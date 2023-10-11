@@ -46,7 +46,7 @@ class HomePage extends Widget {
     });
 
     this.view = new SceneView({
-      container: this.container as string,
+      container: "viewDiv",
       map,
       qualityProfile: "high",
       spatialReference: marsSR,

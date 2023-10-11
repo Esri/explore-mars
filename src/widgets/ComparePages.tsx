@@ -6,12 +6,12 @@ import {
 } from "@arcgis/core/core/accessorSupport/decorators";
 import * as promiseUtils from "@arcgis/core/core/promiseUtils";
 import SceneView from "@arcgis/core/views/SceneView";
-import ColorBackground from "@arcgis/core/webmap/background/ColorBackground";
 import Widget from "@arcgis/core/widgets/Widget";
 import { tsx } from "@arcgis/core/widgets/support/widget";
 import { createEnterCssTransition } from "maquette-css-transitions";
 import type AppState from "./AppState";
 import { graphicFromCountry } from "./countryUtils";
+import type FeatureLayer from "@arcgis/core/layers/FeatureLayer";
 
 const CSS = {
   closeButton: "close-button",
@@ -83,13 +83,12 @@ export class CompareObjectPage extends Widget {
 
   private domForOneObject(gltf: GltfEl) {
     const id = gltf.gltf.split("/")[1].replace(".zip", "");
-
     return (
       <a
         id={id}
         class={this.classes(CSS.submenuItem)}
         onclick={(e: Event) => {
-          this.editGltf(e, gltf);
+          void this.editGltf(e, gltf);
         }}
         enterAnimation={createEnterCssTransition("slideDown")}
       >
@@ -242,11 +241,12 @@ export class AddRegionPage extends Widget {
     });
 
     overlayGlobe.ui.components = [];
-    overlayGlobe.environment.background = new ColorBackground({
+    overlayGlobe.environment.background = {
+      type: 'color',
       color: [255, 255, 255, 0],
-    });
+    } as unknown as __esri.Background;
 
-    overlayGlobe.popup.autoOpenEnabled = false;
+    overlayGlobe.popupEnabled = false;
 
     overlayGlobe.on(
       "click",
@@ -256,10 +256,11 @@ export class AddRegionPage extends Widget {
 
         if (hitTest.results.length > 0) {
           const result = hitTest.results[hitTest.results.length - 1];
-          console.log("got hit result", result);
-          // this.selectedRegion = result.graphic;
-          // const lv = await overlayGlobe.whenLayerView(result.graphic.layer as FeatureLayer);
-          // this.highlight = lv.highlight(result.graphic);
+          if (result.type === "graphic") {
+            this.selectedRegion = result.graphic;
+            const lv = await overlayGlobe.whenLayerView(result.graphic.layer as FeatureLayer);
+            this.highlight = lv.highlight(result.graphic);
+          }
         }
         this.scheduleRender();
       }),

@@ -4,7 +4,7 @@ import AppState from "./widgets/AppState";
 import Application from "./widgets/Application";
 import HomePage from "./widgets/HomePage";
 
-const home = new HomePage({ container: "viewDiv" });
+const home = new HomePage({ container: "landing-page-container" });
 const scene = home.init();
 
 const appState = new AppState({

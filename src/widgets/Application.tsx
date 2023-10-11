@@ -113,7 +113,6 @@ class Application extends Widget {
     // Check if we need to show the cookie disclaimer
     void this.appState.homePage.onStart.then(() => {
       const disclaimerCookie = getCookie(DISCLAIMER_COOKIE_NAME);
-
       if (disclaimerCookie !== DISCLAIMER_COOKIE_VALUE) {
         this.appState.currentPageAbove = new CookieDisclaimerPage({
           appState: this.appState,
@@ -410,16 +409,11 @@ class MenuCredit extends Widget {
           <p>
             Various imagery layers and detailed terrain allow you to explore the
             planet's surface. Place Earth-sized regions and 3D models to better
-            understand distances and elevation on Mars. Share your findings on
-            Twitter and see what others have discovered!
+            understand distances and elevation on Mars.
           </p>
           <p>
             The app was built using the{" "}
             <a href="https://js.arcgis.com">ArcGIS API for JavaScript</a>.
-          </p>
-          <p>
-            Please share any feedback or questions with{" "}
-            <a href="https://twitter.com/arcgisjsapi?lang=en">@ArcGISJSAPI</a>.
           </p>
         </div>
         <hr />
@@ -454,6 +448,7 @@ class LoadingPage extends Widget {
 @subclass("ExploreMars.pages.CookieDisclaimer")
 class CookieDisclaimerPage extends Widget {
   constructor(args: { appState: AppState }) {
+    console.log('wtffff')
     super(args as any);
   }
 

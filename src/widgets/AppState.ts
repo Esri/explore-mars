@@ -83,20 +83,7 @@ export class AppState extends Accessor {
 
     this.editingState = new Editing({ view: this.view });
     this.measureState = new MeasureState({ view: this.view });
-
-    // await this.refreshProfile();
   }
-
-  // async refreshProfile() {
-  // 	try {
-  // 		const response = await request("/profile", {
-  // 			responseType: "json",
-  // 		});
-  // 		this.userProfile = response.data;
-  // 	} catch (error) {
-  // 		this.userProfile = null;
-  // 	}
-  // }
 }
 
 // ---------
@@ -170,12 +157,15 @@ export class Editing extends Accessor {
     this.sketchViewModel.complete();
   }
 
-  public async addGltf(url: string, height: number | undefined = undefined) {
+  public async addGltf(id: string, height: number | undefined = undefined) {
     this.cancelEditing();
     this.loading = true;
 
     const importer = new GlTFImporter();
-    const href = await importer.import(url);
+
+    const url = new URL("/" + id, import.meta.url);
+
+    const href = await importer.import(url.toString());
 
     const gltfModel = new ObjectSymbol3DLayer({
       anchor: "bottom",

@@ -1,5 +1,6 @@
+@use "sass:math";
 @import "@arcgis/core/assets/esri/themes/light/main.css";
-@import "./font-face.scss";
+@import "./font-face";
 
 $menuHeight: 78px;
 $menuWidth: 680px;
@@ -17,22 +18,13 @@ body,
   margin: 0;
   padding: 0;
   color: $mainColor;
-  font-family: "Avenir Next Condensed";
+  font-family: "Avenir Next Condensed", sans-serif;
   overflow: hidden;
 }
 
 a {
   cursor: pointer;
 }
-
-/* .esri-view-surface::after {
-  outline: none !important;
-} */
-
-/* #buttons {
-    width: 150px;
-    height: 100px;
-} */
 
 .hide {
   display: none;
@@ -45,9 +37,9 @@ a {
 
 #regionSelector {
   position: absolute;
-  top: 0px;
-  left: 0px;
-  background-color: rgba(0, 0, 0, 0.4);
+  top: 0;
+  left: 0;
+  background-color: rgb(0 0 0 / 40%);
 }
 
 #regionClose {
@@ -86,11 +78,11 @@ a {
   bottom: 0;
   left: 50%;
   transform: translate(-50%, 0);
-  z-index: 2; //above esri UI, below splash screen
+  z-index: 2; // above esri UI, below splash screen
 }
 
 .icon {
-  background-image: url(../images/measure.svg);
+  background-image: url("../images/measure.svg");
   width: 28px;
   height: 28px;
   display: block;
@@ -102,8 +94,8 @@ a {
 }
 
 .menu {
-  background: rgba(10, 10, 10, 0.85);
-  border: solid 1px rgba(100, 100, 100, 0.2);
+  background: rgb(10 10 10 / 85%);
+  border: solid 1px rgb(100 100 100 / 20%);
   width: $menuWidth;
   border-radius: 39px 39px 0 0;
   height: $menuHeight;
@@ -124,7 +116,7 @@ a {
       flex-grow: 1;
       color: $mainColor;
       position: relative;
-      text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.5);
+      text-shadow: 2px 2px 6px rgb(0 0 0 / 50%);
       transition: all 0.2s ease-in;
       text-align: center;
 
@@ -136,7 +128,7 @@ a {
       &:hover {
         color: $highlightColor;
         text-decoration: none;
-        text-shadow: 2px 2px 6px rgba(14, 71, 98, 0.5);
+        text-shadow: 2px 2px 6px rgb(14 71 98 / 50%);
 
         .icon {
           background-position: 0 -28px;
@@ -153,19 +145,19 @@ a {
 
       &.share {
         .icon {
-          background-image: url(../images/share.svg);
+          background-image: url("../images/share.svg");
         }
       }
 
       &.location {
         .icon {
-          background-image: url(../images/location.svg);
+          background-image: url("../images/location.svg");
         }
       }
 
       &.compare {
         .icon {
-          background-image: url(../images/compare.svg);
+          background-image: url("../images/compare.svg");
         }
       }
 
@@ -196,7 +188,7 @@ a {
 
     .menu-background {
       position: absolute;
-      background-image: url(../images/highlight.png);
+      background-image: url("../images/highlight.png");
       width: 120px;
       height: 100%;
       background-position: 0 -57px;
@@ -226,7 +218,7 @@ a {
     }
 
     .icon {
-      background-image: url(../images/logo.png);
+      background-image: url("../images/logo.png");
       width: 70px;
       margin-left: 40px;
       margin-top: 18px;
@@ -241,7 +233,7 @@ a {
 
 .above-page,
 .below-page {
-  background: rgba(10, 10, 10, 0.85);
+  background: rgb(10 10 10 / 85%);
   width: $menuWidth + 2px;
   border-radius: 39px 39px 0 0;
   position: absolute;
@@ -260,7 +252,7 @@ a {
   }
 
   .page-border {
-    border: solid 1px rgba(100, 100, 100, 0.2);
+    border: solid 1px rgb(100 100 100 / 20%);
     margin-bottom: -2px;
   }
 
@@ -277,16 +269,16 @@ a {
     margin-left: 10px;
     margin-top: 20px;
     text-align: center;
-    background: rgba(0, 0, 0, 0.5);
-    border: solid 1px rgba(0, 0, 0, 0.5);
+    background: rgb(0 0 0 / 50%);
+    border: solid 1px rgb(0 0 0 / 50%);
     transition: all 0.5s ease-out;
     color: $mainColor;
 
     &:hover {
       color: $highlightColor;
       text-decoration: none;
-      background: rgba(10, 10, 10, 0.4);
-      border: solid 1px rgba(100, 100, 100, 0.2);
+      background: rgb(10 10 10 / 40%);
+      border: solid 1px rgb(100 100 100 / 20%);
     }
 
     &:first-child {
@@ -301,6 +293,7 @@ a {
   #submenu-measure {
     .submenu-item {
       $height: 100px;
+
       height: $height;
       line-height: $height * 1.3;
       background-size: auto $height;
@@ -308,7 +301,7 @@ a {
       background-repeat: no-repeat;
       opacity: 0.7;
       color: $highlightColor;
-      background-color: rgba(0, 0, 0, 0.7);
+      background-color: rgb(0 0 0 / 70%);
 
       &:hover {
         background-position: -6px -6px;
@@ -336,27 +329,63 @@ a {
     nav {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-      margin-left: 0px;
+      margin-left: 0;
       margin-top: 40px;
     }
 
     .submenu-item {
-      height: 120px;
-      line-height: 100px;
-      margin: 10px 10px;
-    }
-  }
-
-  #submenu-location {
-    .submenu-item {
       $height: 100px;
+
+      line-height: $height;
       height: $height;
       background-size: auto $height;
       background-position: 0 0;
       background-repeat: no-repeat;
       opacity: 0.7;
       color: $highlightColor;
-      background-color: rgba(0, 0, 0, 0.7);
+      background-color: rgb(0 0 0 / 70%);
+      background-image: url("../images/newyork.svg");
+      margin: 10px;
+
+      &:hover {
+        background-position: -6px -6px;
+        opacity: 1;
+      }
+
+      &#dubai {
+        background-image: url("../images/dubai.svg");
+      }
+
+      &#zurich {
+        background-image: url("../images/zurich.svg");
+      }
+
+      &#grand-canyon {
+        background-image: url("../images/canyon.svg");
+      }
+
+      &#everest {
+        background-image: url("../images/everest.svg");
+      }
+
+      &#killimanjaro {
+        background-image: url("../images/kilimanjaro.svg");
+      }
+    }
+
+  }
+
+  #submenu-location {
+    .submenu-item {
+      $height: 100px;
+
+      height: $height;
+      background-size: auto $height;
+      background-position: 0 0;
+      background-repeat: no-repeat;
+      opacity: 0.7;
+      color: $highlightColor;
+      background-color: rgb(0 0 0 / 70%);
       background-image: url("../images/opportunity.svg");
 
       &:nth-child(2) {
@@ -408,46 +437,6 @@ a {
     }
   }
 
-  #compare-objects {
-    .submenu-item {
-      $height: 100px;
-      line-height: $height;
-      height: $height;
-      background-size: auto $height;
-      background-position: 0 0;
-      background-repeat: no-repeat;
-      opacity: 0.7;
-      color: $highlightColor;
-      background-color: rgba(0, 0, 0, 0.7);
-      background-image: url("../images/newyork.svg");
-
-      &:hover {
-        background-position: -6px -6px;
-        opacity: 1;
-      }
-
-      &#dubai {
-        background-image: url("../images/dubai.svg");
-      }
-
-      &#zurich {
-        background-image: url("../images/zurich.svg");
-      }
-
-      &#grand-canyon {
-        background-image: url("../images/canyon.svg");
-      }
-
-      &#everest {
-        background-image: url("../images/everest.svg");
-      }
-
-      &#killimanjaro {
-        background-image: url("../images/kilimanjaro.svg");
-      }
-    }
-  }
-
   #add-region {
     width: 100%;
     text-align: right;
@@ -480,6 +469,7 @@ a {
   #submenu-compare {
     .submenu-item {
       $height: 100px;
+
       line-height: $height;
       height: $height;
       background-size: cover;
@@ -487,7 +477,7 @@ a {
       background-repeat: no-repeat;
       opacity: 0.7;
       color: $highlightColor;
-      background-color: rgba(0, 0, 0, 0.7);
+      background-color: rgb(0 0 0 / 70%);
       background-image: url("../images/3d-objects.svg");
 
       &:hover {
@@ -502,6 +492,7 @@ a {
   }
 
   $closeButtonSize: 30px;
+
   .close-button {
     width: $closeButtonSize;
     height: $closeButtonSize;
@@ -532,7 +523,7 @@ a {
 
     .esri-direct-line-measurement-3d__measurement,
     .esri-area-measurement-3d__measurement {
-      background-color: rgba(0, 0, 0, 0.5);
+      background-color: rgb(0 0 0 / 50%);
       display: flex;
       width: 372px;
       margin-bottom: 20px;
@@ -572,7 +563,7 @@ a {
 }
 
 .esri-ui-top-left .esri-widget {
-  background: rgba(10, 10, 10, 0.85);
+  background: rgb(10 10 10 / 85%);
 }
 
 #submenu-share {
@@ -604,9 +595,6 @@ a {
     .share-form {
       flex-grow: 1;
       margin-left: 20px;
-
-      -webkit-box-sizing: border-box;
-      -moz-box-sizing: border-box;
       box-sizing: border-box;
 
       .share-url {
@@ -652,13 +640,12 @@ a {
     height 0s;
   z-index: 3;
   width: 100%;
-  height: 40%;
   height: 100%;
   background: linear-gradient(
     to bottom,
-    rgba(0, 0, 0, 0.5) 40%,
-    rgba(0, 0, 0, 0.2) 70%,
-    rgba(0, 0, 0, 0.5) 100%
+    rgb(0 0 0 / 50%) 40%,
+    rgb(0 0 0 / 20%) 70%,
+    rgb(0 0 0 / 50%) 100%
   );
 
   .content {
@@ -670,7 +657,7 @@ a {
     position: absolute;
     z-index: 2;
     padding-bottom: 50px;
-    text-shadow: 2px 2px 20px rgba(0, 0, 0, 0.8);
+    text-shadow: 2px 2px 20px rgb(0 0 0 / 80%);
     color: $highlightColor;
     font-size: 1.8em;
     transition:
@@ -697,8 +684,8 @@ a {
 
     button {
       font-size: 1.4em;
-      background: rgba(10, 10, 10, 0.85);
-      border: solid 1px rgba(100, 100, 100, 0.4);
+      background: rgb(10 10 10 / 85%);
+      border: solid 1px rgb(100 100 100 / 40%);
       height: 78px;
       padding: 0 80px;
       line-height: 78px;
@@ -774,7 +761,7 @@ a {
 
     & > div {
       width: $graphicWidth;
-      height: 890px * ($graphicWidth / 2400px);
+      height: 890px * math.div($graphicWidth, 2400px);
       background-size: cover;
       background-image: url("../images/home/background-1.png");
       position: absolute;
@@ -853,15 +840,6 @@ a {
 //   left: 50%;
 //   transform: translate(-50%, 0);
 
-//   .twitter-tweet.twitter-tweet-rendered {
-//     display: flex;
-//     max-width: $menuWidth !important;
-//     width: 100%;
-//     margin-top: 0 !important;
-//     margin-bottom: 0 !important;
-//   }
-// }
-
 // .esri-popup__content {
 //   margin: 0;
 // }
@@ -870,23 +848,23 @@ a {
 .esri-button,
 textarea {
   color: $mainColor;
-  background-color: rgba(0, 0, 0, 0.7);
-  border: solid 1px rgba(100, 100, 100, 0.1);
+  background-color: rgb(0 0 0 / 70%);
+  border: solid 1px rgb(100 100 100 / 10%);
   padding: 10px 35px;
   border-radius: 5px;
 
   &:hover {
     color: $highlightColor;
     text-decoration: none;
-    background: rgba(10, 10, 10, 0.4);
-    border: solid 1px rgba(100, 100, 100, 0.2);
+    background: rgb(10 10 10 / 40%);
+    border: solid 1px rgb(100 100 100 / 20%);
   }
 
   &:focus {
     color: $highlightColor;
     text-decoration: none;
-    background: rgba(10, 10, 10, 0.4);
-    border: solid 1px rgba(100, 100, 100, 0.2);
+    background: rgb(10 10 10 / 40%);
+    border: solid 1px rgb(100 100 100 / 20%);
   }
 }
 
@@ -894,30 +872,8 @@ textarea {
   padding: 8px;
 }
 
-#page-login {
-  text-align: center;
-  margin-top: 30px;
-  margin-bottom: 110px;
-
-  .esri-button {
-    display: inline-flex;
-    width: auto;
-
-    .icon {
-      margin: 0;
-      margin-right: 10px;
-      background-image: url("../images/twitter.svg");
-    }
-
-    &:hover .icon {
-      background-position: 0 -28px;
-    }
-  }
-}
-
 .credit {
-  margin-top: -18px;
-  color: rgba(255, 255, 255, 0.3);
+  color: rgb(255 255 255 / 30%);
   margin-bottom: 100px;
   margin-top: -18px;
 }
@@ -941,13 +897,13 @@ $loader-size: 10px;
   div {
     display: inline-block;
     position: absolute;
-    left: $loader-size / 2;
+    left: $loader-size * 0.5;
     width: $loader-size;
     background: $mainColor;
     animation: loader 1.2s cubic-bezier(0, 0.5, 0.5, 1) infinite;
 
     &:nth-child(1) {
-      left: $loader-size / 2;
+      left: $loader-size * 0.5;
       animation-delay: -0.24s;
     }
 
@@ -957,7 +913,7 @@ $loader-size: 10px;
     }
 
     &:nth-child(3) {
-      left: $loader-size * 3 + $loader-size / 2;
+      left: $loader-size * 3 + $loader-size * 0.5;
       animation-delay: 0;
     }
   }
@@ -965,17 +921,18 @@ $loader-size: 10px;
 
 @keyframes loader {
   0% {
-    top: $loader-size / 2;
+    top: $loader-size * 0.5;
     height: $loader-size * 4;
   }
+
   50%,
   100% {
-    top: $loader-size + $loader-size / 2;
+    top: $loader-size + $loader-size * 0.5;
     height: $loader-size * 2;
   }
 }
 
-@media screen and (max-width: 930px) {
+@media screen and (width <= 930px) {
   .esri-component.esri-basemap-toggle.esri-widget {
     margin-bottom: 60px;
   }
@@ -991,7 +948,7 @@ $loader-size: 10px;
   }
 }
 
-@media screen and (max-width: 745px), screen and (max-height: 415px) {
+@media screen and (width <= 745px), screen and (height <= 415px) {
   html {
     font-size: 13px;
   }
@@ -1014,6 +971,7 @@ $loader-size: 10px;
 
     .logo {
       width: auto;
+
       .icon {
         margin-left: 10px;
       }
@@ -1045,7 +1003,7 @@ $loader-size: 10px;
 
     .graphics > div {
       width: $graphicWidth;
-      height: 890px * ($graphicWidth / 2400px);
+      height: 890px * math.div($graphicWidth, 2400px);
     }
   }
 

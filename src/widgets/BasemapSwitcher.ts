@@ -23,7 +23,7 @@ export class BasemapSwitcher extends Accessor {
   @property()
   homePage!: HomePage;
 
-  initialize() {
+  async initialize() {
     const toggle = new BasemapToggle({
       view: this.view,
       nextBasemap: shadedReliefBasemap,
@@ -35,19 +35,25 @@ export class BasemapSwitcher extends Accessor {
     });
 
     this.view.ui.add(toggle, "bottom-right");
+    await this.homePage.onStart;
 
-    void this.homePage.onStart.then(() => {
-      const updateBasemap = promiseUtils.debounce(this.updateBasemap);
-      reactiveUtils.when(() => this.view.stationary, updateBasemap);
-    });
+    const updateBasemap = promiseUtils.debounce(this.updateBasemap);
+
+    reactiveUtils.when(
+      () => this.view.stationary,
+      () => {
+        void updateBasemap();
+      },
+    );
   }
 
   /* Update visibility of HiRise basemaps depending on distance to camera */
-  async updateBasemap() {
+  updateBasemap = async () => {
     const result = await this.view.hitTest(
       { x: this.view.width / 2, y: this.view.height / 2 },
       { include: [this.view.map.ground] },
     );
+    // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
     const d = result.ground.mapPoint
       ? result.ground.distance
       : Number.MAX_VALUE;

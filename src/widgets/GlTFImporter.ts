@@ -1,13 +1,9 @@
+import * as zip from "@zip.js/zip.js";
+
 interface BlobZIPEntry {
   name: string;
   url: string;
   blob: Blob;
-}
-
-interface ZIPEntry {
-  directory: boolean;
-  filename: string;
-  getData: (writer: any, onFinished: (_: any) => void) => void;
 }
 
 const ZIP_PROGRESS_FACTOR = 0.5;
@@ -17,7 +13,7 @@ export default class GlTFImporter {
 
   public task = "start";
 
-  private readonly zip = (window as any).zip;
+  // private readonly zip = (window as any).zip;
 
   constructor(public onProgress = () => {}) {}
 
@@ -35,22 +31,24 @@ export default class GlTFImporter {
     return gltfBlob.url;
   }
 
-  private async downloadAndExtractZip(url: string): Promise<ZIPEntry[]> {
-    return await new Promise((resolve, reject) => {
-      const reader = new this.zip.HttpProgressReader(url, {
-        onProgress: this.reportDownloadProgress.bind(this),
-      });
-      this.zip.createReader(
-        reader,
-        (zipReader: any) => {
-          zipReader.getEntries(resolve);
-        },
-        reject,
-      );
+  private async downloadAndExtractZip(url: string): Promise<zip.Entry[]> {
+    const zipReader = new zip.ZipReader(
+      new zip.HttpReader(url, { preventHeadRequest: true }),
+    );
+    const entries = await zipReader.getEntries({
+      onprogress: async (loaded, total, entries) => {
+        this.reportDownloadProgress({
+          loaded,
+          total,
+          entries,
+        });
+      },
     });
+
+    return entries;
   }
 
-  private async zipEntriesToBlob(entries: ZIPEntry[]) {
+  private async zipEntriesToBlob(entries: zip.Entry[]) {
     entries = entries.filter((entry) => !entry.directory);
 
     // const progress = (currentIndex, totalIndex)
@@ -65,20 +63,24 @@ export default class GlTFImporter {
       }),
     );
 
-    return await Promise.all(promises);
+    const blobEntries = await Promise.all(promises);
+
+    return blobEntries.filter((entry): entry is BlobZIPEntry => entry != null);
   }
 
-  private async saveEntryToBlob(entry: ZIPEntry): Promise<BlobZIPEntry> {
-    return await new Promise((resolve, reject) => {
-      entry.getData(new this.zip.BlobWriter("text/plain"), (data: any) => {
-        const url = window.URL.createObjectURL(data);
-        resolve({
-          name: entry.filename,
-          url,
-          blob: data,
-        });
-      });
-    });
+  private async saveEntryToBlob(
+    entry: zip.Entry,
+  ): Promise<BlobZIPEntry | undefined> {
+    const dataBlobWriter = new zip.BlobWriter("text/plain");
+    const data = await entry.getData?.(dataBlobWriter);
+    if (data != null) {
+      const url = URL.createObjectURL(data);
+      return {
+        name: entry.filename,
+        blob: data,
+        url,
+      };
+    }
   }
 
   private async combineToSingleBlob(
@@ -89,9 +91,9 @@ export default class GlTFImporter {
     if (rootEntry == null) {
       return await Promise.reject("Can not find a .gltf file in ZIP archive");
     }
-    const assets = entries.reduce<Record<string, string>>((previous, entry) => {
-      previous[entry.name] = entry.url;
-      return previous;
+    const assets = entries.reduce<Record<string, string>>((record, entry) => {
+      record[entry.name] = entry.url;
+      return record;
     }, {});
     const reader = new FileReader();
 
@@ -101,26 +103,19 @@ export default class GlTFImporter {
           const gltfJson = JSON.parse(reader.result as string);
 
           // Replace original buffers and images by blob URLs
-          if (Object.prototype.hasOwnProperty.call(gltfJson, "buffers")) {
-            gltfJson.buffers.forEach(
-              (buffer: any) => (buffer.uri = assets[buffer.uri]),
-            );
+          const buffers = gltfJson.buffers ?? [];
+          for (const buffer of buffers) {
+            buffer.uri = assets[buffer.uri]
           }
 
-          if (
-            Object.prototype.hasOwnProperty.call(
-              gltfJson.hasOwnProperty,
-              "images",
-            )
-          ) {
-            gltfJson.images.forEach(
-              (image: any) => (image.uri = assets[image.uri]),
-            );
+          const images = gltfJson.images ?? [];
+          for (const image of images) {
+            image.uri = assets[image.uri]
           }
 
           const gltfContent = JSON.stringify(gltfJson, null, 2);
           const gltfBlob = new Blob([gltfContent], { type: "text/plain" });
-          const gltfUrl = window.URL.createObjectURL(gltfBlob);
+          const gltfUrl = URL.createObjectURL(gltfBlob);
           resolve({
             name: rootEntry.name,
             url: gltfUrl,

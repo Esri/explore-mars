@@ -14,12 +14,15 @@ const MIN_SCALE_PATHS = 3000000;
 const MIN_SCALE_WAYPOINTS = 100000;
 
 export const marsElevation = new ElevationLayer({
+  id: "marsElevation",
+  title: "marsElevation",
   url: "https://astro.arcgis.com/arcgis/rest/services/OnMars/MDEM200M/ImageServer",
   copyright:
     "NASA, ESA, HRSC, Goddard Space Flight Center, USGS Astrogeology Science Center, Esri",
 });
 
 export const marsHiRiseImagery = new TileLayer({
+  id: "marsHiRiseImagery",
   portalItem: {
     id: "c1c4c750a2154842ae523c984cc14fa5",
   },
@@ -30,6 +33,7 @@ export const marsHiRiseImagery = new TileLayer({
 });
 
 export const marsReconnaissanceImagery = new TileLayer({
+  id: "marsReconnaissanceImagery",
   portalItem: {
     id: "e6c448d134404fc082c73678accca7e5",
   },
@@ -40,6 +44,7 @@ export const marsReconnaissanceImagery = new TileLayer({
 });
 
 export const marsImagery = new TileLayer({
+  id: "marsImagery",
   portalItem: {
     id: "1efb16809db84f0c892b9b0662dab0c8",
   },
@@ -50,12 +55,15 @@ export const marsImagery = new TileLayer({
 });
 
 export const marsImageryBasemap = new Basemap({
+  id: "marsImageryBasemap",
+  title: "marsImageryBasemap",
   thumbnailUrl:
     "https://www.arcgis.com/sharing/rest/content/items/1efb16809db84f0c892b9b0662dab0c8/info/thumbnail/thumbnail1552849034608.png",
   baseLayers: [marsImagery, marsReconnaissanceImagery, marsHiRiseImagery],
 });
 
 const shadedReliefLayer = new TileLayer({
+  id: "shadedReliefLayer",
   portalItem: {
     id: "07b33bb3067747abbebd1ce34c29816e",
   },
@@ -64,6 +72,7 @@ const shadedReliefLayer = new TileLayer({
 });
 
 export const shadedReliefBasemap = new Basemap({
+  id: "shadedReliefBasemap",
   thumbnailUrl:
     "https://www.arcgis.com/sharing/rest/content/items/07b33bb3067747abbebd1ce34c29816e/info/thumbnail/thumbnail1552722865064.png",
   baseLayers: [shadedReliefLayer],
@@ -71,8 +80,10 @@ export const shadedReliefBasemap = new Basemap({
 
 export const createMarsNamesLayer = () =>
   new GroupLayer({
+    id: "createMarsNamesLayer",
     layers: [
       new FeatureLayer({
+        id: "createMarsNamesLayer1",
         title: "Mars Nomenclature Mons",
         url: "https://services.arcgis.com/P3ePLMYs2RVChkJx/ArcGIS/rest/services/Mars_Nomenclature_Mountains/FeatureServer/7",
         popupEnabled: false,
@@ -108,6 +119,7 @@ export const createMarsNamesLayer = () =>
         elevationInfo: { mode: "on-the-ground" },
       }),
       new FeatureLayer({
+        id: "createMarsNamesLayer2",
         title: "Mars Nomenclature Craters",
         url: "https://services.arcgis.com/P3ePLMYs2RVChkJx/ArcGIS/rest/services/Mars_Nomenclature_Mountains/FeatureServer/7",
         popupEnabled: false,
@@ -145,6 +157,7 @@ export const createMarsNamesLayer = () =>
         elevationInfo: { mode: "on-the-ground" },
       }),
       new FeatureLayer({
+        id: "createMarsNamesLayer3",
         title: "Mars Nomenclature Planitia and Vallis",
         url: "https://services.arcgis.com/P3ePLMYs2RVChkJx/ArcGIS/rest/services/Mars_Nomenclature_Mountains/FeatureServer/7",
         popupEnabled: false,
@@ -230,10 +243,12 @@ const RENDERER_PATHS: any = {
 
 export const createPerseveranceLayers = () => {
   return new GroupLayer({
+    id: "createPerseveranceLayers",
     title: "Perseverance 2021",
     visible: true,
     layers: [
       new GeoJSONLayer({
+        id: "createPerseveranceLayers1",
         title: "Perseverance Waypoints",
         url: "https://mars.nasa.gov/mmgis-maps/M20/Layers/json/M20_waypoints_current.json",
         copyright: "NASA",
@@ -241,6 +256,7 @@ export const createPerseveranceLayers = () => {
         minScale: MIN_SCALE_WAYPOINTS,
       }),
       new FeatureLayer({
+        id: "createPerseveranceLayers2",
         url: "https://trek.nasa.gov/mars/trekarcgis/rest/services/perseverance_landing_ellipse/MapServer/0",
         title: "Perseverance target landing area",
         popupEnabled: true,
@@ -298,10 +314,12 @@ export const createPerseveranceLayers = () => {
 
 export const createCuriosityLayers = () =>
   new GroupLayer({
+    id: "createCuriosityLayers",
     title: "Curiosity 2012",
     visible: true,
     layers: [
       new GeoJSONLayer({
+        id: "createCuriosityLayers1",
         title: "Curiosity Waypoints",
         url: "https://mars.nasa.gov/mmgis-maps/MSL/Layers/json/MSL_waypoints.json",
         copyright: "NASA",
@@ -311,6 +329,7 @@ export const createCuriosityLayers = () =>
         screenSizePerspectiveEnabled: true,
       }),
       new GeoJSONLayer({
+        id: "createCuriosityLayers2",
         title: "Curiosity Path",
         url: "https://mars.nasa.gov/mmgis-maps/MSL/Layers/json/MSL_traverse.json",
         copyright: "NASA",
@@ -326,16 +345,19 @@ export const createCuriosityLayers = () =>
 //   url: "https://trek.nasa.gov/mars/trekarcgis/rest/services/opportunity_path3/MapServer/0",
 export const createOpportunityLayers = () =>
   new GroupLayer({
+    id: "createOpportunityLayers",
     title: "Opportuntiy 2004",
     visible: true,
     layers: [
       new FeatureLayer({
+        id: "createOpportunityLayers1",
         url: "https://trek.nasa.gov/mars/trekarcgis/rest/services/opportunity_path/MapServer/0",
         outFields: ["*"],
         renderer: RENDERER_PATHS,
         minScale: MIN_SCALE_PATHS,
       }),
       new FeatureLayer({
+        id: "createOpportunityLayers2",
         url: "https://trek.nasa.gov/mars/trekarcgis/rest/services/opportunity_waypoints/MapServer/0",
         outFields: ["*"],
         renderer: RENDERER_WAYPOINTS,
@@ -352,6 +374,7 @@ export const createOpportunityLayers = () =>
 
 export const createMissionLayer = () =>
   new FeatureLayer({
+    id: "createMissionLayer",
     portalItem: { id: "be651e0ceb6941b3949d0f68e0169642" },
     elevationInfo: {
       mode: "on-the-ground",
@@ -416,97 +439,7 @@ export const createMissionLayer = () =>
     popupEnabled: false,
     maxScale: 0,
     minScale: 0,
-    // maxScale: 500000
   });
-
-export const tweetLayer = new FeatureLayer({
-  // test service  url:"https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/USA_Airports_by_scale/FeatureServer/1",
-  portalItem: { id: "bfa90941f52c4c519d650dadc3de1b72" },
-  outFields: ["*"],
-  definitionExpression: "show = 1",
-  featureReduction: {
-    type: "selection",
-  },
-  minScale: 25000000,
-  screenSizePerspectiveEnabled: true,
-  labelingInfo: [
-    {
-      labelExpressionInfo: {
-        expression: "'@' + $feature.twitterUser",
-      },
-      symbol: {
-        type: "text",
-        color: "white",
-        haloSize: 0.5,
-        haloColor: [50, 50, 50, 0.7],
-        font: {
-          size: 9,
-        },
-      },
-      labelPlacement: "center-right",
-      maxScale: 0,
-      minScale: 2500000,
-    },
-  ],
-  renderer: {
-    type: "simple",
-    symbol: {
-      type: "point-3d",
-      callout: {
-        type: "line",
-        // autocasts as new LineCallout3D()
-        size: 1.5,
-        color: [150, 150, 150],
-        border: {
-          color: [50, 50, 50],
-        },
-      },
-      verticalOffset: {
-        screenLength: 40,
-        maxWorldLength: 10000,
-        minWorldLength: 20,
-      },
-      symbolLayers: [
-        {
-          type: "icon",
-          size: 20,
-          material: {
-            color: [255, 255, 255, 0.9],
-          },
-          resource: {
-            href: "/tweet.svg",
-          },
-        },
-      ],
-    },
-  },
-});
-
-export const tweetLayerClientSide = new FeatureLayer({
-  spatialReference: { wkid: 104971 },
-  geometryType: "point",
-  objectIdField: "OBJECTID",
-  source: [],
-  fields: [
-    {
-      name: "OBJECTID",
-      alias: "OBJECTID",
-      type: "oid",
-    },
-    {
-      name: "tweetid",
-      alias: "tweetId",
-      type: "string",
-    },
-    {
-      name: "urlhash",
-      alias: "urlHash",
-      type: "string",
-    },
-  ],
-  outFields: ["*"],
-  renderer: tweetLayer.renderer.clone(),
-});
 
 export const cameras = {
   perseverance: new Camera({
@@ -529,16 +462,6 @@ export const cameras = {
     heading: 13.78,
     tilt: 65.46,
   }),
-  // opportunity: new Camera({
-  //   position: {
-  //     x: -5.26261,
-  //     y: -2.42335,
-  //     z: 1945.698,
-  //     spatialReference: { wkid: 104971 }
-  //   },
-  //   heading: 320.10,
-  //   tilt: 71.47
-  // })
   opportunity: new Camera({
     position: {
       x: -5.7945,
