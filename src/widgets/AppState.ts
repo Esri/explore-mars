@@ -27,8 +27,18 @@ import type HomePage from "./HomePage";
 import PolygonTransform from "./PolygonTransform";
 import * as layers from "./layers";
 
+export type Page = 
+| 'home'
+| 'locations'
+| 'measure'
+| 'compare'
+| 'credits'
+
 @subclass("ExploreMars.AppState")
 export class AppState extends Accessor {
+  @property()
+  page: Page = 'home'
+
   @property()
   homePage!: HomePage;
 

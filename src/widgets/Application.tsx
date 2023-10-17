@@ -3,9 +3,6 @@ import {
   subclass,
 } from "@arcgis/core/core/accessorSupport/decorators";
 import * as reactiveUtils from "@arcgis/core/core/reactiveUtils";
-import AreaMeasurement3D from "@arcgis/core/widgets/AreaMeasurement3D";
-import DirectLineMeasurement3D from "@arcgis/core/widgets/DirectLineMeasurement3D";
-import ElevationProfile from "@arcgis/core/widgets/ElevationProfile";
 import Widget from "@arcgis/core/widgets/Widget";
 import { tsx } from "@arcgis/core/widgets/support/widget";
 import type AppState from "./AppState";
@@ -15,13 +12,13 @@ import {
   EditObjectPage,
 } from "./ComparePages";
 import {
-  createAreaPage,
-  createElevationPage,
-  createLinePage,
+  MeasurePage,
 } from "./MeasurePages";
 import { CSS } from "./constants";
 import { cameras } from "./layers";
 import { getCookie, setCookie } from "./utils";
+import { match } from 'ts-pattern'
+import type { Page } from "./AppState";
 
 const DISCLAIMER_COOKIE_NAME = "disclaimerCookie";
 const DISCLAIMER_COOKIE_VALUE = "true";
@@ -31,37 +28,10 @@ class Application extends Widget {
   @property()
   appState!: AppState;
 
+  @property()
+  private content: any;
+
   initialize() {
-    // When a user edit a measure, go to measure page:
-    this.appState.measureState?.widgets.forEach((tool) => {
-      tool.watch("viewModel.state", (state) => {
-        if (
-          state !== "ready" &&
-          this.appState.currentPageAbove === null &&
-          this.appState.currentPageBelow === null
-        ) {
-          const getPage = () => {
-            switch (tool.constructor) {
-              case AreaMeasurement3D:
-                // code...
-                return createAreaPage(this.appState, false);
-
-              case DirectLineMeasurement3D:
-                // code...
-                return createLinePage(this.appState, false);
-
-              case ElevationProfile:
-                // code...
-                return createElevationPage(this.appState, false);
-              default:
-                return createElevationPage(this.appState);
-            }
-          };
-          this.appState.currentPageAbove = getPage();
-        }
-      });
-    });
-
     // When user is editing an 3D object, go to editing page
     this.watch("appState.editingState.isUpdating", (isUpdating: boolean) => {
       if (isUpdating) {
@@ -110,6 +80,10 @@ class Application extends Widget {
       }
     });
 
+    this.appState.watch("page", (page: Page) => {
+      this.goToPage(page);
+    })
+
     // Check if we need to show the cookie disclaimer
     void this.appState.homePage.onStart.then(() => {
       const disclaimerCookie = getCookie(DISCLAIMER_COOKIE_NAME);
@@ -123,16 +97,16 @@ class Application extends Widget {
 
   render() {
     const abovePage = this.appState.currentPageAbove?.render();
-    const belowPage = this.appState.currentPageBelow?.render();
+    const bottom = this.content?.render()
 
     return (
       <div class={CSS.wrapper}>
         <div
           class={this.classes(CSS.belowPage, {
-            "has-content": belowPage != null,
+            "has-content": bottom != null,
           })}
         >
-          <div class={CSS.border}>{belowPage}</div>
+          <div class={CSS.border}>{bottom}</div>
         </div>
         <div class={CSS.menu}>
           <nav>
@@ -140,6 +114,7 @@ class Application extends Widget {
               class={CSS.logo}
               onclick={(e: Event) => {
                 this.showHome(e);
+                this.appState.page = 'home';
               }}
             >
               <div class={CSS.menuBackground}></div>
@@ -147,15 +122,15 @@ class Application extends Widget {
             </a>
             <a
               class={this.classes(CSS.menuItem, CSS.location)}
-              onclick={(e: Event) => this.createSubPage(e, MenuLocation)}
+              onclick={(e: Event) => { this.appState.page = 'locations' }}
             >
               <div class={CSS.menuBackground}></div>
               <div class={CSS.icon}></div>
-              <div class={CSS.label}>Locations</div>
+              <div class={CSS.label}>Locations {this.appState.page}</div>
             </a>
             <a
               class={this.classes(CSS.menuItem, CSS.measure)}
-              onclick={(e: Event) => this.createSubPage(e, MenuMeasure)}
+              onclick={(e: Event) => { this.appState.page = 'measure' }}
             >
               <div class={CSS.menuBackground}></div>
               <div class={CSS.icon}></div>
@@ -163,7 +138,7 @@ class Application extends Widget {
             </a>
             <a
               class={this.classes(CSS.menuItem, CSS.compare)}
-              onclick={(e: Event) => this.createSubPage(e, MenuCompare)}
+              onclick={(e: Event) => { this.appState.page = 'compare' }}
             >
               <div class={CSS.menuBackground}></div>
               <div class={CSS.icon}></div>
@@ -171,7 +146,7 @@ class Application extends Widget {
             </a>
             <a
               class={this.classes(CSS.menuItem, CSS.esriLogo)}
-              onclick={(e: Event) => this.createSubPage(e, MenuCredit)}
+              onclick={(e: Event) => { this.appState.page = 'credits' }}
             >
               <div class={CSS.menuBackground}></div>
               <div class={CSS.icon} title="Credits"></div>
@@ -190,31 +165,25 @@ class Application extends Widget {
     );
   }
 
-  private createSubPage<T extends Widget>(
-    event: Event,
-    ClassToCreate: new (args: { appState: AppState }) => T,
-  ) {
-    event.preventDefault();
+  private goToPage(page: Page) {
+    const ContentConstructor = match(page)
+      .with('home', () => null)
+      .with('measure', () => MeasurePage)
+      .with('compare', () => MenuCompare)
+      .with('credits', () => MenuCredit)
+      .with('locations', () => MenuLocation)
+      .exhaustive();
 
-    if (this.appState.currentPageBelow === null) {
-      this.appState.currentPageBelow = new ClassToCreate({
-        appState: this.appState,
-      });
-      return false;
-    }
+    if (ContentConstructor == null) return;
 
-    if (this.appState.currentPageBelow instanceof ClassToCreate) {
-      this.appState.currentPageBelow = null;
-      return false;
-    }
+    const content = this.content != null && this.content instanceof ContentConstructor
+    ? this.content
+    : new ContentConstructor({ appState: this.appState });
 
-    this.appState.currentPageBelow = null;
+    this.content = null
 
     setTimeout(() => {
-      this.appState.currentPageBelow = new ClassToCreate({
-        appState: this.appState,
-      });
-      this.appState.homePage.visible = false;
+      this.content = content
       this.scheduleRender();
     }, 200);
   }
@@ -225,54 +194,6 @@ class Application extends Widget {
     this.appState.currentPageAbove = null;
     this.appState.homePage.visible = !this.appState.homePage.visible;
     this.scheduleRender();
-  }
-}
-
-@subclass("ExploreMars.menu.Measure")
-class MenuMeasure extends Widget {
-  constructor(args: { appState: AppState }) {
-    super(args as any);
-  }
-
-  @property()
-  appState!: AppState;
-
-  render() {
-    // enterAnimation={createEnterCssTransition('slideDown')} exitAnimation={createExitCssTransition('slideUp')}
-    return (
-      <nav key="submenu-measure" id="submenu-measure" class={CSS.pageContainer}>
-        <a
-          class={this.classes(CSS.lineMeasure, CSS.submenuItem)}
-          onclick={(e: Event) => {
-            this.goToPage(e, createLinePage);
-          }}
-        >
-          <div class={CSS.submenuContainer}>Line</div>
-        </a>
-        <a
-          class={this.classes(CSS.areaMeasure, CSS.submenuItem)}
-          onclick={(e: Event) => {
-            this.goToPage(e, createAreaPage);
-          }}
-        >
-          <div class={CSS.submenuContainer}>Area</div>
-        </a>
-        <a
-          class={this.classes(CSS.elevationMeasure, CSS.submenuItem)}
-          onclick={(e: Event) => {
-            this.goToPage(e, createElevationPage);
-          }}
-        >
-          <div class={CSS.submenuContainer}>Elevation</div>
-        </a>
-      </nav>
-    );
-  }
-
-  private goToPage(event: Event, createPage: (appState: AppState) => Widget) {
-    event.preventDefault();
-    this.appState.currentPageAbove = createPage(this.appState);
-    this.appState.currentPageBelow = null;
   }
 }
 

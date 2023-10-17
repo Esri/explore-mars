@@ -24,6 +24,7 @@
     "@zip.js/zip.js": "^2.7.29",
     "gl-matrix": "^3.4.3",
     "maquette-css-transitions": "^1.1.1",
+    "ts-pattern": "^5.0.5",
     "typescript": "^5.1.3",
     "vite": "^4.3.9"
   },
