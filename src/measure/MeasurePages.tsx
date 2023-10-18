@@ -2,20 +2,14 @@ import {
   property,
   subclass,
 } from "@arcgis/core/core/accessorSupport/decorators";
-import ElevationLayer from "@arcgis/core/layers/ElevationLayer";
 import AreaMeasurement3D from "@arcgis/core/widgets/AreaMeasurement3D";
 import DirectLineMeasurement3D from "@arcgis/core/widgets/DirectLineMeasurement3D";
 import ElevationProfile from "@arcgis/core/widgets/ElevationProfile";
 import Widget from "@arcgis/core/widgets/Widget";
 import { tsx } from "@arcgis/core/widgets/support/widget";
-import type AppState from "./AppState";
+import type AppState from "../widgets/AppState";
 import { match } from 'ts-pattern';
-import SceneView from "@arcgis/core/views/SceneView";
 import ElevationProfileLineGround from "@arcgis/core/widgets/ElevationProfile/ElevationProfileLineGround";
-
-const marsHiRiseImageryElevation = new ElevationLayer({
-  url: "https://astro.arcgis.com/arcgis/rest/services/OnMars/HiRISE_DEM/ImageServer",
-});
 
 const CSS = {
   closeButton: "close-button",
@@ -28,7 +22,7 @@ const CSS = {
   pageContainer: "page-container",
 };
 
-type State = 
+type Page = 
 | 'menu'
 | 'area'
 | 'line'
@@ -61,7 +55,7 @@ export class MeasurePage extends Widget {
   private readonly elevationProfile: ElevationProfile;
 
   @property()
-  measureState: State = 'menu'
+  page: Page = 'menu'
 
   @property()
   appState!: AppState;
@@ -80,10 +74,10 @@ export class MeasurePage extends Widget {
   }
 
   render() {
-    if (this.measureState === 'menu') 
-      return <MeasureMenu classes={this.classes} selectTool={(tool) => { this.measureState = tool }} />;
+    if (this.page === 'menu') 
+      return <MeasureMenu classes={this.classes} selectTool={(tool) => { this.page = tool }} />;
 
-    const widget = match(this.measureState)
+    const widget = match(this.page)
     .with('area', () => this.areaMeasurement)
     .with("elevation", () => this.elevationProfile)
     .with("line", () => this.lineMeasurement)
@@ -99,14 +93,14 @@ export class MeasurePage extends Widget {
   close(widget: AreaMeasurement3D | DirectLineMeasurement3D | ElevationProfile) {
     widget.viewModel.clear();
     widget.visible = false;
-    this.measureState = 'menu';
+    this.page = 'menu';
   }
 }
 
 
 interface MeasureMenuProps {
   classes: __esri.Widget['classes'],
-  selectTool: (tool: Exclude<State, 'menu'>) => void
+  selectTool: (tool: Exclude<Page, 'menu'>) => void
 }
 function MeasureMenu({ classes, selectTool }: MeasureMenuProps) {
   return (

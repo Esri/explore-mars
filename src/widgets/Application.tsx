@@ -2,18 +2,15 @@ import {
   property,
   subclass,
 } from "@arcgis/core/core/accessorSupport/decorators";
-import * as reactiveUtils from "@arcgis/core/core/reactiveUtils";
 import Widget from "@arcgis/core/widgets/Widget";
 import { tsx } from "@arcgis/core/widgets/support/widget";
 import type AppState from "./AppState";
 import {
-  AddRegionPage,
-  CompareObjectPage,
-  EditObjectPage,
-} from "./ComparePages";
+  ComparePage,
+} from "../compare/ComparePage";
 import {
   MeasurePage,
-} from "./MeasurePages";
+} from "../measure/MeasurePages";
 import { CSS } from "./constants";
 import { cameras } from "./layers";
 import { getCookie, setCookie } from "./utils";
@@ -32,54 +29,6 @@ class Application extends Widget {
   private content: any;
 
   initialize() {
-    // When user is editing an 3D object, go to editing page
-    this.watch("appState.editingState.isUpdating", (isUpdating: boolean) => {
-      if (isUpdating) {
-        // Save the page:
-        const previousPageBelow = this.appState.currentPageBelow;
-        const previousPageAbove = this.appState.currentPageAbove;
-
-        // Go to the edit page:
-        this.appState.currentPageBelow = null;
-        this.appState.currentPageAbove = new EditObjectPage({
-          appState: this.appState,
-        });
-        this.scheduleRender();
-
-        // Once done, go back to the old pages:
-        void reactiveUtils
-          .once(() => this.appState.editingState.isUpdating)
-          .then(() => {
-            this.appState.currentPageBelow = previousPageBelow;
-            this.appState.currentPageAbove = previousPageAbove;
-            this.scheduleRender();
-          });
-      }
-    });
-
-    // When user is editing an 3D object, go to editing page
-    this.watch("appState.editingState.loading", (loading: boolean) => {
-      if (loading) {
-        // Save the page:
-        const previousPageBelow = this.appState.currentPageBelow;
-        const previousPageAbove = this.appState.currentPageAbove;
-
-        // Go to the edit page:
-        this.appState.currentPageBelow = null;
-        this.appState.currentPageAbove = new LoadingPage();
-        this.scheduleRender();
-
-        // Once done, go back to the old pages:
-        void reactiveUtils
-          .once(() => this.appState.editingState.loading)
-          .then(() => {
-            this.appState.currentPageBelow = previousPageBelow;
-            this.appState.currentPageAbove = previousPageAbove;
-            this.scheduleRender();
-          });
-      }
-    });
-
     this.appState.watch("page", (page: Page) => {
       this.goToPage(page);
     })
@@ -169,7 +118,7 @@ class Application extends Widget {
     const ContentConstructor = match(page)
       .with('home', () => null)
       .with('measure', () => MeasurePage)
-      .with('compare', () => MenuCompare)
+      .with('compare', () => ComparePage)
       .with('credits', () => MenuCredit)
       .with('locations', () => MenuLocation)
       .exhaustive();
@@ -259,54 +208,6 @@ class MenuLocation extends Widget {
     event.preventDefault();
     const camera = cameras[rover];
     void this.appState.view.goTo(camera);
-  }
-}
-
-@subclass("ExploreMars.menu.Compare")
-class MenuCompare extends Widget {
-  constructor(args: { appState: AppState }) {
-    super(args as any);
-  }
-
-  @property()
-  appState!: AppState;
-
-  render() {
-    return (
-      <nav id="submenu-compare" class={CSS.pageContainer}>
-        <a
-          href=""
-          id="regions"
-          class={this.classes(CSS.lineMeasure, CSS.submenuItem)}
-          onclick={(e: Event) => {
-            this.goToPage(e, AddRegionPage);
-          }}
-        >
-          <div class={CSS.submenuContainer}>Regions</div>
-        </a>
-        <a
-          href=""
-          id="3d-objects"
-          class={this.classes(CSS.areaMeasure, CSS.submenuItem)}
-          onclick={(e: Event) => {
-            this.goToPage(e, CompareObjectPage);
-          }}
-        >
-          <div class={CSS.submenuContainer}>3D Models</div>
-        </a>
-      </nav>
-    );
-  }
-
-  private goToPage<T extends Widget>(
-    event: Event,
-    ClassToCreate: new (args: { appState: AppState }) => T,
-  ) {
-    event.preventDefault();
-    this.appState.currentPageAbove = new ClassToCreate({
-      appState: this.appState,
-    });
-    this.appState.currentPageBelow = null;
   }
 }
 
