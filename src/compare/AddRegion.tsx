@@ -8,7 +8,7 @@ import * as promiseUtils from "@arcgis/core/core/promiseUtils";
 import SceneView from "@arcgis/core/views/SceneView";
 import Widget from "@arcgis/core/widgets/Widget";
 import { tsx } from "@arcgis/core/widgets/support/widget";
-import { graphicFromCountry } from "../widgets/countryUtils";
+import { graphicFromCountry } from "./countryUtils";
 import type FeatureLayer from "@arcgis/core/layers/FeatureLayer";
 import { type Polygon } from "@arcgis/core/geometry";
 import { PointSymbol3D, ObjectSymbol3DLayer, TextSymbol3DLayer } from "@arcgis/core/symbols";

@@ -13,8 +13,9 @@ import type Graphic from "@arcgis/core/Graphic";
 import SketchViewModel from "@arcgis/core/widgets/Sketch/SketchViewModel";
 import GraphicsLayer from "@arcgis/core/layers/GraphicsLayer";
 import Handles from "@arcgis/core/core/Handles";
-import PolygonTransform from "../widgets/PolygonTransform";
+import PolygonTransform from "./PolygonTransform";
 import { type Polygon, type Point } from "@arcgis/core/geometry";
+import SceneView from "@arcgis/core/views/SceneView";
 
 const CSS = {
   closeButton: "close-button",
@@ -35,10 +36,8 @@ type Page =
 
 @subclass("ExploreMars.page.CompareObject")
 export class ComparePage extends Widget {
-  constructor({ appState }: { appState: AppState }) {
+  constructor(view: SceneView) {
     super();
-    const view = appState.view
-
     this.addRegionWidget = new AddRegionPage({ 
       view,
       onClose: this.close,
@@ -100,14 +99,14 @@ export class ComparePage extends Widget {
       }
     });
 
-    this.appState = appState
+    this.view = view
   }
 
   @property()
   page: Page = 'menu'
 
   @property()
-  appState!: AppState;
+  view!: SceneView;
 
   @property()
   isEditing = false;
@@ -128,7 +127,7 @@ export class ComparePage extends Widget {
   private readonly addObjectWidget: AddObjectPage;
 
   initialize() {
-    const view = this.appState.view;
+    const view = this.view;
     
     const graphics = new GraphicsLayer({
       title: "SVM layer for comparison",
@@ -182,7 +181,7 @@ export class ComparePage extends Widget {
     if (options?.elevationInfo != null)
       this.graphics.elevationInfo = options.elevationInfo;
 
-    void this.appState.view.goTo(options?.target);
+    void this.view.goTo(options?.target);
     void this.sketchViewModel.update(graphics[0], {
       enableScaling: false,
     });

@@ -74,11 +74,11 @@ a {
 }
 
 .wrapper {
-  position: absolute;
-  bottom: 0;
-  left: 50%;
-  transform: translate(-50%, 0);
-  z-index: 2; // above esri UI, below splash screen
+//   position: absolute;
+//   bottom: 0;
+//   left: 50%;
+//   transform: translate(-50%, 0);
+//   z-index: 2; // above esri UI, below splash screen
 }
 
 .icon {
@@ -629,7 +629,7 @@ a {
   }
 }
 
-#landing-page {
+.landing-page {
   opacity: 1;
   overflow: hidden;
   position: absolute;
@@ -987,7 +987,7 @@ $loader-size: 10px;
     }
   }
 
-  #landing-page {
+  .landing-page {
     .content {
       .text {
         margin-top: 200px;

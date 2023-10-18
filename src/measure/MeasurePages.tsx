@@ -7,9 +7,9 @@ import DirectLineMeasurement3D from "@arcgis/core/widgets/DirectLineMeasurement3
 import ElevationProfile from "@arcgis/core/widgets/ElevationProfile";
 import Widget from "@arcgis/core/widgets/Widget";
 import { tsx } from "@arcgis/core/widgets/support/widget";
-import type AppState from "../widgets/AppState";
 import { match } from 'ts-pattern';
 import ElevationProfileLineGround from "@arcgis/core/widgets/ElevationProfile/ElevationProfileLineGround";
+import type SceneView from "@arcgis/core/views/SceneView";
 
 const CSS = {
   closeButton: "close-button",
@@ -30,7 +30,7 @@ type Page =
 
 @subclass("ExploreMars.page.Measure")
 export class MeasurePage extends Widget {
-  constructor({ appState: { view }}: { appState: AppState }) {
+  constructor(view: SceneView) {
     super();
     this.areaMeasurement = new AreaMeasurement3D({
       view
@@ -56,9 +56,6 @@ export class MeasurePage extends Widget {
 
   @property()
   page: Page = 'menu'
-
-  @property()
-  appState!: AppState;
 
   initialize() {
     // (this.widget as any).visible = true;

@@ -7,7 +7,6 @@ import * as promiseUtils from "@arcgis/core/core/promiseUtils";
 import * as reactiveUtils from "@arcgis/core/core/reactiveUtils";
 import type SceneView from "@arcgis/core/views/SceneView";
 import BasemapToggle from "@arcgis/core/widgets/BasemapToggle";
-import type HomePage from "./HomePage";
 import {
   marsHiRiseImagery,
   marsImageryBasemap,
@@ -19,9 +18,6 @@ import {
 export class BasemapSwitcher extends Accessor {
   @property()
   view!: SceneView;
-
-  @property()
-  homePage!: HomePage;
 
   async initialize() {
     const toggle = new BasemapToggle({
@@ -35,7 +31,6 @@ export class BasemapSwitcher extends Accessor {
     });
 
     this.view.ui.add(toggle, "bottom-right");
-    await this.homePage.onStart;
 
     const updateBasemap = promiseUtils.debounce(this.updateBasemap);
 
