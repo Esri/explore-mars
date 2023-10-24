@@ -1,10 +1,14 @@
 import "@esri/calcite-components/dist/calcite/calcite.css";
 import "@esri/calcite-components/dist/components/calcite-loader";
-import Application from "./widgets/Application";
-import { marsImageryBasemap, marsSR, marsElevation } from "./widgets/layers";
+import "./general.scss";
+import "./esri-widget-customizations.scss";
+import Application from "./application/Application";
+import { marsImageryBasemap, marsSR, marsElevation } from "./application/layers";
 import SceneView from "@arcgis/core/views/SceneView";
 import Map from "@arcgis/core/Map";
 import { addFrameTask } from "@arcgis/core/core/scheduling";
+import { when } from "@arcgis/core/core/reactiveUtils";
+import AppState from "./application/AppState";
 
 const map = new Map({
   basemap: marsImageryBasemap,
@@ -50,23 +54,25 @@ popup.dockOptions = {
 popup.spinnerEnabled = true;
 popup.collapseEnabled = false;
 
-const stopSpin = addFrameTask({
+const spinGlobe = addFrameTask({
   update: () => {
     if (!view.interacting) {
       const camera = view?.camera.clone();
       camera.position.longitude -= 0.04;
       view.camera = camera;
     } else {
-      stopSpin.remove();
+      spinGlobe.remove();
     }
   },
 });
 
+AppState.view = view;
+
 // eslint-disable-next-line no-new
-new Application({
+const app = new Application({
   container: "application",
-  // @ts-expect-error dunno how to fix this type error...
-  view,
 });
+
+when(() => AppState.page !== 'landing', () => { spinGlobe.remove(); });
 
 (window as any).view = view;

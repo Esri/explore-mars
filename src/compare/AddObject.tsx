@@ -5,24 +5,21 @@ import {
 } from "@arcgis/core/core/accessorSupport/decorators";
 import Widget from "@arcgis/core/widgets/Widget";
 import { tsx } from "@arcgis/core/widgets/support/widget";
-import { createEnterCssTransition } from "maquette-css-transitions";
 import { PointSymbol3D, ObjectSymbol3DLayer } from "@arcgis/core/symbols";
-import type SketchViewModel from "@arcgis/core/widgets/Sketch/SketchViewModel";
+import SketchViewModel from "@arcgis/core/widgets/Sketch/SketchViewModel";
 import GlTFImporter from "./GlTFImporter";
-import type SceneView from "@arcgis/core/views/SceneView";
+import GraphicsLayer from "@arcgis/core/layers/GraphicsLayer";
+import AppState from "../application/AppState";
+import { EditingInfo } from "./ComparePage";
+import { Item, SubMenu } from "../utility-components/SubMenu";
+import styles from './AddObject.module.scss';
 
-const CSS = {
-  closeButton: "close-button",
-  submenuItem: "submenu-item",
-  pageContainer: "page-container",
-};
-
-interface GltfEl {
+interface GltfObject {
   name: string;
   gltf: string;
 }
 
-const objects: GltfEl[] = [
+const objects: GltfObject[] = [
   {
     gltf: "gltf/zurich.zip",
     name: "Zurich",
@@ -49,62 +46,60 @@ const objects: GltfEl[] = [
   },
 ];
 
-interface Props {
-  view: SceneView;
-  onClose: () => void;
-  onAddObject: (object: Graphic) => void
-}
-
 @subclass("ExploreMars.page.AddObjectPage")
 export class AddObjectPage extends Widget {
-  constructor(props: Props) {
-    super(props as any);
-    this.onClose = props.onClose
-    this.view = props.view;
-    this.onAddObject = props.onAddObject;
-  }
-
-  private readonly onAddObject: (object: any) => void;
-  private readonly onClose: () => void;
-
-  @property()
-  view!: SceneView;
-
-  @property()
-  private isAdding = false;
-
   @property()
   sketchViewModel!: SketchViewModel;
 
+  @property()
+  isEditing = false;
+
+  @property()
+  viewGraphics!: GraphicsLayer;
+
+  @property()
+  placedObject: Graphic | null = null;
+
+  initialize() {
+    const view = AppState.view;
+    
+    const graphics = new GraphicsLayer({
+      title: "SVM layer for comparison",
+      listMode: "hide",
+    });
+
+    view.map.layers.add(graphics);
+
+    const sketchViewModel = new SketchViewModel({
+      layer: graphics,
+      view,
+      defaultUpdateOptions: {
+        toggleToolOnClick: false,
+        enableScaling: false,
+        enableZ: true,
+      },
+    });
+
+    sketchViewModel.on("delete", () => {
+      this.destroy();
+    });
+
+    this.viewGraphics = graphics;
+    this.sketchViewModel = sketchViewModel;
+  }
+
   render() {
-    const items = objects.map((o) => this.domForOneObject(o));
+    if (this.placedObject != null) {
+      return <EditingInfo />;
+    }
+
+    const items = objects.map((o) => <Object gltf={o} onClick={el => { void AppState.load(this.addGltf(el.gltf)) }} />);
     return (
-      <div id="compare-objects" class={CSS.pageContainer}>
-        <a
-          class={CSS.closeButton}
-          onclick={(e: Event) => {
-            this.close(e);
-          }}
-        >
-          <span></span>
-        </a>
-        <nav>{items}</nav>
-      </div>
+      <SubMenu items={items} />
     )
   }
 
-  private async editGltf(event: Event, el: GltfEl) {
-    event.preventDefault();
-    if (!this.isAdding) {
-      try {
-        await this.addGltf(el.gltf);
-      } finally {
-        this.isAdding = false;
-      }
-    }
-  }
-
-  public async addGltf(id: string, height: number | undefined = undefined) {
+  private async addGltf(id: string) {   
     const importer = new GlTFImporter();
 
     const url = new URL("/" + id, import.meta.url);
@@ -113,17 +108,11 @@ export class AddObjectPage extends Widget {
 
     const gltfModel = new ObjectSymbol3DLayer({
       anchor: "bottom",
-      height,
       resource: {
         href,
-        // primitive: "sphere"
       },
-      // material: {
-      //   // color: [255, 255, 255, 0.5]
-      //   color: "#e6faff"
-      // }
     });
-    const view = this.view;
+    const view = AppState.view;
     const geometry = view.center.clone();
     geometry.z = 0;
     const graphic = new Graphic({
@@ -133,30 +122,53 @@ export class AddObjectPage extends Widget {
       }),
     });
 
-    this.onAddObject(graphic);
+    this.placedObject = graphic;
+
+    this.viewGraphics.add(graphic);
+
+    void AppState.view.goTo({
+      target: graphic.geometry,
+      scale: 25_000,
+      tilt: 70,
+    });
+
+    void this.sketchViewModel.update(graphic, {
+      enableScaling: false,
+    });
+
   }
 
-  private domForOneObject(gltf: GltfEl) {
-    const id = gltf.gltf.split("/")[1].replace(".zip", "");
+  destroy(): void {
+    this.isEditing = false;
 
-    return (
-      <a
-        id={id}
-        class={this.classes(CSS.submenuItem)}
-        onclick={(e: Event) => {
-          void this.editGltf(e, gltf);
-        }}
-        enterAnimation={createEnterCssTransition("slideDown")}
-      >
-        {gltf.name}
-      </a>
-    );
-  }
+    this.sketchViewModel.cancel();
+    this.viewGraphics.graphics.forEach((graphic) => {
+      graphic.destroy();
+    });
+    this.viewGraphics.removeAll();
+    this.placedObject = null;
 
-  private close(e: Event) {
-    e.preventDefault();
+    if (!this.sketchViewModel.destroyed) this.sketchViewModel.destroy();
+    this.viewGraphics.destroy();
 
-    this.onClose();
+    super.destroy();
   }
 }
 
+interface ObjectProps {
+  gltf: GltfObject;
+  onClick: (gltf: GltfObject) => void;
+}
+function Object({ gltf, onClick }: ObjectProps) {
+  const id = gltf.gltf.split("/")[1].replace(".zip", "");
+
+  return (
+    <Item
+      itemClass={styles[id]}
+      onClick={() => {
+        onClick(gltf);
+      }}
+      text={gltf.name}
+    />
+  )
+}

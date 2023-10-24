@@ -1,0 +1,26 @@
+@import '..//variables.module.scss';
+
+.subMenu {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.item {
+  height: 100px;
+  flex: 1;
+  min-width: 30%;
+  background-color: rgba(0 0 0 / 70%);
+  border: none;
+  color: $highlightColor;
+  cursor: pointer;
+  transition: background-position 0.2s ease-out;
+  background-size: auto calc(100% + 6px);
+  background-repeat: no-repeat;
+
+  &:hover {
+    background-position: -6px -6px;
+    text-decoration: underline;
+  }
+}

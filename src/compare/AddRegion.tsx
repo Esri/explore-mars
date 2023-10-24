@@ -1,6 +1,7 @@
 import Graphic from "@arcgis/core/Graphic";
 import WebScene from "@arcgis/core/WebScene";
 import {
+  aliasOf,
   property,
   subclass,
 } from "@arcgis/core/core/accessorSupport/decorators";
@@ -10,41 +11,32 @@ import Widget from "@arcgis/core/widgets/Widget";
 import { tsx } from "@arcgis/core/widgets/support/widget";
 import { graphicFromCountry } from "./countryUtils";
 import type FeatureLayer from "@arcgis/core/layers/FeatureLayer";
-import { type Polygon } from "@arcgis/core/geometry";
+import { type Point, type Polygon } from "@arcgis/core/geometry";
 import { PointSymbol3D, ObjectSymbol3DLayer, TextSymbol3DLayer } from "@arcgis/core/symbols";
 import Handles from "@arcgis/core/core/Handles";
-
-const CSS = {
-  closeButton: "close-button",
-  pageContainer: "page-container",
-};
+import GraphicsLayer from "@arcgis/core/layers/GraphicsLayer";
+import SketchViewModel from "@arcgis/core/widgets/Sketch/SketchViewModel";
+import PolygonTransform from "./PolygonTransform";
+import { EditingInfo } from "./ComparePage";
+import AppState from "../application/AppState";
+import styles from './AddRegion.module.scss';
 
 interface Region {
   label: Graphic;
   center: Graphic;
   country: Graphic;
 }
-
-interface Props {
-  view: SceneView;
-  onClose: () => void;
-  onAddRegion: (region: Region) => void
-}
-
+  
 @subclass("ExploreMars.page.AddRegionPage")
 export class AddRegionPage extends Widget {
-  constructor(props: Props) {
-    super();
-    this.view = props.view;
-    this.onClose = props.onClose
-    this.onAddRegion = props.onAddRegion
-  }
-
-  private readonly onAddRegion: Props['onAddRegion'];
-  private readonly onClose: () => void;
+  @property()
+  sketchViewModel!: SketchViewModel;
 
   @property()
-  view!: SceneView;
+  viewGraphics!: GraphicsLayer;
+
+  @aliasOf('viewGraphics.graphics')
+  graphicEditing: Graphic[] = [];
 
   @property()
   selectedRegion: Graphic | null = null;
@@ -60,85 +52,65 @@ export class AddRegionPage extends Widget {
   @property()
   handles = new Handles();
 
+  @property()
+  isEditing = false;
+
+  async initialize() {
+    const view = AppState.view;
+    
+    const graphics = new GraphicsLayer({
+      title: "SVM layer for comparison",
+      listMode: "hide",
+    });
+
+    view.map.layers.add(graphics);
+
+    const sketchViewModel = new SketchViewModel({
+      layer: graphics,
+      view,
+      defaultUpdateOptions: {
+        toggleToolOnClick: false,
+        enableScaling: false,
+        enableZ: true,
+      },
+    });
+
+    sketchViewModel.on("delete", () => {
+      this.destroy();
+    });
+
+    this.viewGraphics = graphics;
+    this.sketchViewModel = sketchViewModel;
+  }
+
   render() {
+    if (this.placedRegion != null) {
+      return <EditingInfo />;
+    }
+
     return (
-      <div id="add-region">
-        <a
-          class={CSS.closeButton}
-          onclick={(e: Event) => {
-            this.close(e);
-          }}
-        >
-          <span></span>
-        </a>
+      <div class={styles.container}>
         <p>Select a region on the globe</p>
         <div
-          id="add-region-view"
+          class={styles.globeView}
           afterCreate={(element: HTMLDivElement) => {
             this.createView(element);
           }}
-        ></div>
-        <div class="buttons">
-          <button
-            class="esri-button esri-button--primary"
-            disabled={this.selectedRegion == null}
-            onclick={async (e: Event) => {
-              await this.placeIt(e);
-            }}
-          >
-            Place it on Mars
-          </button>
+        >
         </div>
+        <button
+          class="esri-button esri-button--primary"
+          disabled={this.selectedRegion == null}
+          onclick={() => { void AppState.load(this.addCountry()) }}
+        >
+          Place it on Mars
+        </button>
       </div>
     );
   }
 
-  private async placeIt(event: Event) {
-    event.preventDefault();
-    if (this.selectedRegion == null) {
-      return;
-    }
-
-    this.placedRegion = this.selectedRegion;
-
-    const country = await graphicFromCountry(
-      this.placedRegion,
-      this.view,
-    );
-
-    this.selectedRegion = null;
-    this.addCountry(country);
-  }
-
   private createView(element: HTMLDivElement) {
-    const overlayGlobe = new SceneView({
-      container: element,
-      qualityProfile: "high",
-      map: new WebScene({
-        portalItem: {
-          id: "df5009a0ea79444e92f48f50fe171bf1",
-        },
-      }),
-      alphaCompositingEnabled: true,
-      environment: {
-        atmosphereEnabled: false,
-        starsEnabled: false,
-        background: {
-          type: 'color',
-          color: [255, 255, 255, 0],
-        }
-      },
-      constraints: {
-        altitude: {
-          min: 0,
-          max: 25512548 * 4,
-        },
-      },
-      ui: {
-        components: []
-      },
-      popupEnabled: false
-    });
+    const overlayGlobe = new SceneView(createGlobeConfig(element));
 
     const handle = overlayGlobe.on(
       "click",
@@ -150,8 +122,8 @@ export class AddRegionPage extends Widget {
           const result = hitTest.results[hitTest.results.length - 1];
           if (result.type === "graphic") {
             this.selectedRegion = result.graphic;
-            const lv = await overlayGlobe.whenLayerView(result.graphic.layer as FeatureLayer);
-            this.highlight = lv.highlight(result.graphic);
+            const layerView = await overlayGlobe.whenLayerView(result.graphic.layer as FeatureLayer);
+            this.highlight = layerView.highlight(result.graphic);
           }
         }
       }),
@@ -162,79 +134,187 @@ export class AddRegionPage extends Widget {
     this.overlayGlobe = overlayGlobe;
   }
 
-  private addCountry(country: Graphic) {
-    const centroid = (country.geometry as Polygon).centroid;
-
-    const center = new Graphic({
-      geometry: centroid,
-      symbol: new PointSymbol3D({
-        symbolLayers: [
-          new ObjectSymbol3DLayer({
-            material: {
-              color: "white",
-            },
-            width: 5_000,
-            height: 5_000,
-            depth: 5_000,
-            resource: {
-              primitive: "diamond",
-            },
-          }),
-        ],
-      }),
-    });
-
-    const labelGraphic = new Graphic({
-      geometry: centroid,
-      symbol: new PointSymbol3D({
-        symbolLayers: [
-          new TextSymbol3DLayer({
-            text: country.getAttribute("label"),
-            material: {
-              color: [0, 0, 0, 0.9],
-            },
-            halo: {
-              size: 2,
-              color: [255, 255, 255, 0.7],
-            },
-            font: {
-              size: 10,
-            },
-          }),
-        ],
-        verticalOffset: {
-          screenLength: 40,
-          maxWorldLength: 500000,
-          minWorldLength: 0,
-        },
-        callout: {
-          type: "line",
-          size: 0.5,
-          color: [255, 255, 255, 0.9],
-          border: {
-            color: [0, 0, 0, 0.3],
-          },
-        },
-      }),
-    });
-
-    this.onAddRegion({
-      center,
-      country,
-      label: labelGraphic
-    })
-  }
-
-  private close(e: Event) {
-    e.preventDefault();
-    if (this.overlayGlobe != null) {
-      this.overlayGlobe.destroy();
+  private async addCountry() {
+    if (this.selectedRegion == null) {
+      return;
     }
 
-    this.selectedRegion = null;
-    this.placedRegion = null;
-    this.overlayGlobe = null;
+    const region = this.selectedRegion;
+    this.placedRegion = this.selectedRegion;
+    const country = await graphicFromCountry(
+      region,
+      AppState.view,
+    );
 
-    this.onClose();
+    const center = createRegionCenter(country)
+    const label = createRegionLabel(country)
+    this.selectedRegion = null;
+
+    this.viewGraphics.addMany([
+      center,
+      country,
+      label
+    ]);
+
+    this.viewGraphics.elevationInfo = { mode: 'on-the-ground' };
+
+    void AppState.view.goTo(country.geometry);
+    void this.sketchViewModel.update(center, {
+      enableScaling: false,
+    });
+
+    this.isEditing = true;
+    this.handles.add(
+      this.sketchViewModel.on("update", watchRotation(this.sketchViewModel, { country, center, label })),
+    );
   }
+
+  private readonly close = (e?: Event) => {
+    e?.preventDefault();
+  }
+
+  destroy(): void {
+    this.isEditing = false;
+
+    this.sketchViewModel.cancel();
+    this.handles.removeAll();
+    this.graphicEditing.forEach((graphic) => {
+      graphic.destroy();
+    });
+    this.viewGraphics.removeAll();
+
+    this.overlayGlobe?.destroy();
+    this.selectedRegion?.destroy();
+    this.placedRegion?.destroy();
+    this.handles.destroy();
+    
+    if (!this.sketchViewModel.destroyed) this.sketchViewModel.destroy();
+
+    this.viewGraphics.destroy();
+    super.destroy();
+  }
+}
+
+function createGlobeConfig(container: HTMLDivElement): __esri.SceneViewProperties {
+  return {
+    container,
+    qualityProfile: "high",
+    map: new WebScene({
+      portalItem: {
+        id: "df5009a0ea79444e92f48f50fe171bf1",
+      },
+    }),
+    alphaCompositingEnabled: true,
+    environment: {
+      atmosphereEnabled: false,
+      starsEnabled: false,
+      background: {
+        type: 'color',
+        color: [255, 255, 255, 0],
+      }
+    },
+    constraints: {
+      altitude: {
+        min: 0,
+        max: 25512548 * 4,
+      },
+    },
+    ui: {
+      components: []
+    },
+    popupEnabled: false
+  }
+}
+
+function createRegionCenter(country: Graphic): Region['center'] {
+  const centroid = (country.geometry as Polygon).centroid;
+  
+  return new Graphic({
+    geometry: centroid,
+    symbol: new PointSymbol3D({
+      symbolLayers: [
+        new ObjectSymbol3DLayer({
+          material: {
+            color: "white",
+          },
+          width: 5_000,
+          height: 5_000,
+          depth: 5_000,
+          resource: {
+            primitive: "diamond",
+          },
+        }),
+      ],
+    }),
+  });
+}
+
+function createRegionLabel(country: Graphic): Region['label'] {
+  const centroid = (country.geometry as Polygon).centroid;
+
+  return new Graphic({
+    geometry: centroid,
+    symbol: new PointSymbol3D({
+      symbolLayers: [
+        new TextSymbol3DLayer({
+          text: country.getAttribute("label"),
+          material: {
+            color: [0, 0, 0, 0.9],
+          },
+          halo: {
+            size: 2,
+            color: [255, 255, 255, 0.7],
+          },
+          font: {
+            size: 10,
+          },
+        }),
+      ],
+      verticalOffset: {
+        screenLength: 40,
+        maxWorldLength: 500000,
+        minWorldLength: 0,
+      },
+      callout: {
+        type: "line",
+        size: 0.5,
+        color: [255, 255, 255, 0.9],
+        border: {
+          color: [0, 0, 0, 0.3],
+        },
+      },
+    }),
+  });
+}
+
+function watchRotation(model: SketchViewModel, region: Region) {
+  let lastAngle = 0;
+  const view = model.view as SceneView;
+
+  const { country, center, label } = region;
+  const spherical = new PolygonTransform(view);
+
+  return (ev: __esri.SketchViewModelUpdateEvent) => {
+    if (ev.state !== "active") {
+      return;
+    }
+
+    const toolType = ev.toolEventInfo.type;
+    const rotateStartStop =
+      toolType === "rotate-stop" || toolType === "rotate-start";
+    let current = country.geometry as Polygon;
+
+    if (toolType === "rotate" || rotateStartStop) {
+      const infoAngle = (ev.toolEventInfo as __esri.RotateEventInfo).angle;
+      const angle = infoAngle - lastAngle;
+
+      current = spherical.rotate(current, angle);
+      lastAngle = rotateStartStop ? 0 : infoAngle;
+    } else {
+      const newCenter = center.geometry as Point;
+      current = spherical.moveTo(current, newCenter);
+      label.geometry = newCenter;
+    }
+    country.geometry = current;
+  };
 }

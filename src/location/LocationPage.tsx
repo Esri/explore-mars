@@ -1,16 +1,15 @@
 import {
-  property,
   subclass,
 } from "@arcgis/core/core/accessorSupport/decorators";
 import Widget from "@arcgis/core/widgets/Widget";
 import { tsx } from "@arcgis/core/widgets/support/widget";
-import { CSS } from "../widgets/constants";
-import Camera from "@arcgis/core/Camera";
 import * as layers from "./rover-layers";
-import type SceneView from "@arcgis/core/views/SceneView";
+import AppState from "../application/AppState";
+import styles from './LocationPage.module.scss'
+import { Item, SubMenu } from "../utility-components/SubMenu";
 
 const cameras = {
-  perseverance: new Camera({
+  perseverance: {
     position: {
       x: 77.31831,
       y: 17.9882,
@@ -19,8 +18,8 @@ const cameras = {
     },
     heading: 15.53,
     tilt: 67.5,
-  }),
-  curiosity: new Camera({
+  },
+  curiosity: {
     position: {
       x: 136.90526,
       y: -7.16597,
@@ -29,8 +28,8 @@ const cameras = {
     },
     heading: 13.78,
     tilt: 65.46,
-  }),
-  opportunity: new Camera({
+  },
+  opportunity: {
     position: {
       x: -5.7945,
       y: 0.66213,
@@ -39,86 +38,59 @@ const cameras = {
     },
     heading: 173.58,
     tilt: 61.54,
-  }),
+  },
 };
 
 @subclass("ExploreMars.menu.Location")
 export class LocationPage extends Widget {
-  constructor(view: SceneView) {
-    super();
-    this.view = view;
-  }
-
-  @property()
-  view!: SceneView;
+  private _destroy: () => void;
 
   async initialize() {
-    const view = this.view;
+    const view = AppState.view;
     const missionLayer = layers.createMissionLayer();
     const marsNamesLayer = layers.createMarsNamesLayer();
     const perseveranceLayers = layers.createPerseveranceLayers();
 
-    await Promise.all([
-      missionLayer.when(),
-      marsNamesLayer.when(),
-      perseveranceLayers.when(),  
-    ]);
-    
-    view.map.addMany([missionLayer, marsNamesLayer, perseveranceLayers]);    
+    view.map.addMany([missionLayer, marsNamesLayer, perseveranceLayers]);
+    this._destroy = () => {
+      view.map.removeMany([missionLayer, marsNamesLayer, perseveranceLayers]);
+      missionLayer.destroy();
+      marsNamesLayer.destroy();
+      perseveranceLayers.destroy();
+    }
+  }
+
+  destroy(): void {
+    super.destroy();
+    this._destroy();
   }
 
   render() {
     return (
-      <nav id="submenu-location" class={CSS.pageContainer}>
-        <a
-          href=""
-          class={this.classes(CSS.submenuItem)}
-          onclick={(e: Event) => {
-            this.goTo(e, "perseverance");
-          }}
-        >
-          <div class={CSS.submenuContainer}>
-            <div class={CSS.icon}></div>
-            <div>Perseverance Rover</div>
-          </div>
-        </a>
-        <a
-          href=""
-          class={this.classes(CSS.submenuItem)}
-          onclick={(e: Event) => {
-            this.goTo(e, "curiosity");
-          }}
-        >
-          <div class={CSS.submenuContainer}>
-            <div class={CSS.icon}></div>
-            <div>Curiosity Rover</div>
-          </div>
-        </a>
-        <a href="" class={this.classes(CSS.submenuItem)} style="display:none;">
-          <div class={CSS.submenuContainer}>
-            <div class={CSS.icon}></div>
-            <div>Martian Path</div>
-          </div>
-        </a>
-        <a
-          href=""
-          class={this.classes(CSS.submenuItem)}
-          onclick={(e: Event) => {
-            this.goTo(e, "opportunity");
-          }}
-        >
-          <div class={CSS.submenuContainer}>
-            <div class={CSS.icon}></div>
-            <div>Opportunity Rover</div>
-          </div>
-        </a>
-      </nav>
+      <SubMenu
+        items={[
+          <Item
+            text="Perseverance Rover"
+            onClick={() => { this.goTo("perseverance"); }}
+            itemClass={styles.perseverance}
+          />,
+          <Item
+            text="Curiosity Rover"
+            onClick={() => { this.goTo("curiosity"); }}
+            itemClass={styles.curiosity}
+          />,
+          <Item
+            text="Opportunity Rover"
+            onClick={() => { this.goTo("opportunity"); }}
+            itemClass={styles.opportunity}
+          />
+        ]}
+      />
     );
   }
 
-  private goTo(event: Event, rover: keyof typeof cameras) {
-    event.preventDefault();
+  private goTo(rover: keyof typeof cameras) {
     const camera = cameras[rover];
-    void this.view.goTo(camera);
+    void AppState.view.goTo(camera);
   }
 }

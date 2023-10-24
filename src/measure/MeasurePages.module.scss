@@ -1,0 +1,17 @@
+.line {
+  background-image: url("../images/line.svg");
+}
+
+.area {
+  background-image: url("../images/area.svg");
+}
+
+.elevation {
+  background-image: url("../images/elevation.svg");
+}
+
+.measurement {
+  display: flex;
+  flex-direction: column;
+  justify-content: end;
+}

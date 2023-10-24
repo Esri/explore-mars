@@ -1,0 +1,28 @@
+
+.container {
+  width: 100%;
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  p {
+    text-align: center;
+    margin-top: 40px;
+    margin-bottom: 10px;
+  }
+}
+
+.globeView {
+  margin-inline: -15px;
+  width: calc(100% + 30px);
+  height: min(600px, 50vh);
+
+  &:focus {
+    outline: none;
+  }
+
+  .esri-view-surface:focus {
+    outline: none;
+  }
+}

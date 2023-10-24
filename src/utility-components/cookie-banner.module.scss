@@ -1,0 +1,10 @@
+@import '..//variables.module.scss';
+
+.cookieBanner {
+  order: 99;
+}
+
+.hidden {
+  transform: translateY(1000%);
+  transition: transform 0.3s ease-out;
+}

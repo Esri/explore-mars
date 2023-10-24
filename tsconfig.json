@@ -12,9 +12,10 @@
     "preserveConstEnums": true,
     "resolveJsonModule": true,
     "sourceMap": true,
+    "strictPropertyInitialization": false,
     "strict": true,
     "target": "ES2020",
     "outDir": "dist/js"
   },
-  "include": ["./src/**/*", "./node_modules/@arcgis/core/**/*.d.ts"]
+  "include": ["./src/**/*", "./node_modules/@arcgis/core/**/*.d.ts", "./css-modules.d.ts"]
 }

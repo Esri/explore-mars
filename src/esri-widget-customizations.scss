@@ -1,0 +1,62 @@
+@import "./variables.module";
+
+.esri-popup__header,
+.esri-feature__last-edited-info {
+  display: none !important;
+}
+
+.esri-popup .esri-widget {
+  background: none !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.esri-ui {
+  z-index: 1;
+}
+
+.esri-ui-top-left .esri-widget {
+  background: rgb(10 10 10 / 85%);
+}
+
+.esri-button,
+textarea {
+  color: $mainColor;
+  background-color: rgb(0 0 0 / 70%);
+  border: solid 1px rgb(100 100 100 / 10%);
+  padding: 10px 35px;
+  border-radius: 5px;
+
+  &:hover {
+    color: $highlightColor;
+    text-decoration: none;
+    background: rgb(10 10 10 / 40%);
+    border: solid 1px rgb(100 100 100 / 20%);
+  }
+
+  &:focus {
+    color: $highlightColor;
+    text-decoration: none;
+    background: rgb(10 10 10 / 40%);
+    border: solid 1px rgb(100 100 100 / 20%);
+  }
+}
+
+textarea {
+  padding: 8px;
+}
+
+@media screen and (width <= 930px) {
+  .esri-component.esri-basemap-toggle.esri-widget {
+    margin-bottom: calc($menuHeight + 15px);
+  }
+}
+
+@media screen and (width <= 745px), screen and (height <= 415px) {
+  .esri-component.esri-basemap-toggle.esri-widget,
+  .esri-basemap-toggle__container {
+    width: 32px;
+    height: 32px;
+    margin-bottom: calc($menuHeight - 15px);
+  }
+}

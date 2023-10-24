@@ -10,17 +10,9 @@ import { tsx } from "@arcgis/core/widgets/support/widget";
 import { match } from 'ts-pattern';
 import ElevationProfileLineGround from "@arcgis/core/widgets/ElevationProfile/ElevationProfileLineGround";
 import type SceneView from "@arcgis/core/views/SceneView";
-
-const CSS = {
-  closeButton: "close-button",
-
-  submenuItem: "submenu-item",
-  submenuContainer: "submenu-container",
-  lineMeasure: "line-measure",
-  areaMeasure: "area-measure",
-  elevationMeasure: "elevation-measure",
-  pageContainer: "page-container",
-};
+import Handles from "@arcgis/core/core/Handles";
+import { Item, SubMenu } from "../utility-components/SubMenu";
+import styles from './MeasurePages.module.scss';
 
 type Page = 
 | 'menu'
@@ -57,10 +49,11 @@ export class MeasurePage extends Widget {
   @property()
   page: Page = 'menu'
 
+  handles = new Handles();
+
   initialize() {
-    // (this.widget as any).visible = true;
     (window as any).elevationProfile = this.elevationProfile;
-    this.elevationProfile.watch("_chart.amChart", (amChart) => {
+    const handle = this.elevationProfile.watch("_chart.amChart", (amChart) => {
       if (amChart != null) {
         amChart.paddingLeft = 1;
         if (amChart?.yAxes?._values[0] != null) {
@@ -68,11 +61,13 @@ export class MeasurePage extends Widget {
         }
       }
     });
+
+    this.handles.add(handle);
   }
 
   render() {
     if (this.page === 'menu') 
-      return <MeasureMenu classes={this.classes} selectTool={(tool) => { this.page = tool }} />;
+      return <MeasureMenu selectTool={(tool) => { this.page = tool }} />;
 
     const widget = match(this.page)
     .with('area', () => this.areaMeasurement)
@@ -83,7 +78,9 @@ export class MeasurePage extends Widget {
     widget.visible = true;
 
     return (
-      <MeasureTool onClose={() => { this.close(widget); }} children={widget.render()} />
+      <div class={styles.measurement}>
+        {widget.render()}
+      </div>
     )
   }
 
@@ -92,54 +89,43 @@ export class MeasurePage extends Widget {
     widget.visible = false;
     this.page = 'menu';
   }
+
+  destroy(): void {
+    this.areaMeasurement.destroy();
+    this.lineMeasurement.destroy();
+    this.elevationProfile.destroy();
+    delete (window as any).elevationProfile;
+
+    this.handles.removeAll();
+    this.handles.destroy();
+  }
 }
 
 
 interface MeasureMenuProps {
-  classes: __esri.Widget['classes'],
   selectTool: (tool: Exclude<Page, 'menu'>) => void
 }
-function MeasureMenu({ classes, selectTool }: MeasureMenuProps) {
+function MeasureMenu({ selectTool }: MeasureMenuProps) {
   return (
-    <nav key="submenu-measure" id="submenu-measure" class={CSS.pageContainer}>
-      <a
-        class={classes(CSS.lineMeasure, CSS.submenuItem)}
-        onclick={() => { selectTool('line') }}
-      >
-        <div class={CSS.submenuContainer}>Line</div>
-      </a>
-      <a
-        class={classes(CSS.areaMeasure, CSS.submenuItem)}
-        onclick={() => { selectTool('area') }}
-      >
-        <div class={CSS.submenuContainer}>Area</div>
-      </a>
-      <a
-        class={classes(CSS.elevationMeasure, CSS.submenuItem)}
-        onclick={() => { selectTool('elevation') }}
-      >
-        <div class={CSS.submenuContainer}>Elevation</div>
-      </a>
-    </nav>
-  )
-}
+    <SubMenu
+      items={[
+        <Item
+          text="Line"
+          itemClass={styles.line}
+          onClick={() => { selectTool('line') }}
+        />,
+        <Item
+          text="Area"
+          itemClass={styles.area}
+          onClick={() => { selectTool('area') }}
+        />,
+        <Item
+          text="Elevation"
+          itemClass={styles.elevation}
+          onClick={() => { selectTool('elevation') }}
+        />
+      ]}
+    />
 
-interface MeasureToolProps {
-  onClose: () => void;
-  children: ReturnType<Widget['render']>
-}
-function MeasureTool({ children, onClose }: MeasureToolProps) {
-  return (
-  <div>
-    <a
-      class={CSS.closeButton}
-      onclick={() => {
-        onClose();
-      }}
-    >
-      <span></span>
-    </a>
-      {children}
-  </div>
   )
 }
