@@ -255,7 +255,6 @@ export const createMissionLayer = () =>
     maxScale: 0,
     minScale: 0,
   });
-  
 
 export const createMarsNamesLayer = () =>
   new GroupLayer({

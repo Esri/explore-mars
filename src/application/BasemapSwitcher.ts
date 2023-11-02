@@ -9,16 +9,14 @@ import {
   shadedReliefBasemap,
 } from "./layers";
 
-  /* Update visibility of HiRise basemaps depending on distance to camera */
+/* Update visibility of HiRise basemaps depending on distance to camera */
 async function updateBasemap(view: SceneView) {
   const result = await view.hitTest(
     { x: view.width / 2, y: view.height / 2 },
     { include: [view.map.ground] },
   );
   // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
-  const d = result.ground.mapPoint
-    ? result.ground.distance
-    : Number.MAX_VALUE;
+  const d = result.ground.mapPoint ? result.ground.distance : Number.MAX_VALUE;
 
   marsReconnaissanceImagery.visible = d < 100000;
   marsHiRiseImagery.visible = d < 10000;

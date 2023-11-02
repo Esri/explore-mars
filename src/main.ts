@@ -3,7 +3,11 @@ import "@esri/calcite-components/dist/components/calcite-loader";
 import "./general.scss";
 import "./esri-widget-customizations.scss";
 import Application from "./application/Application";
-import { marsImageryBasemap, marsSR, marsElevation } from "./application/layers";
+import {
+  marsImageryBasemap,
+  marsSR,
+  marsElevation,
+} from "./application/layers";
 import SceneView from "@arcgis/core/views/SceneView";
 import Map from "@arcgis/core/Map";
 import { addFrameTask } from "@arcgis/core/core/scheduling";
@@ -73,6 +77,11 @@ const app = new Application({
   container: "application",
 });
 
-when(() => AppState.page !== 'landing', () => { spinGlobe.remove(); });
+when(
+  () => AppState.page !== "landing",
+  () => {
+    spinGlobe.remove();
+  },
+);
 
 (window as any).view = view;

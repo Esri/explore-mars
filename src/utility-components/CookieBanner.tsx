@@ -1,6 +1,6 @@
 import { tsx } from "@arcgis/core/widgets/support/widget";
 import { Page } from "./Page";
-import styles from './cookie-banner.module.scss'
+import styles from "./cookie-banner.module.scss";
 
 const setCookie = (name: string, value: string, exdays: number) => {
   const d = new Date();
@@ -33,7 +33,8 @@ interface CookieBannerProps {
 
 export function CookieBanner({ hidden }: CookieBannerProps) {
   const disclaimerCookie = getCookie(DISCLAIMER_COOKIE_NAME);
-  const needsAcceptence = !hidden && disclaimerCookie !== DISCLAIMER_COOKIE_VALUE;
+  const needsAcceptence =
+    !hidden && disclaimerCookie !== DISCLAIMER_COOKIE_VALUE;
 
   return (
     <Page
@@ -43,12 +44,12 @@ export function CookieBanner({ hidden }: CookieBannerProps) {
       onClose={() => {
         setCookie(DISCLAIMER_COOKIE_NAME, DISCLAIMER_COOKIE_VALUE, 365);
       }}
-      content={(
+      content={
         <p>
           By using this app, you agree to the storing of cookies on your device
           to access data layers, enhance user experience and analyze site usage.
         </p>
-      )}
+      }
     />
   );
 }

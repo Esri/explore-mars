@@ -6,13 +6,13 @@ import {
 import * as reactiveUtils from "@arcgis/core/core/reactiveUtils";
 import type SceneView from "@arcgis/core/views/SceneView";
 
-export type Page = 
-| 'landing'
-| 'home'
-| 'locations'
-| 'measure'
-| 'compare'
-| 'credits'
+export type Page =
+  | "landing"
+  | "home"
+  | "locations"
+  | "measure"
+  | "compare"
+  | "credits";
 
 @subclass("ExploreMars.Store")
 export class Store extends Accessor {
@@ -20,28 +20,28 @@ export class Store extends Accessor {
   view: SceneView;
 
   @property()
-  page: Page = 'landing'
+  page: Page = "landing";
 
   @property()
-  status: 'uninitialized' | 'idle' | 'loading';
+  status: "uninitialized" | "idle" | "loading";
 
   async initialize() {
-    this.status = 'uninitialized';
-    await reactiveUtils.whenOnce(() => this.view != null)
+    this.status = "uninitialized";
+    await reactiveUtils.whenOnce(() => this.view != null);
     await this.view?.when();
-    this.status = 'idle'
+    this.status = "idle";
   }
 
   async when() {
-    await reactiveUtils.whenOnce(() => this.status !== 'uninitialized')
+    await reactiveUtils.whenOnce(() => this.status !== "uninitialized");
   }
 
   async load<T>(promise: Promise<T>): Promise<T> {
-    this.status = 'loading';
+    this.status = "loading";
     try {
-      return await promise; 
+      return await promise;
     } finally {
-      this.status = 'idle';
+      this.status = "idle";
     }
   }
 }

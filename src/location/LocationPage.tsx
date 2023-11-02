@@ -1,11 +1,9 @@
-import {
-  subclass,
-} from "@arcgis/core/core/accessorSupport/decorators";
+import { subclass } from "@arcgis/core/core/accessorSupport/decorators";
 import Widget from "@arcgis/core/widgets/Widget";
 import { tsx } from "@arcgis/core/widgets/support/widget";
 import * as layers from "./rover-layers";
 import AppState from "../application/AppState";
-import styles from './LocationPage.module.scss'
+import styles from "./LocationPage.module.scss";
 import { Item, SubMenu } from "../utility-components/SubMenu";
 
 const cameras = {
@@ -57,7 +55,7 @@ export class LocationPage extends Widget {
       missionLayer.destroy();
       marsNamesLayer.destroy();
       perseveranceLayers.destroy();
-    }
+    };
   }
 
   destroy(): void {
@@ -71,19 +69,25 @@ export class LocationPage extends Widget {
         items={[
           <Item
             text="Perseverance Rover"
-            onClick={() => { this.goTo("perseverance"); }}
+            onClick={() => {
+              this.goTo("perseverance");
+            }}
             itemClass={styles.perseverance}
           />,
           <Item
             text="Curiosity Rover"
-            onClick={() => { this.goTo("curiosity"); }}
+            onClick={() => {
+              this.goTo("curiosity");
+            }}
             itemClass={styles.curiosity}
           />,
           <Item
             text="Opportunity Rover"
-            onClick={() => { this.goTo("opportunity"); }}
+            onClick={() => {
+              this.goTo("opportunity");
+            }}
             itemClass={styles.opportunity}
-          />
+          />,
         ]}
       />
     );

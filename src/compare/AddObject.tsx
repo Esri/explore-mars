@@ -7,12 +7,12 @@ import Widget from "@arcgis/core/widgets/Widget";
 import { tsx } from "@arcgis/core/widgets/support/widget";
 import { PointSymbol3D, ObjectSymbol3DLayer } from "@arcgis/core/symbols";
 import SketchViewModel from "@arcgis/core/widgets/Sketch/SketchViewModel";
-import GlTFImporter from "./GlTFImporter";
+import { importModel } from "./GLTFImporter";
 import GraphicsLayer from "@arcgis/core/layers/GraphicsLayer";
 import AppState from "../application/AppState";
 import { EditingInfo } from "./ComparePage";
 import { Item, SubMenu } from "../utility-components/SubMenu";
-import styles from './AddObject.module.scss';
+import styles from "./AddObject.module.scss";
 
 interface GltfObject {
   name: string;
@@ -62,7 +62,7 @@ export class AddObjectPage extends Widget {
 
   initialize() {
     const view = AppState.view;
-    
+
     const graphics = new GraphicsLayer({
       title: "SVM layer for comparison",
       listMode: "hide",
@@ -93,18 +93,20 @@ export class AddObjectPage extends Widget {
       return <EditingInfo />;
     }
 
-    const items = objects.map((o) => <Object gltf={o} onClick={el => { void AppState.load(this.addGltf(el.gltf)) }} />);
-    return (
-      <SubMenu items={items} />
-    )
+    const items = objects.map((o) => (
+      <Object
+        gltf={o}
+        onClick={(el) => {
+          void AppState.load(this.addGltf(el.gltf));
+        }}
+      />
+    ));
+    return <SubMenu items={items} />;
   }
 
-  private async addGltf(id: string) {   
-    const importer = new GlTFImporter();
-
+  private async addGltf(id: string) {
     const url = new URL("/" + id, import.meta.url);
-
-    const href = await importer.import(url.toString());
+    const href = await importModel(url.toString());
 
     const gltfModel = new ObjectSymbol3DLayer({
       anchor: "bottom",
@@ -135,7 +137,6 @@ export class AddObjectPage extends Widget {
     void this.sketchViewModel.update(graphic, {
       enableScaling: false,
     });
-
   }
 
   destroy(): void {
@@ -170,5 +171,5 @@ function Object({ gltf, onClick }: ObjectProps) {
       }}
       text={gltf.name}
     />
-  )
+  );
 }

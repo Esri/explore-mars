@@ -7,29 +7,25 @@ import DirectLineMeasurement3D from "@arcgis/core/widgets/DirectLineMeasurement3
 import ElevationProfile from "@arcgis/core/widgets/ElevationProfile";
 import Widget from "@arcgis/core/widgets/Widget";
 import { tsx } from "@arcgis/core/widgets/support/widget";
-import { match } from 'ts-pattern';
+import { match } from "ts-pattern";
 import ElevationProfileLineGround from "@arcgis/core/widgets/ElevationProfile/ElevationProfileLineGround";
 import type SceneView from "@arcgis/core/views/SceneView";
 import Handles from "@arcgis/core/core/Handles";
 import { Item, SubMenu } from "../utility-components/SubMenu";
-import styles from './MeasurePages.module.scss';
+import styles from "./MeasurePages.module.scss";
 
-type Page = 
-| 'menu'
-| 'area'
-| 'line'
-| 'elevation'
+type Page = "menu" | "area" | "line" | "elevation";
 
 @subclass("ExploreMars.page.Measure")
 export class MeasurePage extends Widget {
   constructor(view: SceneView) {
     super();
     this.areaMeasurement = new AreaMeasurement3D({
-      view
+      view,
     });
 
     this.lineMeasurement = new DirectLineMeasurement3D({
-      view
+      view,
     });
 
     this.elevationProfile = new ElevationProfile({
@@ -47,7 +43,7 @@ export class MeasurePage extends Widget {
   private readonly elevationProfile: ElevationProfile;
 
   @property()
-  page: Page = 'menu'
+  page: Page = "menu";
 
   handles = new Handles();
 
@@ -66,28 +62,32 @@ export class MeasurePage extends Widget {
   }
 
   render() {
-    if (this.page === 'menu') 
-      return <MeasureMenu selectTool={(tool) => { this.page = tool }} />;
+    if (this.page === "menu")
+      return (
+        <MeasureMenu
+          selectTool={(tool) => {
+            this.page = tool;
+          }}
+        />
+      );
 
     const widget = match(this.page)
-    .with('area', () => this.areaMeasurement)
-    .with("elevation", () => this.elevationProfile)
-    .with("line", () => this.lineMeasurement)
-    .exhaustive()
+      .with("area", () => this.areaMeasurement)
+      .with("elevation", () => this.elevationProfile)
+      .with("line", () => this.lineMeasurement)
+      .exhaustive();
 
     widget.visible = true;
 
-    return (
-      <div class={styles.measurement}>
-        {widget.render()}
-      </div>
-    )
+    return <div class={styles.measurement}>{widget.render()}</div>;
   }
 
-  close(widget: AreaMeasurement3D | DirectLineMeasurement3D | ElevationProfile) {
+  close(
+    widget: AreaMeasurement3D | DirectLineMeasurement3D | ElevationProfile,
+  ) {
     widget.viewModel.clear();
     widget.visible = false;
-    this.page = 'menu';
+    this.page = "menu";
   }
 
   destroy(): void {
@@ -101,9 +101,8 @@ export class MeasurePage extends Widget {
   }
 }
 
-
 interface MeasureMenuProps {
-  selectTool: (tool: Exclude<Page, 'menu'>) => void
+  selectTool: (tool: Exclude<Page, "menu">) => void;
 }
 function MeasureMenu({ selectTool }: MeasureMenuProps) {
   return (
@@ -112,20 +111,25 @@ function MeasureMenu({ selectTool }: MeasureMenuProps) {
         <Item
           text="Line"
           itemClass={styles.line}
-          onClick={() => { selectTool('line') }}
+          onClick={() => {
+            selectTool("line");
+          }}
         />,
         <Item
           text="Area"
           itemClass={styles.area}
-          onClick={() => { selectTool('area') }}
+          onClick={() => {
+            selectTool("area");
+          }}
         />,
         <Item
           text="Elevation"
           itemClass={styles.elevation}
-          onClick={() => { selectTool('elevation') }}
-        />
+          onClick={() => {
+            selectTool("elevation");
+          }}
+        />,
       ]}
     />
-
-  )
+  );
 }

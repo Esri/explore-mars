@@ -5,13 +5,9 @@ import {
 import Widget from "@arcgis/core/widgets/Widget";
 import { tsx } from "@arcgis/core/widgets/support/widget";
 import AppState from "./AppState";
-import {
-  ComparePage,
-} from "../compare/ComparePage";
-import {
-  MeasurePage,
-} from "../measure/MeasurePages";
-import { match, P } from 'ts-pattern'
+import { ComparePage } from "../compare/ComparePage";
+import { MeasurePage } from "../measure/MeasurePages";
+import { match, P } from "ts-pattern";
 import type { Page } from "./AppState";
 import { LocationPage } from "../location/LocationPage";
 import { CreditsPage } from "../credits/CreditsPage";
@@ -20,7 +16,7 @@ import { enableBasemapSwitcher } from "./BasemapSwitcher";
 import { CookieBanner } from "../utility-components/CookieBanner";
 import * as reactiveUtils from "@arcgis/core/core/reactiveUtils";
 import { Loading } from "../utility-components/Loading";
-import styles from './app.module.scss'
+import styles from "./app.module.scss";
 import { MenuBar } from "../utility-components/MenuBar";
 import { Page as PageWrapper } from "../utility-components/Page";
 
@@ -35,7 +31,7 @@ class Application extends Widget {
   async initialize() {
     AppState.watch("page", async (page: Page) => {
       this.previousContent = this.content;
-      
+
       this.content = null;
       const content = await this.refreshContent(page);
 
@@ -43,13 +39,16 @@ class Application extends Widget {
         this.previousContent?.destroy();
         this.previousContent = null;
         this.content = content;
-      }, 200)
+      }, 200);
     });
 
-    reactiveUtils.when(() => AppState.status !== 'uninitialized', () => {
-      console.log('wow');
-      enableBasemapSwitcher(AppState.view);
-    })
+    reactiveUtils.when(
+      () => AppState.status !== "uninitialized",
+      () => {
+        console.log("wow");
+        enableBasemapSwitcher(AppState.view);
+      },
+    );
   }
 
   render() {
@@ -57,20 +56,31 @@ class Application extends Widget {
     const prev = this.previousContent?.render() ?? null;
 
     const renderedContent = match([AppState.status, content])
-      .with(['loading', P._], () => <Loading />)
+      .with(["loading", P._], () => <Loading />)
       .with([P._, P.nullish], () => prev)
       .otherwise(() => content);
 
     return (
       <div class={styles.wrapper}>
-        <MenuBar onItemClick={item => { this.goToPage(item) }} />
-        <CookieBanner hidden={false || AppState.page === 'landing'} />
+        <MenuBar
+          onItemClick={(item) => {
+            this.goToPage(item);
+          }}
+        />
+        <CookieBanner hidden={false || AppState.page === "landing"} />
         <PageWrapper
-          hidden={AppState.page === 'home' || AppState.page === 'landing'}
-          onClose={() => { this.goToPage('home'); }}
+          hidden={AppState.page === "home" || AppState.page === "landing"}
+          onClose={() => {
+            this.goToPage("home");
+          }}
           content={renderedContent}
         />
-        <LandingPage hidden={AppState.page !== 'landing'} onStart={() => { this.goToPage('home') } }/>
+        <LandingPage
+          hidden={AppState.page !== "landing"}
+          onStart={() => {
+            this.goToPage("home");
+          }}
+        />
       </div>
     );
   }
@@ -81,19 +91,20 @@ class Application extends Widget {
 
   private async refreshContent(page: Page) {
     const ContentConstructor = match(page)
-      .with('home', () => null)
-      .with('landing', () => null)
-      .with('measure', () => MeasurePage)
-      .with('compare', () => ComparePage)
-      .with('credits', () => CreditsPage)
-      .with('locations', () => LocationPage)
+      .with("home", () => null)
+      .with("landing", () => null)
+      .with("measure", () => MeasurePage)
+      .with("compare", () => ComparePage)
+      .with("credits", () => CreditsPage)
+      .with("locations", () => LocationPage)
       .exhaustive();
 
     if (ContentConstructor == null) return;
 
-    const content = this.content instanceof ContentConstructor
-    ? this.content
-    : new ContentConstructor(AppState.view);
+    const content =
+      this.content instanceof ContentConstructor
+        ? this.content
+        : new ContentConstructor(AppState.view);
 
     await content.when();
 

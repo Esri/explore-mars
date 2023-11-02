@@ -12,21 +12,25 @@ import { tsx } from "@arcgis/core/widgets/support/widget";
 import { graphicFromCountry } from "./countryUtils";
 import type FeatureLayer from "@arcgis/core/layers/FeatureLayer";
 import { type Point, type Polygon } from "@arcgis/core/geometry";
-import { PointSymbol3D, ObjectSymbol3DLayer, TextSymbol3DLayer } from "@arcgis/core/symbols";
+import {
+  PointSymbol3D,
+  ObjectSymbol3DLayer,
+  TextSymbol3DLayer,
+} from "@arcgis/core/symbols";
 import Handles from "@arcgis/core/core/Handles";
 import GraphicsLayer from "@arcgis/core/layers/GraphicsLayer";
 import SketchViewModel from "@arcgis/core/widgets/Sketch/SketchViewModel";
 import PolygonTransform from "./PolygonTransform";
 import { EditingInfo } from "./ComparePage";
 import AppState from "../application/AppState";
-import styles from './AddRegion.module.scss';
+import styles from "./AddRegion.module.scss";
 
 interface Region {
   label: Graphic;
   center: Graphic;
   country: Graphic;
 }
-  
+
 @subclass("ExploreMars.page.AddRegionPage")
 export class AddRegionPage extends Widget {
   @property()
@@ -35,7 +39,7 @@ export class AddRegionPage extends Widget {
   @property()
   viewGraphics!: GraphicsLayer;
 
-  @aliasOf('viewGraphics.graphics')
+  @aliasOf("viewGraphics.graphics")
   graphicEditing: Graphic[] = [];
 
   @property()
@@ -57,7 +61,7 @@ export class AddRegionPage extends Widget {
 
   async initialize() {
     const view = AppState.view;
-    
+
     const graphics = new GraphicsLayer({
       title: "SVM layer for comparison",
       listMode: "hide",
@@ -96,12 +100,13 @@ export class AddRegionPage extends Widget {
           afterCreate={(element: HTMLDivElement) => {
             this.createView(element);
           }}
-        >
-        </div>
+        ></div>
         <button
           class="esri-button esri-button--primary"
           disabled={this.selectedRegion == null}
-          onclick={() => { void AppState.load(this.addCountry()) }}
+          onclick={() => {
+            void AppState.load(this.addCountry());
+          }}
         >
           Place it on Mars
         </button>
@@ -122,7 +127,9 @@ export class AddRegionPage extends Widget {
           const result = hitTest.results[hitTest.results.length - 1];
           if (result.type === "graphic") {
             this.selectedRegion = result.graphic;
-            const layerView = await overlayGlobe.whenLayerView(result.graphic.layer as FeatureLayer);
+            const layerView = await overlayGlobe.whenLayerView(
+              result.graphic.layer as FeatureLayer,
+            );
             this.highlight = layerView.highlight(result.graphic);
           }
         }
@@ -141,22 +148,15 @@ export class AddRegionPage extends Widget {
 
     const region = this.selectedRegion;
     this.placedRegion = this.selectedRegion;
-    const country = await graphicFromCountry(
-      region,
-      AppState.view,
-    );
+    const country = await graphicFromCountry(region, AppState.view);
 
-    const center = createRegionCenter(country)
-    const label = createRegionLabel(country)
+    const center = createRegionCenter(country);
+    const label = createRegionLabel(country);
     this.selectedRegion = null;
 
-    this.viewGraphics.addMany([
-      center,
-      country,
-      label
-    ]);
+    this.viewGraphics.addMany([center, country, label]);
 
-    this.viewGraphics.elevationInfo = { mode: 'on-the-ground' };
+    this.viewGraphics.elevationInfo = { mode: "on-the-ground" };
 
     void AppState.view.goTo(country.geometry);
     void this.sketchViewModel.update(center, {
@@ -165,13 +165,16 @@ export class AddRegionPage extends Widget {
 
     this.isEditing = true;
     this.handles.add(
-      this.sketchViewModel.on("update", watchRotation(this.sketchViewModel, { country, center, label })),
+      this.sketchViewModel.on(
+        "update",
+        watchRotation(this.sketchViewModel, { country, center, label }),
+      ),
     );
   }
 
   private readonly close = (e?: Event) => {
     e?.preventDefault();
-  }
+  };
 
   destroy(): void {
     this.isEditing = false;
@@ -187,7 +190,7 @@ export class AddRegionPage extends Widget {
     this.selectedRegion?.destroy();
     this.placedRegion?.destroy();
     this.handles.destroy();
-    
+
     if (!this.sketchViewModel.destroyed) this.sketchViewModel.destroy();
 
     this.viewGraphics.destroy();
@@ -195,7 +198,9 @@ export class AddRegionPage extends Widget {
   }
 }
 
-function createGlobeConfig(container: HTMLDivElement): __esri.SceneViewProperties {
+function createGlobeConfig(
+  container: HTMLDivElement,
+): __esri.SceneViewProperties {
   return {
     container,
     qualityProfile: "high",
@@ -209,9 +214,9 @@ function createGlobeConfig(container: HTMLDivElement): __esri.SceneViewPropertie
       atmosphereEnabled: false,
       starsEnabled: false,
       background: {
-        type: 'color',
+        type: "color",
         color: [255, 255, 255, 0],
-      }
+      },
     },
     constraints: {
       altitude: {
@@ -220,15 +225,15 @@ function createGlobeConfig(container: HTMLDivElement): __esri.SceneViewPropertie
       },
     },
     ui: {
-      components: []
+      components: [],
     },
-    popupEnabled: false
-  }
+    popupEnabled: false,
+  };
 }
 
-function createRegionCenter(country: Graphic): Region['center'] {
+function createRegionCenter(country: Graphic): Region["center"] {
   const centroid = (country.geometry as Polygon).centroid;
-  
+
   return new Graphic({
     geometry: centroid,
     symbol: new PointSymbol3D({
@@ -249,7 +254,7 @@ function createRegionCenter(country: Graphic): Region['center'] {
   });
 }
 
-function createRegionLabel(country: Graphic): Region['label'] {
+function createRegionLabel(country: Graphic): Region["label"] {
   const centroid = (country.geometry as Polygon).centroid;
 
   return new Graphic({

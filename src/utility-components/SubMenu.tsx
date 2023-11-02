@@ -1,6 +1,6 @@
-import styles from './SubMenu.module.scss';
+import styles from "./SubMenu.module.scss";
 import { tsx } from "@arcgis/core/widgets/support/widget";
-import cx from 'classnames';
+import cx from "classnames";
 
 interface ItemProps {
   onClick: () => void;
@@ -9,22 +9,15 @@ interface ItemProps {
 }
 export function Item({ text, itemClass, onClick }: ItemProps) {
   return (
-    <button
-      class={cx(styles.item, itemClass)}
-      onclick={onClick}
-    >
+    <button class={cx(styles.item, itemClass)} onclick={onClick}>
       {text}
     </button>
-  )
+  );
 }
 
 interface SubMenuProps {
-  items: tsx.JSX.Element[]
+  items: tsx.JSX.Element[];
 }
 export function SubMenu({ items }: SubMenuProps) {
-  return (
-    <nav class={styles.subMenu}>
-      {items}
-    </nav>
-  )
+  return <nav class={styles.subMenu}>{items}</nav>;
 }
