@@ -27,7 +27,8 @@ export default class PolygonTransform {
     );
 
     const mat = mat4.create();
-    mat4.rotate(mat, mat, angle, rot);
+    const radians = angle * (Math.PI / 180);
+    mat4.rotate(mat, mat, radians, rot);
     return this.transformPolygon(polygon, mat);
   }
 

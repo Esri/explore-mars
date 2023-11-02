@@ -10,8 +10,8 @@ import SceneView from "@arcgis/core/views/SceneView";
 import Widget from "@arcgis/core/widgets/Widget";
 import { tsx } from "@arcgis/core/widgets/support/widget";
 import { graphicFromCountry } from "./countryUtils";
-import type FeatureLayer from "@arcgis/core/layers/FeatureLayer";
-import { type Point, type Polygon } from "@arcgis/core/geometry";
+import FeatureLayer from "@arcgis/core/layers/FeatureLayer";
+import { type Polygon, type Point } from "@arcgis/core/geometry";
 import {
   PointSymbol3D,
   ObjectSymbol3DLayer,
@@ -23,6 +23,8 @@ import PolygonTransform from "./PolygonTransform";
 import { EditingInfo } from "./ComparePage";
 import AppState from "../application/AppState";
 import styles from "./AddRegion.module.scss";
+import simplify from "simplify-js";
+import { P, match } from "ts-pattern";
 
 interface Region {
   label: Graphic;
@@ -133,29 +135,58 @@ export class AddRegionPage extends Widget {
   private createView(element: HTMLDivElement) {
     const overlayGlobe = new SceneView(createGlobeConfig(element));
 
-    const handle = overlayGlobe.on(
-      "click",
-      promiseUtils.debounce(async (e) => {
-        this.highlight?.remove();
-        const hitTest = await overlayGlobe.hitTest(e);
+    overlayGlobe.on("click", async (e) => {
+      try {
+        await this.highlightOnClick(e);
+      } catch (error) {
+        ignoreAbortError(error);
+      }
+    });
 
-        if (hitTest.results.length > 0) {
-          const result = hitTest.results[hitTest.results.length - 1];
-          if (result.type === "graphic") {
-            this.selectedRegion = result.graphic;
-            const layerView = await overlayGlobe.whenLayerView(
-              result.graphic.layer as FeatureLayer,
-            );
-            this.highlight = layerView.highlight(result.graphic);
-          }
-        }
-      }),
-    );
-
-    this.addHandles(handle);
+    overlayGlobe.on("pointer-move", async (e) => {
+      try {
+        await this.highlightOnHover(e);
+      } catch (error) {
+        ignoreAbortError(error);
+      }
+    });
 
     this.overlayGlobe = overlayGlobe;
   }
+
+  private readonly highlightOnHover = promiseUtils.debounce(
+    async (e: __esri.ViewPointerMoveEvent) => {
+      if (this.overlayGlobe == null) return;
+
+      const graphic = await queryRegion(e, this.overlayGlobe);
+
+      this.hovered?.remove();
+
+      if (graphic != null && graphic.layer.type !== "graphics") {
+        const layerView = await this.overlayGlobe.whenLayerView(
+          graphic.layer as FeatureLayer,
+        );
+        this.hovered = layerView.highlight(graphic);
+      }
+    },
+  );
+
+  private readonly highlightOnClick = promiseUtils.debounce(
+    async (e: __esri.ViewClickEvent) => {
+      if (this.overlayGlobe == null) return;
+
+      const graphic = await queryRegion(e, this.overlayGlobe);
+
+      this.highlight?.remove();
+      if (graphic != null && graphic.layer.type !== "graphics") {
+        this.selectedRegion = graphic;
+        const layerView = await this.overlayGlobe.whenLayerView(
+          graphic.layer as FeatureLayer,
+        );
+        this.highlight = layerView.highlight(graphic);
+      }
+    },
+  );
 
   private async addCountry() {
     if (this.selectedRegion == null) {
@@ -183,7 +214,7 @@ export class AddRegionPage extends Widget {
     this.addHandles(
       this.sketchViewModel.on(
         "update",
-        watchRotation(this.sketchViewModel, { country, center, label }),
+        watchModifications(this.sketchViewModel, { country, center, label }),
       ),
     );
   }
@@ -209,7 +240,7 @@ function createGlobeConfig(
     qualityProfile: "high",
     map: new WebScene({
       portalItem: {
-        id: "df5009a0ea79444e92f48f50fe171bf1",
+        id: "8e49a0c79bf543fd8fa52b4dd5c9a064",
       },
     }),
     alphaCompositingEnabled: true,
@@ -300,34 +331,148 @@ function createRegionLabel(country: Graphic): Region["label"] {
   });
 }
 
-function watchRotation(model: SketchViewModel, region: Region) {
+function watchModifications(model: SketchViewModel, region: Region) {
   let lastAngle = 0;
+  let totalAngleDiff = 0;
   const view = model.view as SceneView;
 
   const { country, center, label } = region;
   const spherical = new PolygonTransform(view);
 
+  // for performance reasons, we keep a simplified version of the geometry which will be visible throughout the interaction
+  let detailed = country.geometry as Polygon;
+  let simplified = toSimplified(country.geometry as Polygon);
+
+  // after the user has stopped interacting with the model
+  let commitUpdateTimeout = -1;
+
   return (ev: __esri.SketchViewModelUpdateEvent) => {
-    if (ev.state !== "active") {
-      return;
-    }
+    if (ev.state === "start") return;
 
-    const toolType = ev.toolEventInfo.type;
-    const rotateStartStop =
-      toolType === "rotate-stop" || toolType === "rotate-start";
-    let current = country.geometry as Polygon;
+    clearTimeout(commitUpdateTimeout);
 
-    if (toolType === "rotate" || rotateStartStop) {
-      const currentAngle = (ev.toolEventInfo as __esri.RotateEventInfo).angle;
-      const angleDiff = (currentAngle - lastAngle) * (Math.PI / 180);
+    match(ev.toolEventInfo)
+      .with(
+        {
+          type: P.union("rotate-start", "rotate-stop", "rotate"),
+        },
+        ({ type, angle: currentAngle }) => {
+          // each "rotate" event gives you the change in the angle relative to the last "rotate-start" event
+          // since we're rotating the model on every update, we need to make sure we only apply the difference since the last update
+          const diff = currentAngle - lastAngle;
+          simplified = spherical.rotate(simplified, diff);
+          lastAngle = type === "rotate" ? currentAngle : 0;
 
-      current = spherical.rotate(current, angleDiff);
-      lastAngle = rotateStartStop ? 0 : currentAngle;
-    } else {
-      const newCenter = center.geometry as Point;
-      current = spherical.moveTo(current, newCenter);
-      label.geometry = newCenter;
-    }
-    country.geometry = current;
+          // we also keep track of the total difference, so we can apply the rotation to the detailed geometry later
+          totalAngleDiff += diff;
+        },
+      )
+      .with(
+        {
+          type: P.union("move-start", "move-stop", "move"),
+        },
+        () => {
+          const newCenter = center.geometry as Point;
+          simplified = spherical.moveTo(simplified, newCenter);
+          label.geometry = newCenter;
+        },
+      );
+
+    country.geometry = simplified;
+
+    // here we commit the update to the detailed geometry
+    commitUpdateTimeout = setTimeout(() => {
+      detailed = spherical.moveTo(detailed, center.geometry as Point);
+      detailed = spherical.rotate(detailed, totalAngleDiff);
+      country.geometry = detailed;
+      totalAngleDiff = 0;
+
+      simplified = toSimplified(detailed);
+    }, 200);
   };
+}
+
+function isSceneViewGraphicHit(
+  hit: __esri.SceneViewViewHit,
+): hit is __esri.SceneViewGraphicHit {
+  return hit.type === "graphic";
+}
+
+async function queryRegion(
+  e: __esri.SceneViewScreenPoint | MouseEvent,
+  view: SceneView,
+) {
+  const include = view.map.allLayers.filter(
+    (l) => l.type === "feature" || l.type === "graphics",
+  );
+
+  const htResult = await view.hitTest(e, {
+    include,
+  });
+
+  const results = htResult.results;
+
+  const graphicHits = results.filter(isSceneViewGraphicHit);
+
+  function layerIndex(r: __esri.SceneViewGraphicHit) {
+    return include.indexOf(r.graphic.layer);
+  }
+
+  if (graphicHits.length > 0) {
+    graphicHits.sort((a, b) => {
+      // Intentionally reversing order
+      return layerIndex(b) - layerIndex(a);
+    });
+
+    const graphic = graphicHits[0].graphic;
+    const layer = graphic.layer;
+    if (layer.type === "feature" && layer instanceof FeatureLayer) {
+      const query = layer.createQuery();
+      query.returnGeometry = true;
+      query.objectIds = [graphic.getObjectId()];
+      query.outSpatialReference = graphic.geometry.spatialReference;
+      const response = await layer.queryFeatures(query);
+
+      if (response.features.length > 0) {
+        return response.features[0];
+      }
+    }
+    return graphic;
+  }
+}
+
+function toSimplified(geometry: Polygon) {
+  const polygon = geometry.clone();
+  // The further the country is in the north / south, the more we have to simplify
+  const ymax = Math.max(
+    Math.abs(geometry.extent.ymax),
+    Math.abs(geometry.extent.ymin),
+  );
+  const tolerance = ymax / 25;
+
+  let rings = polygon.rings;
+  const maxLength = rings.reduce((acc, cur) => Math.max(cur.length, acc), 0);
+
+  // Filter small islands around main land
+  rings = rings.filter((r) => r.length > maxLength / 10);
+
+  // Simplify remaining rings
+  rings = rings.map((ring) => {
+    const points = ring.map((c) => {
+      return { x: c[0], y: c[1] };
+    });
+    const simplified = simplify(points, tolerance);
+    return simplified.map((p) => [p.x, p.y]);
+  });
+
+  polygon.rings = rings;
+
+  return polygon;
+}
+
+function ignoreAbortError(error: any) {
+  const isAbortError = promiseUtils.isAbortError(error);
+  if (isAbortError) return;
+
+  throw error;
 }
