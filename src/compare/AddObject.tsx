@@ -52,9 +52,6 @@ export class AddObjectPage extends Widget {
   sketchViewModel!: SketchViewModel;
 
   @property()
-  isEditing = false;
-
-  @property()
   viewGraphics!: GraphicsLayer;
 
   @property()
@@ -89,6 +86,7 @@ export class AddObjectPage extends Widget {
   }
 
   render() {
+    console.log("rendering....");
     if (this.placedObject != null) {
       return <EditingInfo />;
     }
@@ -140,8 +138,6 @@ export class AddObjectPage extends Widget {
   }
 
   destroy(): void {
-    this.isEditing = false;
-
     this.sketchViewModel.cancel();
     this.viewGraphics.graphics.forEach((graphic) => {
       graphic.destroy();

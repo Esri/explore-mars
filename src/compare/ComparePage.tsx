@@ -7,10 +7,10 @@ import { tsx } from "@arcgis/core/widgets/support/widget";
 import { match } from "ts-pattern";
 import { AddObjectPage } from "./AddObject";
 import { AddRegionPage } from "./AddRegion";
-import Handles from "@arcgis/core/core/Handles";
-import { watch, when } from "@arcgis/core/core/reactiveUtils";
+import { watch } from "@arcgis/core/core/reactiveUtils";
 import { Item, SubMenu } from "../utility-components/SubMenu";
 import styles from "./ComparePage.module.scss";
+import { CloseButton } from "../utility-components/CloseButton";
 
 type Page = "menu" | "regions" | "models";
 
@@ -18,9 +18,6 @@ type Page = "menu" | "regions" | "models";
 export class ComparePage extends Widget {
   @property()
   page: Page = "menu";
-
-  @property()
-  handles = new Handles();
 
   private addRegionWidget!: AddRegionPage;
   private addObjectWidget!: AddObjectPage;
@@ -32,30 +29,20 @@ export class ComparePage extends Widget {
     const watchPageHandle = watch(
       () => this.page,
       (page) => {
-        match(page)
-          .with("regions", () => {
-            this.addRegionWidget.isEditing = true;
-          })
-          .with("models", () => {
-            this.addObjectWidget.isEditing = true;
-          });
+        if (page === "menu") return;
+
+        if (page === "regions") {
+          this.addRegionWidget.destroy();
+          this.addRegionWidget = new AddRegionPage();
+        }
+
+        if (page === "models") {
+          this.addObjectWidget.destroy();
+          this.addObjectWidget = new AddObjectPage();
+        }
       },
     );
-
-    const watchEditingHandle = when(
-      () => !this.addRegionWidget.isEditing && !this.addObjectWidget.isEditing,
-      () => {
-        this.page = "menu";
-
-        this.addRegionWidget.destroy();
-        this.addObjectWidget.destroy();
-
-        this.addRegionWidget = new AddRegionPage();
-        this.addObjectWidget = new AddObjectPage();
-      },
-    );
-
-    this.handles.add([watchPageHandle, watchEditingHandle]);
+    this.addHandles(watchPageHandle);
   }
 
   render() {
@@ -69,17 +56,24 @@ export class ComparePage extends Widget {
       );
 
     const widget = match(this.page)
-      .with("models", () => this.addObjectWidget)
       .with("regions", () => this.addRegionWidget)
+      .with("models", () => this.addObjectWidget)
       .exhaustive();
 
-    return widget.render();
+    return (
+      <div class={styles.compareInfo}>
+        <CloseButton
+          onClose={() => {
+            this.page = "menu";
+          }}
+        />
+        {widget.render()}
+      </div>
+    );
   }
 
   destroy() {
     super.destroy();
-    this.handles.removeAll();
-    this.handles.destroy();
     this.addRegionWidget.destroy();
     this.addObjectWidget.destroy();
   }

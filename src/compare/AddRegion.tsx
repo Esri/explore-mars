@@ -56,9 +56,6 @@ export class AddRegionPage extends Widget {
   @property()
   handles = new Handles();
 
-  @property()
-  isEditing = false;
-
   async initialize() {
     const view = AppState.view;
 
@@ -163,7 +160,6 @@ export class AddRegionPage extends Widget {
       enableScaling: false,
     });
 
-    this.isEditing = true;
     this.handles.add(
       this.sketchViewModel.on(
         "update",
@@ -172,13 +168,7 @@ export class AddRegionPage extends Widget {
     );
   }
 
-  private readonly close = (e?: Event) => {
-    e?.preventDefault();
-  };
-
   destroy(): void {
-    this.isEditing = false;
-
     this.sketchViewModel.cancel();
     this.handles.removeAll();
     this.graphicEditing.forEach((graphic) => {

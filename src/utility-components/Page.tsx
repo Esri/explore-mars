@@ -26,7 +26,6 @@ export function Page({
           key={key}
           class={cx(styles.page, { [styles.hidden]: hidden }, clazz)}
         >
-          <CloseButton onClose={onClose} />
           <div class={styles.content}>{content}</div>
         </div>
       }

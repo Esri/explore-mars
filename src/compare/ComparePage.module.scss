@@ -6,3 +6,10 @@
   background-image: url("../images/3d-objects.svg");
   background-size: cover;
 }
+
+.compareInfo {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}

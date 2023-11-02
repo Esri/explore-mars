@@ -13,6 +13,7 @@ import type SceneView from "@arcgis/core/views/SceneView";
 import Handles from "@arcgis/core/core/Handles";
 import { Item, SubMenu } from "../utility-components/SubMenu";
 import styles from "./MeasurePages.module.scss";
+import { CloseButton } from "../utility-components/CloseButton";
 
 type Page = "menu" | "area" | "line" | "elevation";
 
@@ -79,7 +80,16 @@ export class MeasurePage extends Widget {
 
     widget.visible = true;
 
-    return <div class={styles.measurement}>{widget.render()}</div>;
+    return (
+      <div class={styles.measurement}>
+        <CloseButton
+          onClose={() => {
+            this.close(widget);
+          }}
+        />
+        {widget.render()}
+      </div>
+    );
   }
 
   close(
