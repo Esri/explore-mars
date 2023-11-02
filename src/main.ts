@@ -7,12 +7,19 @@ import {
   marsImageryBasemap,
   marsSR,
   marsElevation,
-} from "./application/layers";
+  marsNamesLayer,
+  missionLayer,
+} from "./utilities/layers";
 import SceneView from "@arcgis/core/views/SceneView";
 import Map from "@arcgis/core/Map";
 import { addFrameTask } from "@arcgis/core/core/scheduling";
 import { when } from "@arcgis/core/core/reactiveUtils";
 import AppState from "./application/AppState";
+import {
+  perseveranceLayers,
+  curiosityLayers,
+  opportunityLayers,
+} from "./utilities/rover-layers";
 
 const map = new Map({
   basemap: marsImageryBasemap,
@@ -42,9 +49,15 @@ const view = new SceneView({
     tilt: 10,
   },
 });
-
 view.ui.remove("attribution");
 view.map.ground.layers.add(marsElevation);
+view.map.layers.addMany([
+  marsNamesLayer,
+  missionLayer,
+  perseveranceLayers,
+  curiosityLayers,
+  opportunityLayers,
+]);
 
 const popup = view.popup;
 popup.actions?.removeAll();

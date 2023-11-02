@@ -1,7 +1,6 @@
 import { subclass } from "@arcgis/core/core/accessorSupport/decorators";
 import Widget from "@arcgis/core/widgets/Widget";
 import { tsx } from "@arcgis/core/widgets/support/widget";
-import * as layers from "./rover-layers";
 import AppState from "../application/AppState";
 import styles from "./LocationPage.module.scss";
 import { Item, SubMenu } from "../utility-components/SubMenu";
@@ -41,28 +40,6 @@ const cameras = {
 
 @subclass("ExploreMars.menu.Location")
 export class LocationPage extends Widget {
-  private _destroy: () => void;
-
-  async initialize() {
-    const view = AppState.view;
-    const missionLayer = layers.createMissionLayer();
-    const marsNamesLayer = layers.createMarsNamesLayer();
-    const perseveranceLayers = layers.createPerseveranceLayers();
-
-    view.map.addMany([missionLayer, marsNamesLayer, perseveranceLayers]);
-    this._destroy = () => {
-      view.map.removeMany([missionLayer, marsNamesLayer, perseveranceLayers]);
-      missionLayer.destroy();
-      marsNamesLayer.destroy();
-      perseveranceLayers.destroy();
-    };
-  }
-
-  destroy(): void {
-    super.destroy();
-    this._destroy();
-  }
-
   render() {
     return (
       <SubMenu

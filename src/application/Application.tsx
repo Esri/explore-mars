@@ -45,7 +45,6 @@ class Application extends Widget {
     reactiveUtils.when(
       () => AppState.status !== "uninitialized",
       () => {
-        console.log("wow");
         enableBasemapSwitcher(AppState.view);
       },
     );

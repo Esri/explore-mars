@@ -7,7 +7,7 @@ import {
   marsImageryBasemap,
   marsReconnaissanceImagery,
   shadedReliefBasemap,
-} from "./layers";
+} from "../utilities/layers";
 
 /* Update visibility of HiRise basemaps depending on distance to camera */
 async function updateBasemap(view: SceneView) {
@@ -15,9 +15,9 @@ async function updateBasemap(view: SceneView) {
     { x: view.width / 2, y: view.height / 2 },
     { include: [view.map.ground] },
   );
-  // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
-  const d = result.ground.mapPoint ? result.ground.distance : Number.MAX_VALUE;
 
+  const d =
+    result.ground.mapPoint != null ? result.ground.distance : Number.MAX_VALUE;
   marsReconnaissanceImagery.visible = d < 100000;
   marsHiRiseImagery.visible = d < 10000;
 }
