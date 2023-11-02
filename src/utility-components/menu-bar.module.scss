@@ -1,4 +1,4 @@
-@import '..//variables.module.scss';
+@import "..//variables.module.scss";
 
 .container {
   width: 100%;
@@ -9,7 +9,7 @@
 
 .menu {
   --padding-top: 15px;
-  
+
   backdrop-filter: blur(15px);
   overflow: hidden;
   display: flex;
@@ -36,7 +36,8 @@
 .items {
   flex-basis: 300px;
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
+  gap: 30px;
 }
 
 .icon {
@@ -51,7 +52,6 @@
 .menuItem {
   font-size: 1.3em;
   text-decoration: none;
-  flex-grow: 1;
   color: $mainColor;
   position: relative;
   text-shadow: 2px 2px 6px rgb(0 0 0 / 50%);
@@ -60,21 +60,26 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  
+
   &::before {
     content: "";
+    pointer-events: none;
     position: absolute;
-    inset: -15px;
-    background-repeat: no-repeat;
-    background-image: url("../images/highlight.png");
-    background-position: 50% 100%;
+    inset: -100px;
+    transition: opacity 0.2s ease-out;
     opacity: 0;
-    transition: opacity 0.2s ease-in;
+    background: radial-gradient(
+      circle,
+      rgba(0 198 255 / 20%) 0,
+      rgba(0 198 255 / 0%) 50px
+    );
+    background-repeat: no-repeat;
+    background-position: center;
   }
 
   &:hover {
     &::before {
-      opacity: 0.6;
+      opacity: 1;
     }
 
     color: $highlightColor;
@@ -87,36 +92,56 @@
   }
 }
 
+.logoItem {
+  flex: 0;
+  flex-basis: 100px;
+}
+
 .explore {
   align-items: start;
-  flex-basis: 105px;
+
+  // small nudge down to make it more visually balanced
+  transform: translateY(7px);
+
+  & > .exploreLogoHighlighted {
+    position: absolute;
+    opacity: 0;
+  }
+
+  & > .exploreLogo {
+    position: unset;
+    opacity: 1;
+  }
+
+  &:hover {
+    & > .exploreLogo {
+      position: absolute;
+      opacity: 0;
+    }
+
+    & > .exploreLogoHighlighted {
+      position: unset;
+      opacity: 1;
+    }
+  }
 
   &::before {
-    left: -30px;
-    background-position: -5px 100%;
+    transform: translate(-15px, 7px);
   }
 }
 
-.exploreLogo {
+.exploreLogo,
+.exploreLogoHighlighted {
   max-height: 40px;
-
-  // width: 243
-  // height: 294
-  // the upper half of the image has the unhighlighted version,
-  // while the lower half has the highlighted version
-  // the actual icon image is therefore half of the height, 147
-  aspect-ratio: 243 / 147;
+  aspect-ratio: unset;
 }
 
 .credits {
   align-items: end;
-  flex-basis: 150px;
   font-size: 0.85em;
-  
-  &::before {
-    right: -30px;
-    background-position: 110px 100%;
-  }
+
+  // small nudge down to make it more visually balanced
+  transform: translateY(7px);
 
   &:hover {
     text-decoration: none;
