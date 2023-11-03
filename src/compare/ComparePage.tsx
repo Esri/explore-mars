@@ -5,8 +5,8 @@ import {
 import Widget from "@arcgis/core/widgets/Widget";
 import { tsx } from "@arcgis/core/widgets/support/widget";
 import { match } from "ts-pattern";
-import { AddObjectPage } from "./AddObject";
-import { AddRegionPage } from "./AddRegion";
+import { AddObjectPage } from "./object/AddObject";
+import { AddRegionPage } from "./region/AddRegion";
 import { watch } from "@arcgis/core/core/reactiveUtils";
 import { Item, SubMenu } from "../utility-components/SubMenu";
 import styles from "./ComparePage.module.scss";

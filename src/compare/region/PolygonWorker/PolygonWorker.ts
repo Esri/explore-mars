@@ -46,7 +46,6 @@ export class PolygonWorker {
     }: MessageEvent<WorkerResponse>) => {
       const [resolve, reject] = PolygonWorker.requests.get(data.id) ?? [];
       if (data.type === "success") {
-        console.log(data);
         resolve?.(new Polygon(data.data));
       } else {
         reject?.(data.error);
