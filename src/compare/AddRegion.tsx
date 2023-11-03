@@ -25,11 +25,13 @@ import AppState from "../application/AppState";
 import styles from "./AddRegion.module.scss";
 import simplify from "simplify-js";
 import { P, match } from "ts-pattern";
-
+import { PolygonWorker } from "./PolygonWorker/PolygonWorker";
 interface Region {
   label: Graphic;
   center: Graphic;
   country: Graphic;
+  detailed: Polygon;
+  simplified: Polygon;
 }
 
 @subclass("ExploreMars.page.AddRegionPage")
@@ -197,6 +199,15 @@ export class AddRegionPage extends Widget {
     this.placedRegion = this.selectedRegion;
     const country = await graphicFromCountry(region, AppState.view);
 
+    const detailed = await PolygonWorker.simplify(
+      country.geometry as Polygon,
+      1000,
+    ); // toSimplified(country.geometry as Polygon, 1000);
+    const simplified = await PolygonWorker.simplify(
+      country.geometry as Polygon,
+    ); // toSimplified(country.geometry as Polygon);
+    country.geometry = detailed;
+
     const center = createRegionCenter(country);
     const label = createRegionLabel(country);
     this.selectedRegion = null;
@@ -214,7 +225,13 @@ export class AddRegionPage extends Widget {
     this.addHandles(
       this.sketchViewModel.on(
         "update",
-        watchModifications(this.sketchViewModel, { country, center, label }),
+        watchModifications(this.sketchViewModel, {
+          country,
+          center,
+          label,
+          detailed,
+          simplified,
+        }),
       ),
     );
   }
@@ -337,11 +354,10 @@ function watchModifications(model: SketchViewModel, region: Region) {
   const view = model.view as SceneView;
 
   const { country, center, label } = region;
-  const spherical = new PolygonTransform(view);
 
   // for performance reasons, we keep a simplified version of the geometry which will be visible throughout the interaction
-  let detailed = country.geometry as Polygon;
-  let simplified = toSimplified(country.geometry as Polygon);
+  let { detailed, simplified } = region;
+  const spherical = new PolygonTransform(view);
 
   // after the user has stopped interacting with the model
   let commitUpdateTimeout = -1;
@@ -387,7 +403,11 @@ function watchModifications(model: SketchViewModel, region: Region) {
       country.geometry = detailed;
       totalAngleDiff = 0;
 
-      simplified = toSimplified(detailed);
+      void PolygonWorker.simplify(country.geometry as Polygon, 1000).then(
+        (simp) => {
+          simplified = simp;
+        },
+      );
     }, 200);
   };
 }
@@ -441,14 +461,15 @@ async function queryRegion(
   }
 }
 
-function toSimplified(geometry: Polygon) {
+function toSimplified(geometry: Polygon, tolerance = 25) {
+  const n = performance.now();
   const polygon = geometry.clone();
   // The further the country is in the north / south, the more we have to simplify
   const ymax = Math.max(
     Math.abs(geometry.extent.ymax),
     Math.abs(geometry.extent.ymin),
   );
-  const tolerance = ymax / 25;
+  const calculatedTolerance = ymax / tolerance;
 
   let rings = polygon.rings;
   const maxLength = rings.reduce((acc, cur) => Math.max(cur.length, acc), 0);
@@ -461,12 +482,12 @@ function toSimplified(geometry: Polygon) {
     const points = ring.map((c) => {
       return { x: c[0], y: c[1] };
     });
-    const simplified = simplify(points, tolerance);
+    const simplified = simplify(points, calculatedTolerance);
     return simplified.map((p) => [p.x, p.y]);
   });
 
   polygon.rings = rings;
-
+  console.log(performance.now() - n);
   return polygon;
 }
 

@@ -101,7 +101,6 @@ export class AddObjectPage extends Widget {
   }
 
   render() {
-    console.log("rendering....");
     if (this.placedObject != null) {
       return <EditingInfo />;
     }
