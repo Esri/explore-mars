@@ -9,7 +9,7 @@ import * as promiseUtils from "@arcgis/core/core/promiseUtils";
 import SceneView from "@arcgis/core/views/SceneView";
 import Widget from "@arcgis/core/widgets/Widget";
 import { tsx } from "@arcgis/core/widgets/support/widget";
-import { graphicFromCountry } from "./countryUtils";
+import { graphicFromCountry } from "./graphicFromCountry";
 import FeatureLayer from "@arcgis/core/layers/FeatureLayer";
 import { type Polygon, type Point } from "@arcgis/core/geometry";
 import {
@@ -20,10 +20,9 @@ import {
 import GraphicsLayer from "@arcgis/core/layers/GraphicsLayer";
 import SketchViewModel from "@arcgis/core/widgets/Sketch/SketchViewModel";
 import PolygonTransform from "./PolygonTransform";
-import { EditingInfo } from "./ComparePage";
-import AppState from "../application/AppState";
+import { EditingInfo } from "../ComparePage";
+import AppState from "../../application/AppState";
 import styles from "./AddRegion.module.scss";
-import simplify from "simplify-js";
 import { P, match } from "ts-pattern";
 import { PolygonWorker } from "./PolygonWorker/PolygonWorker";
 interface Region {
@@ -70,6 +69,9 @@ export class AddRegionPage extends Widget {
 
   @property()
   highlight?: IHandle;
+
+  @property()
+  hover?: IHandle;
 
   overlayGlobe?: SceneView | null;
 
@@ -165,13 +167,13 @@ export class AddRegionPage extends Widget {
 
       const graphic = await queryRegion(e, this.overlayGlobe);
 
-      this.hovered?.remove();
+      this.hover?.remove();
 
       if (graphic != null && graphic.layer.type !== "graphics") {
         const layerView = await this.overlayGlobe.whenLayerView(
           graphic.layer as FeatureLayer,
         );
-        this.hovered = layerView.highlight(graphic);
+        this.hover = layerView.highlight(graphic);
       }
     },
   );
@@ -406,11 +408,9 @@ function watchModifications(model: SketchViewModel, region: Region) {
       country.geometry = detailed;
       totalAngleDiff = 0;
 
-      void PolygonWorker.simplify(country.geometry as Polygon, 1000).then(
-        (simp) => {
-          simplified = simp;
-        },
-      );
+      void PolygonWorker.simplify(country.geometry as Polygon).then((simp) => {
+        simplified = simp;
+      });
     }, 200);
   };
 }
@@ -462,36 +462,6 @@ async function queryRegion(
     }
     return graphic;
   }
-}
-
-function toSimplified(geometry: Polygon, tolerance = 25) {
-  const n = performance.now();
-  const polygon = geometry.clone();
-  // The further the country is in the north / south, the more we have to simplify
-  const ymax = Math.max(
-    Math.abs(geometry.extent.ymax),
-    Math.abs(geometry.extent.ymin),
-  );
-  const calculatedTolerance = ymax / tolerance;
-
-  let rings = polygon.rings;
-  const maxLength = rings.reduce((acc, cur) => Math.max(cur.length, acc), 0);
-
-  // Filter small islands around main land
-  rings = rings.filter((r) => r.length > maxLength / 10);
-
-  // Simplify remaining rings
-  rings = rings.map((ring) => {
-    const points = ring.map((c) => {
-      return { x: c[0], y: c[1] };
-    });
-    const simplified = simplify(points, calculatedTolerance);
-    return simplified.map((p) => [p.x, p.y]);
-  });
-
-  polygon.rings = rings;
-  console.log(performance.now() - n);
-  return polygon;
 }
 
 function ignoreAbortError(error: any) {
