@@ -35,18 +35,21 @@ const view = new SceneView({
   spatialReference: marsSR,
   environment: {
     lighting: {
+      type: "virtual",
       directShadowsEnabled: true,
     },
   },
   camera: {
     position: {
-      x: 360 * Math.random() - 180,
-      y: 90 * Math.random() - 45,
-      z: 6500000,
-      spatialReference: { wkid: 104971 },
+      spatialReference: {
+        wkid: 104971,
+      },
+      x: -57.10234077359152,
+      y: -24.37565105257643,
+      z: 839844.3044310743,
     },
-    heading: 0.0,
-    tilt: 10,
+    heading: 293.23407097843636,
+    tilt: 43.952125030140685,
   },
 });
 view.ui.remove("attribution");
@@ -75,7 +78,7 @@ const spinGlobe = addFrameTask({
   update: () => {
     if (!view.interacting) {
       const camera = view?.camera.clone();
-      camera.position.longitude -= 0.04;
+      camera.position.longitude -= 0.01;
       view.camera = camera;
     } else {
       spinGlobe.remove();
