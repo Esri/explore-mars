@@ -23,21 +23,18 @@ export class ComparePage extends Widget {
   private addObjectWidget!: AddObjectPage;
 
   initialize() {
-    this.addRegionWidget = new AddRegionPage();
-    this.addObjectWidget = new AddObjectPage();
-
     const watchPageHandle = watch(
       () => this.page,
       (page) => {
         if (page === "menu") return;
 
         if (page === "regions") {
-          this.addRegionWidget.destroy();
+          this.addRegionWidget?.destroy();
           this.addRegionWidget = new AddRegionPage();
         }
 
         if (page === "models") {
-          this.addObjectWidget.destroy();
+          this.addObjectWidget?.destroy();
           this.addObjectWidget = new AddObjectPage();
         }
       },
@@ -74,8 +71,6 @@ export class ComparePage extends Widget {
 
   destroy() {
     super.destroy();
-    this.addRegionWidget.destroy();
-    this.addObjectWidget.destroy();
   }
 }
 
