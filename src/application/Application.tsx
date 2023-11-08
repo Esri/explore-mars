@@ -74,9 +74,6 @@ class Application extends Widget {
         <CookieBanner hidden={false || AppState.page === "landing"} />
         <PageWrapper
           hidden={AppState.page === "home" || AppState.page === "landing"}
-          onClose={() => {
-            this.goToPage("home");
-          }}
           content={renderedContent}
         />
         <LandingPage

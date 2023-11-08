@@ -1,7 +1,9 @@
 @import "..//variables.module.scss";
 
 .cookieBanner {
-  order: 99;
+  display: flex;
+  flex-direction: column;
+  justify-content: end;
 }
 
 .hidden {

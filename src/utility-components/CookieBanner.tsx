@@ -1,6 +1,7 @@
 import { tsx } from "@arcgis/core/widgets/support/widget";
 import { Page } from "./Page";
 import styles from "./cookie-banner.module.scss";
+import { CloseButton } from "./CloseButton";
 
 const setCookie = (name: string, value: string, exdays: number) => {
   const d = new Date();
@@ -39,16 +40,20 @@ export function CookieBanner({ hidden }: CookieBannerProps) {
   return (
     <Page
       key="cookies"
-      class={styles.cookieBanner}
       hidden={!needsAcceptence}
-      onClose={() => {
-        setCookie(DISCLAIMER_COOKIE_NAME, DISCLAIMER_COOKIE_VALUE, 365);
-      }}
       content={
-        <p>
-          By using this app, you agree to the storing of cookies on your device
-          to access data layers, enhance user experience and analyze site usage.
-        </p>
+        <div class={styles.cookieBanner}>
+          <CloseButton
+            onClose={() => {
+              setCookie(DISCLAIMER_COOKIE_NAME, DISCLAIMER_COOKIE_VALUE, 365);
+            }}
+          />
+          <p>
+            By using this app, you agree to the storing of cookies on your
+            device to access data layers, enhance user experience and analyze
+            site usage.
+          </p>
+        </div>
       }
     />
   );
