@@ -29,18 +29,21 @@ class Application extends Widget {
   private previousContent: any;
 
   async initialize() {
-    AppState.watch("page", async (page: Page) => {
-      this.previousContent = this.content;
+    const watchPage = reactiveUtils.watch(
+      () => AppState.page,
+      async (page) => {
+        this.previousContent = this.content;
 
-      this.content = null;
-      const content = await this.refreshContent(page);
+        this.content = null;
+        const content = await this.refreshContent(page);
 
-      setTimeout(() => {
-        this.previousContent?.destroy();
-        this.previousContent = null;
-        this.content = content;
-      }, 200);
-    });
+        setTimeout(() => {
+          this.previousContent?.destroy();
+          this.previousContent = null;
+          this.content = content;
+        }, 200);
+      },
+    );
 
     reactiveUtils.when(
       () => AppState.status !== "uninitialized",
@@ -48,6 +51,8 @@ class Application extends Widget {
         enableBasemapSwitcher(AppState.view);
       },
     );
+
+    this.addHandles(watchPage);
   }
 
   render() {

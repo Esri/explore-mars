@@ -28,10 +28,13 @@ export function enableBasemapSwitcher(view: SceneView) {
     nextBasemap: shadedReliefBasemap,
   });
 
-  view.map.watch("basemap", () => {
-    view.environment.atmosphereEnabled =
-      toggle.activeBasemap === marsImageryBasemap;
-  });
+  reactiveUtils.watch(
+    () => view.map.basemap,
+    () => {
+      view.environment.atmosphereEnabled =
+        toggle.activeBasemap === marsImageryBasemap;
+    },
+  );
 
   view.ui.add(toggle, "bottom-right");
 

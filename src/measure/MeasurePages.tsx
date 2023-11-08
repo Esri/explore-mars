@@ -14,6 +14,7 @@ import Handles from "@arcgis/core/core/Handles";
 import { Item, SubMenu } from "../utility-components/SubMenu";
 import styles from "./MeasurePages.module.scss";
 import { CloseButton } from "../utility-components/CloseButton";
+import * as reactiveUtils from "@arcgis/core/core/reactiveUtils";
 
 type Page = "menu" | "area" | "line" | "elevation";
 
@@ -50,14 +51,17 @@ export class MeasurePage extends Widget {
 
   initialize() {
     (window as any).elevationProfile = this.elevationProfile;
-    const handle = this.elevationProfile.watch("_chart.amChart", (amChart) => {
-      if (amChart != null) {
-        amChart.paddingLeft = 1;
-        if (amChart?.yAxes?._values[0] != null) {
-          amChart.yAxes._values[0].renderer.opposite = true;
+    const handle = reactiveUtils.watch(
+      () => (this.elevationProfile as any)._chart.amChart,
+      (amChart) => {
+        if (amChart != null) {
+          amChart.paddingLeft = 1;
+          if (amChart?.yAxes?._values[0] != null) {
+            amChart.yAxes._values[0].renderer.opposite = true;
+          }
         }
-      }
-    });
+      },
+    );
 
     this.handles.add(handle);
   }
