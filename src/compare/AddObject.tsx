@@ -128,7 +128,7 @@ export class AddObjectPage extends Widget {
 
     void AppState.view.goTo({
       target: graphic.geometry,
-      scale: 25_000,
+      scale: 250_000,
       tilt: 70,
     });
 
