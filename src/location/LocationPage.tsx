@@ -50,6 +50,7 @@ export class LocationPage extends Widget {
               this.goTo("perseverance");
             }}
             itemClass={styles.perseverance}
+            icon="../images/location.svg"
           />,
           <Item
             text="Curiosity Rover"
@@ -57,6 +58,7 @@ export class LocationPage extends Widget {
               this.goTo("curiosity");
             }}
             itemClass={styles.curiosity}
+            icon="../images/location.svg"
           />,
           <Item
             text="Opportunity Rover"
@@ -64,6 +66,7 @@ export class LocationPage extends Widget {
               this.goTo("opportunity");
             }}
             itemClass={styles.opportunity}
+            icon="../images/location.svg"
           />,
         ]}
       />
