@@ -49,6 +49,10 @@ export class MeasurePage extends Widget {
   constructor(view: SceneView) {
     super();
 
+    areaMeasurement.view ??= view;
+    lineMeasurement.view ??= view;
+    elevationProfile.view ??= view;
+
     const watchPage = reactiveUtils.watch(
       () => this.page,
       (page) => {
@@ -57,9 +61,17 @@ export class MeasurePage extends Widget {
           lineMeasurement?.viewModel.clear();
           elevationProfile?.viewModel.clear();
 
-          areaMeasurement.view ??= view;
-          lineMeasurement.view ??= view;
-          elevationProfile.view ??= view;
+          match(page)
+            .with("area", () => {
+              areaMeasurement.viewModel.start();
+            })
+            .with("elevation", () => {
+              elevationProfile.viewModel.start();
+            })
+            .with("line", () => {
+              lineMeasurement.viewModel.start();
+            })
+            .exhaustive();
         }
       },
     );
@@ -92,10 +104,13 @@ export class MeasurePage extends Widget {
       reactiveUtils.when(
         () => widget.viewModel.state === "creating",
         () => {
-          widget.viewModel.clear();
+          if (widget !== elevationProfile) widget.viewModel.clear();
         },
       ),
     );
+
+    this.activeWidget = widget;
+
     return (
       <div class={styles.measurement}>
         <CloseButton
