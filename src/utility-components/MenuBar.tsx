@@ -1,7 +1,7 @@
 import { tsx } from "@arcgis/core/widgets/support/widget";
 import styles from "./menu-bar.module.scss";
 import cx from "classnames";
-import { type Page } from "../application/AppState";
+import AppState, { type Page } from "../application/AppState";
 import { PointerEventsContainer } from "./PointerEventsContainer";
 
 interface MenuBarProps {
@@ -15,7 +15,8 @@ export function MenuBar({ onItemClick }: MenuBarProps) {
           <a
             class={cx(styles.menuItem, styles.logoItem, styles.explore)}
             onclick={(e: Event) => {
-              onItemClick("landing");
+              if (AppState.page === "landing") onItemClick("home");
+              else onItemClick("landing");
             }}
           >
             <img
@@ -33,7 +34,8 @@ export function MenuBar({ onItemClick }: MenuBarProps) {
             <a
               class={cx(styles.menuItem, styles.location)}
               onclick={(e: Event) => {
-                onItemClick("locations");
+                if (AppState.page === "locations") onItemClick("home");
+                else onItemClick("locations");
               }}
             >
               <img class={styles.icon} alt="" src="../images/location.svg" />
@@ -42,7 +44,8 @@ export function MenuBar({ onItemClick }: MenuBarProps) {
             <a
               class={cx(styles.menuItem)}
               onclick={(e: Event) => {
-                onItemClick("measure");
+                if (AppState.page === "measure") onItemClick("home");
+                else onItemClick("measure");
               }}
             >
               <img class={styles.icon} alt="" src="../images/measure.svg" />
@@ -51,7 +54,8 @@ export function MenuBar({ onItemClick }: MenuBarProps) {
             <a
               class={cx(styles.menuItem, styles.compare)}
               onclick={(e: Event) => {
-                onItemClick("compare");
+                if (AppState.page === "compare") onItemClick("home");
+                else onItemClick("compare");
               }}
             >
               <img class={styles.icon} alt="" src="../images/compare.svg" />
@@ -61,7 +65,8 @@ export function MenuBar({ onItemClick }: MenuBarProps) {
           <a
             class={cx(styles.menuItem, styles.logoItem, styles.credits)}
             onclick={(e: Event) => {
-              onItemClick("credits");
+              if (AppState.page === "credits") onItemClick("home");
+              else onItemClick("credits");
             }}
           >
             <img
