@@ -75,6 +75,7 @@ class Application extends Widget {
         <PageWrapper
           hidden={AppState.page === "home" || AppState.page === "landing"}
           content={renderedContent}
+          class={AppState.status === "editing" ? styles.obscureMenu : ""}
         />
         <LandingPage
           hidden={AppState.page !== "landing"}

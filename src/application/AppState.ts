@@ -23,7 +23,7 @@ export class Store extends Accessor {
   page: Page = "landing";
 
   @property()
-  status: "uninitialized" | "idle" | "loading";
+  status: "uninitialized" | "idle" | "loading" | "editing";
 
   async initialize() {
     this.status = "uninitialized";

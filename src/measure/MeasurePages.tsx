@@ -15,6 +15,7 @@ import styles from "./MeasurePages.module.scss";
 import { CloseButton } from "../utility-components/CloseButton";
 import * as reactiveUtils from "@arcgis/core/core/reactiveUtils";
 import ElevationProfileLineView from "@arcgis/core/widgets/ElevationProfile/ElevationProfileLineView";
+import AppState from "../application/AppState";
 
 type Page = "menu" | "area" | "line" | "elevation";
 
@@ -74,7 +75,8 @@ export class MeasurePage extends Widget {
   }
 
   render() {
-    if (this.page === "menu")
+    if (this.page === "menu") {
+      AppState.status = "idle";
       return (
         <MeasureMenu
           selectTool={(tool) => {
@@ -82,6 +84,9 @@ export class MeasurePage extends Widget {
           }}
         />
       );
+    }
+
+    AppState.status = "editing";
 
     const widget = match(this.page)
       .with("area", () => this.areaMeasurement)

@@ -11,6 +11,7 @@ import { watch } from "@arcgis/core/core/reactiveUtils";
 import { Item, SubMenu } from "../utility-components/SubMenu";
 import styles from "./ComparePage.module.scss";
 import { CloseButton } from "../utility-components/CloseButton";
+import AppState from "../application/AppState";
 
 type Page = "menu" | "regions" | "models";
 
@@ -43,7 +44,9 @@ export class ComparePage extends Widget {
   }
 
   render() {
-    if (this.page === "menu")
+    if (this.page === "menu") {
+      AppState.status = "idle";
+
       return (
         <CompareMenu
           selectTool={(tool) => {
@@ -51,6 +54,9 @@ export class ComparePage extends Widget {
           }}
         />
       );
+    }
+
+    AppState.status = "editing";
 
     const widget = match(this.page)
       .with("regions", () => this.addRegionWidget)
