@@ -88,6 +88,9 @@ class Application extends Widget {
   }
 
   private goToPage(page: Page) {
+    if (AppState.page === page) {
+      AppState.page = "home";
+    }
     AppState.page = page;
   }
 
