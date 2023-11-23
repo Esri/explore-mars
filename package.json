@@ -1,7 +1,7 @@
 {
   "name": "explore-mars",
   "version": "1.0.0",
-  "description": "Interactively discover the red planet using the ArcGIS API for JavaScript",
+  "description": "Interactively discover the red planet using the ArcGIS Maps SDK for JavaScript",
   "repository": {
     "type": "git",
     "url": "https://github.com/arnofiva/arcgis-core-template"

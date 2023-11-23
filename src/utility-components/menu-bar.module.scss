@@ -152,6 +152,11 @@
   aspect-ratio: unset;
 }
 
+.label {
+  white-space: nowrap;
+  align-self: center;
+}
+
 @media screen and (width <= 745px), screen and (height <= 415px) {
   .menu {
     box-sizing: border-box;

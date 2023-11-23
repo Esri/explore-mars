@@ -75,7 +75,7 @@ export function MenuBar({ onItemClick }: MenuBarProps) {
               title="Credits"
               alt=""
             />
-            <div class={styles.label}>ArcGIS API for Javascript</div>
+            <div class={styles.label}>ArcGIS Maps SDK for JavaScript</div>
           </a>
         </nav>
       }

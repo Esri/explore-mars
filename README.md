@@ -1,4 +1,4 @@
-# ArcGIS API for JavaScript template
+# ArcGIS Maps SDK for JavaScript template
 
 ## Prerequisites
 

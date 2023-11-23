@@ -19,7 +19,7 @@ export class CreditsPage extends Widget {
         </p>
         <p>
           The app was built using the{" "}
-          <a href="https://js.arcgis.com">ArcGIS API for JavaScript</a>.
+          <a href="https://js.arcgis.com">ArcGIS Maps SDK for JavaScript</a>.
         </p>
       </div>,
       <hr />,
