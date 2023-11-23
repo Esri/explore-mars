@@ -57,7 +57,9 @@ export class AddObjectPage extends Widget {
   @property()
   placedObject: Graphic | null = null;
 
-  initialize() {
+  start() {
+    if (this.viewGraphics != null) return;
+
     const view = AppState.view;
 
     const graphics = new GraphicsLayer({
@@ -135,6 +137,12 @@ export class AddObjectPage extends Widget {
     void this.sketchViewModel.update(graphic, {
       enableScaling: false,
     });
+  }
+
+  clear() {
+    this.viewGraphics?.removeAll();
+    this.placedObject?.destroy();
+    this.placedObject = null;
   }
 
   destroy(): void {

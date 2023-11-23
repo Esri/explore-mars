@@ -15,29 +15,22 @@ import AppState from "../application/AppState";
 
 type Page = "menu" | "regions" | "models";
 
+const addRegionWidget = new AddRegionPage();
+const addObjectWidget = new AddObjectPage();
 @subclass("ExploreMars.page.CompareObject")
 export class ComparePage extends Widget {
   @property()
   page: Page = "menu";
-
-  private addRegionWidget!: AddRegionPage;
-  private addObjectWidget!: AddObjectPage;
 
   initialize() {
     const watchPageHandle = watch(
       () => this.page,
       (page) => {
         if (page === "menu") return;
-
-        if (page === "regions") {
-          this.addRegionWidget?.destroy();
-          this.addRegionWidget = new AddRegionPage();
-        }
-
-        if (page === "models") {
-          this.addObjectWidget?.destroy();
-          this.addObjectWidget = new AddObjectPage();
-        }
+        addRegionWidget?.start();
+        addRegionWidget?.clear();
+        addObjectWidget?.start();
+        addObjectWidget?.clear();
       },
     );
     this.addHandles(watchPageHandle);
@@ -59,8 +52,8 @@ export class ComparePage extends Widget {
     AppState.status = "editing";
 
     const widget = match(this.page)
-      .with("regions", () => this.addRegionWidget)
-      .with("models", () => this.addObjectWidget)
+      .with("regions", () => addRegionWidget)
+      .with("models", () => addObjectWidget)
       .exhaustive();
 
     return (

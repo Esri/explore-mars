@@ -17,7 +17,6 @@ import {
   ObjectSymbol3DLayer,
   TextSymbol3DLayer,
 } from "@arcgis/core/symbols";
-import Handles from "@arcgis/core/core/Handles";
 import GraphicsLayer from "@arcgis/core/layers/GraphicsLayer";
 import SketchViewModel from "@arcgis/core/widgets/Sketch/SketchViewModel";
 import PolygonTransform from "./PolygonTransform";
@@ -53,10 +52,8 @@ export class AddRegionPage extends Widget {
 
   overlayGlobe?: SceneView | null;
 
-  @property()
-  handles = new Handles();
-
-  async initialize() {
+  start() {
+    if (this.viewGraphics != null) return;
     const view = AppState.view;
 
     const graphics = new GraphicsLayer({
@@ -133,7 +130,7 @@ export class AddRegionPage extends Widget {
       }),
     );
 
-    this.handles.add(handle);
+    this.addHandles(handle);
 
     this.overlayGlobe = overlayGlobe;
   }
@@ -160,7 +157,7 @@ export class AddRegionPage extends Widget {
       enableScaling: false,
     });
 
-    this.handles.add(
+    this.addHandles(
       this.sketchViewModel.on(
         "update",
         watchRotation(this.sketchViewModel, { country, center, label }),
@@ -168,9 +165,19 @@ export class AddRegionPage extends Widget {
     );
   }
 
+  clear() {
+    this.viewGraphics?.removeAll();
+    this.selectedRegion?.destroy();
+    this.placedRegion?.destroy();
+    this.graphicEditing.forEach((graphic) => {
+      graphic.destroy();
+    });
+    this.selectedRegion = null;
+    this.placedRegion = null;
+  }
+
   destroy(): void {
     this.sketchViewModel.cancel();
-    this.handles.removeAll();
     this.graphicEditing.forEach((graphic) => {
       graphic.destroy();
     });
@@ -179,7 +186,6 @@ export class AddRegionPage extends Widget {
     this.overlayGlobe?.destroy();
     this.selectedRegion?.destroy();
     this.placedRegion?.destroy();
-    this.handles.destroy();
 
     if (!this.sketchViewModel.destroyed) this.sketchViewModel.destroy();
 

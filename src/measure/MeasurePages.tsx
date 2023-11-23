@@ -8,7 +8,6 @@ import ElevationProfile from "@arcgis/core/widgets/ElevationProfile";
 import Widget from "@arcgis/core/widgets/Widget";
 import { tsx } from "@arcgis/core/widgets/support/widget";
 import { match } from "ts-pattern";
-import ElevationProfileLineGround from "@arcgis/core/widgets/ElevationProfile/ElevationProfileLineGround";
 import type SceneView from "@arcgis/core/views/SceneView";
 import { Item, SubMenu } from "../utility-components/SubMenu";
 import styles from "./MeasurePages.module.scss";
@@ -19,59 +18,52 @@ import AppState from "../application/AppState";
 
 type Page = "menu" | "area" | "line" | "elevation";
 
+const areaMeasurement = new AreaMeasurement3D({});
+
+const lineMeasurement = new DirectLineMeasurement3D({});
+const elevationProfile = new ElevationProfile({
+  profiles: [new ElevationProfileLineView()],
+  visibleElements: {
+    selectButton: false,
+    legend: false,
+  },
+});
+
+reactiveUtils.watch(
+  () => (elevationProfile as any)?._chart?.amChart,
+  (amChart) => {
+    if (amChart != null) {
+      amChart.paddingLeft = 1;
+      if (amChart?.yAxes?._values[0] != null) {
+        amChart.yAxes._values[0].renderer.opposite = true;
+      }
+    }
+  },
+);
+
 @subclass("ExploreMars.page.Measure")
 export class MeasurePage extends Widget {
-  private areaMeasurement: AreaMeasurement3D;
-  private lineMeasurement: DirectLineMeasurement3D;
-  private elevationProfile: ElevationProfile;
-
   @property()
   page: Page = "menu";
 
   constructor(view: SceneView) {
     super();
-    reactiveUtils.watch(
+
+    const watchPage = reactiveUtils.watch(
       () => this.page,
       (page) => {
         if (page !== "menu") {
-          this.areaMeasurement?.destroy();
-          this.areaMeasurement = new AreaMeasurement3D({
-            view,
-          });
+          areaMeasurement?.viewModel.clear();
+          lineMeasurement?.viewModel.clear();
+          elevationProfile?.viewModel.clear();
 
-          this.lineMeasurement?.destroy();
-          this.lineMeasurement = new DirectLineMeasurement3D({
-            view,
-          });
-          this.elevationProfile?.destroy();
-          this.elevationProfile = new ElevationProfile({
-            view,
-            profiles: [
-              new ElevationProfileLineGround(),
-              new ElevationProfileLineView(),
-            ],
-            visibleElements: {
-              selectButton: false,
-              legend: false,
-            },
-          });
-
-          const handle = reactiveUtils.watch(
-            () => (this.elevationProfile as any)?._chart?.amChart,
-            (amChart) => {
-              console.log("am chart");
-              if (amChart != null) {
-                amChart.paddingLeft = 1;
-                if (amChart?.yAxes?._values[0] != null) {
-                  amChart.yAxes._values[0].renderer.opposite = true;
-                }
-              }
-            },
-          );
-          this.elevationProfile.addHandles(handle);
+          areaMeasurement.view ??= view;
+          lineMeasurement.view ??= view;
+          elevationProfile.view ??= view;
         }
       },
     );
+    this.addHandles(watchPage);
   }
 
   render() {
@@ -89,13 +81,21 @@ export class MeasurePage extends Widget {
     AppState.status = "editing";
 
     const widget = match(this.page)
-      .with("area", () => this.areaMeasurement)
-      .with("elevation", () => this.elevationProfile)
-      .with("line", () => this.lineMeasurement)
+      .with("area", () => areaMeasurement)
+      .with("elevation", () => elevationProfile)
+      .with("line", () => lineMeasurement)
       .exhaustive();
 
     widget.visible = true;
 
+    widget.viewModel.addHandles(
+      reactiveUtils.when(
+        () => widget.viewModel.state === "creating",
+        () => {
+          widget.viewModel.clear();
+        },
+      ),
+    );
     return (
       <div class={styles.measurement}>
         <CloseButton
@@ -113,7 +113,6 @@ export class MeasurePage extends Widget {
   }
 
   destroy(): void {
-    delete (window as any).elevationProfile;
     super.destroy();
   }
 }
