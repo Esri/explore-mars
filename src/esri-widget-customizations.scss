@@ -5,7 +5,7 @@
   display: none !important;
 }
 
-.esri-popup .esri-widget {
+.esri-popup.esri-widget {
   background: none !important;
   border: none !important;
   box-shadow: none !important;
@@ -15,8 +15,26 @@
   z-index: 1;
 }
 
-.esri-ui-top-left .esri-widget {
+.esri-widget {
+  font-size: 1rem;
+}
+
+.esri-ui-top-left.esri-widget {
   background: rgb(10 10 10 / 85%);
+}
+
+.esri-widget.esri-widget--panel {
+  background: transparent;
+}
+
+.esri-direct-line-measurement-3d__measurement,
+.esri-area-measurement-3d__measurement {
+  display: none;
+}
+
+.esri-direct-line-measurement-3d__settings,
+.esri-area-measurement-3d__settings {
+  padding-bottom: 20px;
 }
 
 .esri-button,
