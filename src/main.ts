@@ -86,6 +86,10 @@ when(
   () => AppState.page !== "landing",
   () => {
     spinGlobe.remove();
+    const camera = view.camera.clone();
+    camera.position.z = 8382276.030513974;
+    camera.tilt = 0.15;
+    void view.goTo(camera, { speedFactor: 0.5 });
   },
 );
 
