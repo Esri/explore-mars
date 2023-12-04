@@ -224,6 +224,9 @@ function createGlobeConfig(
       components: [],
     },
     popupEnabled: false,
+    highlightOptions: {
+      color: "rgba(207, 88, 25, 0.5)",
+    },
   };
 }
 
