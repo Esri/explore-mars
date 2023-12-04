@@ -23,7 +23,8 @@ export function Item({ icon, text, itemClass, onClick }: ItemProps) {
 
 interface SubMenuProps {
   items: tsx.JSX.Element[];
+  class?: string;
 }
-export function SubMenu({ items }: SubMenuProps) {
-  return <nav class={styles.subMenu}>{items}</nav>;
+export function SubMenu({ items, class: clazz }: SubMenuProps) {
+  return <nav class={cx(styles.subMenu, clazz)}>{items}</nav>;
 }

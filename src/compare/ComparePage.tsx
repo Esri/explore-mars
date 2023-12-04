@@ -58,11 +58,13 @@ export class ComparePage extends Widget {
 
     return (
       <div class={styles.compareInfo}>
-        <CloseButton
-          onClose={() => {
-            this.page = "menu";
-          }}
-        />
+        <span class={styles.close}>
+          <CloseButton
+            onClose={() => {
+              this.page = "menu";
+            }}
+          />
+        </span>
         {widget.render()}
       </div>
     );

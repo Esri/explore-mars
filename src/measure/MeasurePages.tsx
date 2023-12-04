@@ -16,6 +16,8 @@ import * as reactiveUtils from "@arcgis/core/core/reactiveUtils";
 import ElevationProfileLineView from "@arcgis/core/widgets/ElevationProfile/ElevationProfileLineView";
 import AppState from "../application/AppState";
 
+import "./esri-measurement-widget-overwrites.scss";
+
 type Page = "menu" | "area" | "line" | "elevation";
 
 const areaMeasurement = new AreaMeasurement3D({});
