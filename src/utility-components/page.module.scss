@@ -10,7 +10,7 @@
   border: solid 1px rgb(100 100 100 / 20%);
   z-index: -1;
   padding: 15px;
-  padding-bottom: calc(78px + 10px);
+  padding-bottom: 88px;
   display: flex;
   flex-direction: column;
   align-items: end;
@@ -31,6 +31,10 @@
   width: 100%;
   border-top-left-radius: 24px;
   border-top-right-radius: 24px;
+}
+
+.obscureMenu {
+  padding-bottom: unset;
 }
 
 @media screen and (width <= 745px), screen and (height <= 415px) {

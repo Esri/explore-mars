@@ -101,7 +101,7 @@ export class AddObjectPage extends Widget {
         }}
       />
     ));
-    return <SubMenu items={items} />;
+    return <SubMenu class={styles.container} items={items} />;
   }
 
   private async addGltf(id: string) {

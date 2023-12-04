@@ -49,12 +49,12 @@ $graphicWidth: 1500px;
 }
 
 .content {
+  font-size: 1.5rem;
   text-align: center;
   z-index: 1;
   text-shadow: 2px 2px 20px rgb(0 0 0 / 80%);
   color: $highlightColor;
-  font-size: 1.8em;
-  max-width: 600px;
+  max-width: 800px;
   margin: 0 auto;
 }
 
@@ -63,7 +63,7 @@ $graphicWidth: 1500px;
 }
 
 .small {
-  font-size: 0.5em;
+  font-size: 0.7em;
 }
 
 .graphics {
