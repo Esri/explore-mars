@@ -13,12 +13,13 @@
 }
 
 .globeView {
-  margin-inline: -15px;
-  width: calc(100% + 30px);
+  width: 100%;
   height: min(600px, 50vh);
+  overflow: hidden;
+  border-radius: 25px;
 
-  &:focus {
-    outline: none;
+  &:focus-within {
+    outline: 4px solid rgba(207 88 25 / 0.5);
   }
 
   .esri-view-surface:focus {

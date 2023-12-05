@@ -78,3 +78,8 @@ textarea {
     margin-bottom: calc($menuHeight - 15px);
   }
 }
+
+.esri-view-surface::after {
+  // we manage the accessibility glow manually
+  outline: 0 !important;
+}
