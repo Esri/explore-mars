@@ -38,6 +38,9 @@ export class AddRegionPage extends Widget {
   @property()
   viewGraphics!: GraphicsLayer;
 
+  @property()
+  editingGrapihcs: GraphicsLayer;
+
   @aliasOf("viewGraphics.graphics")
   graphicEditing: Graphic[] = [];
 
@@ -56,15 +59,19 @@ export class AddRegionPage extends Widget {
     if (this.viewGraphics != null) return;
     const view = AppState.view;
 
-    const graphics = new GraphicsLayer({
+    const viewGraphics = new GraphicsLayer({
+      title: "Country comparison",
+      listMode: "hide",
+    });
+    const editingGraphics = new GraphicsLayer({
       title: "SVM layer for comparison",
       listMode: "hide",
     });
 
-    view.map.layers.add(graphics);
+    view.map.layers.addMany([viewGraphics, editingGraphics]);
 
     const sketchViewModel = new SketchViewModel({
-      layer: graphics,
+      layer: editingGraphics,
       view,
       defaultUpdateOptions: {
         toggleToolOnClick: false,
@@ -77,7 +84,8 @@ export class AddRegionPage extends Widget {
       this.destroy();
     });
 
-    this.viewGraphics = graphics;
+    this.editingGrapihcs = editingGraphics;
+    this.viewGraphics = viewGraphics;
     this.sketchViewModel = sketchViewModel;
   }
 
@@ -148,7 +156,8 @@ export class AddRegionPage extends Widget {
     const label = createRegionLabel(country);
     this.selectedRegion = null;
 
-    this.viewGraphics.addMany([center, country, label]);
+    this.viewGraphics.addMany([country, label]);
+    this.editingGrapihcs.add(center);
 
     this.viewGraphics.elevationInfo = { mode: "on-the-ground" };
 
@@ -167,6 +176,7 @@ export class AddRegionPage extends Widget {
 
   clear() {
     this.viewGraphics?.removeAll();
+    this.editingGrapihcs?.removeAll();
     this.selectedRegion?.destroy();
     this.placedRegion?.destroy();
     this.graphicEditing.forEach((graphic) => {
@@ -182,6 +192,7 @@ export class AddRegionPage extends Widget {
       graphic.destroy();
     });
     this.viewGraphics.removeAll();
+    this.editingGrapihcs.removeAll();
 
     this.overlayGlobe?.destroy();
     this.selectedRegion?.destroy();
@@ -189,6 +200,7 @@ export class AddRegionPage extends Widget {
 
     if (!this.sketchViewModel.destroyed) this.sketchViewModel.destroy();
 
+    this.editingGrapihcs.destroy();
     this.viewGraphics.destroy();
     super.destroy();
   }
