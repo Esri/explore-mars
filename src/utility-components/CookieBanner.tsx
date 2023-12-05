@@ -43,11 +43,13 @@ export function CookieBanner({ hidden }: CookieBannerProps) {
       hidden={!needsAcceptence}
       content={
         <div class={styles.cookieBanner}>
-          <CloseButton
-            onClose={() => {
-              setCookie(DISCLAIMER_COOKIE_NAME, DISCLAIMER_COOKIE_VALUE, 365);
-            }}
-          />
+          <span class={styles.close}>
+            <CloseButton
+              onClose={() => {
+                setCookie(DISCLAIMER_COOKIE_NAME, DISCLAIMER_COOKIE_VALUE, 365);
+              }}
+            />
+          </span>
           <p>
             By using this app, you agree to the storing of cookies on your
             device to access data layers, enhance user experience and analyze
