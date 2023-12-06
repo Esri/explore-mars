@@ -11,7 +11,7 @@ import { match } from "ts-pattern";
 import type SceneView from "@arcgis/core/views/SceneView";
 import { Item, SubMenu } from "../utility-components/SubMenu";
 import styles from "./MeasurePages.module.scss";
-import { CloseButton } from "../utility-components/CloseButton";
+import { CloseButton } from "../utility-components/close-button/CloseButton";
 import * as reactiveUtils from "@arcgis/core/core/reactiveUtils";
 import ElevationProfileLineView from "@arcgis/core/widgets/ElevationProfile/ElevationProfileLineView";
 import AppState from "../application/AppState";

@@ -10,7 +10,7 @@ import { AddRegionPage } from "./AddRegion";
 import { watch } from "@arcgis/core/core/reactiveUtils";
 import { Item, SubMenu } from "../utility-components/SubMenu";
 import styles from "./ComparePage.module.scss";
-import { CloseButton } from "../utility-components/CloseButton";
+import { CloseButton } from "../utility-components/close-button/CloseButton";
 import AppState from "../application/AppState";
 
 type Page = "menu" | "regions" | "models";
