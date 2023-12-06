@@ -17,7 +17,7 @@ import { CookieBanner } from "../utility-components/CookieBanner";
 import * as reactiveUtils from "@arcgis/core/core/reactiveUtils";
 import { Loading } from "../utility-components/Loading";
 import styles from "./app.module.scss";
-import { MenuBar } from "../utility-components/MenuBar";
+import { MenuBar } from "../utility-components/menu-bar/MenuBar";
 import { Page as PageWrapper } from "../utility-components/Page";
 
 @subclass("ExploreMars.Application")

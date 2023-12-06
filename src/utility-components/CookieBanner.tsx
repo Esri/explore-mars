@@ -1,7 +1,7 @@
 import { tsx } from "@arcgis/core/widgets/support/widget";
 import { Page } from "./Page";
 import styles from "./cookie-banner.module.scss";
-import { CloseButton } from "./CloseButton";
+import { CloseButton } from "./close-button/CloseButton";
 
 const setCookie = (name: string, value: string, exdays: number) => {
   const d = new Date();

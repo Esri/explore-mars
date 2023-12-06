@@ -13,35 +13,48 @@ import AppState from "../application/AppState";
 import { EditingInfo } from "./ComparePage";
 import { Item, SubMenu } from "../utility-components/SubMenu";
 import styles from "./AddObject.module.scss";
+import zurich from "./gltf/zurich.zip";
+import manhattan from "./gltf/manhattan.zip";
+import killimanjaro from "./gltf/killimanjaro.zip";
+import grandCanyon from "./gltf/grand-canyon.zip";
+import dubai from "./gltf/dubai.zip";
+import everest from "./gltf/everest.zip";
 
 interface GltfObject {
+  id: string;
   name: string;
   gltf: string;
 }
 
 const objects: GltfObject[] = [
   {
-    gltf: "gltf/zurich.zip",
+    id: "zurich",
+    gltf: zurich,
     name: "Zurich",
   },
   {
-    gltf: "gltf/manhattan.zip",
+    id: "manhattan",
+    gltf: manhattan,
     name: "Manhattan",
   },
   {
-    gltf: "gltf/killimanjaro.zip",
+    id: "killimanjaro",
+    gltf: killimanjaro,
     name: "Killimanjaro",
   },
   {
-    gltf: "gltf/grand-canyon.zip",
+    id: "grand-canyon",
+    gltf: grandCanyon,
     name: "Grand Canyon",
   },
   {
-    gltf: "gltf/dubai.zip",
+    id: "dubai",
+    gltf: dubai,
     name: "Dubai",
   },
   {
-    gltf: "gltf/everest.zip",
+    id: "everest",
+    gltf: everest,
     name: "Everest",
   },
 ];
@@ -104,9 +117,8 @@ export class AddObjectPage extends Widget {
     return <SubMenu class={styles.container} items={items} />;
   }
 
-  private async addGltf(id: string) {
-    const url = new URL("/" + id, import.meta.url);
-    const href = await importModel(url.toString());
+  private async addGltf(url: string) {
+    const href = await importModel(url);
 
     const gltfModel = new ObjectSymbol3DLayer({
       anchor: "bottom",
@@ -165,11 +177,9 @@ interface ObjectProps {
   onClick: (gltf: GltfObject) => void;
 }
 function Object({ gltf, onClick }: ObjectProps) {
-  const id = gltf.gltf.split("/")[1].replace(".zip", "");
-
   return (
     <Item
-      itemClass={styles[id]}
+      itemClass={styles[gltf.id]}
       onClick={() => {
         onClick(gltf);
       }}

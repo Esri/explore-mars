@@ -1,5 +1,6 @@
 import "@esri/calcite-components/dist/calcite/calcite.css";
 import "@esri/calcite-components/dist/components/calcite-loader";
+import "./font-face/font-face.scss";
 import "./general.scss";
 import "./esri-widget-customizations.scss";
 import Application from "./application/Application";
@@ -77,7 +78,6 @@ const spinGlobe = addFrameTask({
 
 AppState.view = view;
 
-// eslint-disable-next-line no-new
 const app = new Application({
   container: "application",
 });
@@ -93,4 +93,5 @@ when(
   },
 );
 
+(window as any).app = app;
 (window as any).view = view;

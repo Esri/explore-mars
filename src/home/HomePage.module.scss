@@ -86,46 +86,46 @@ $graphicWidth: 1500px;
   background-repeat: no-repeat;
 
   &:nth-child(1) {
-    background-image: url("../images/home/background-1.png");
+    background-image: url("./images/background-1.png");
   }
 
   &:nth-child(2) {
-    background-image: url("../images/home/background-2.png");
+    background-image: url("./images/background-2.png");
     transition-delay: 0.2s;
   }
 
   &:nth-child(3) {
-    background-image: url("../images/home/background-3.png");
+    background-image: url("./images/background-3.png");
     transition-delay: 0.15s;
   }
 
   &:nth-child(4) {
-    background-image: url("../images/home/background-4.png");
+    background-image: url("./images/background-4.png");
     transition-delay: 0.05s;
   }
 
   &:nth-child(5) {
-    background-image: url("../images/home/background-5.png");
+    background-image: url("./images/background-5.png");
     transition-delay: 0.3s;
   }
 
   &:nth-child(6) {
-    background-image: url("../images/home/background-6.png");
+    background-image: url("./images/background-6.png");
     transition-delay: 0.22s;
   }
 
   &:nth-child(7) {
-    background-image: url("../images/home/background-7.png");
+    background-image: url("./images/background-7.png");
     transition-delay: 0.12s;
   }
 
   &:nth-child(8) {
-    background-image: url("../images/home/background-8.png");
+    background-image: url("./images/background-8.png");
     transition-delay: 0.2s;
   }
 
   &:nth-child(0) {
-    background-image: url("../images/home/background-9.png");
+    background-image: url("./images/background-9.png");
   }
 }
 
