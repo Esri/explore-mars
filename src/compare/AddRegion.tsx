@@ -237,6 +237,8 @@ function createGlobeConfig(
     },
     popupEnabled: false,
     highlightOptions: {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-expect-error
       color: "rgba(207, 88, 25, 0.5)",
     },
   };

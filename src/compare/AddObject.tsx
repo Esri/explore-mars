@@ -7,7 +7,7 @@ import Widget from "@arcgis/core/widgets/Widget";
 import { tsx } from "@arcgis/core/widgets/support/widget";
 import { PointSymbol3D, ObjectSymbol3DLayer } from "@arcgis/core/symbols";
 import SketchViewModel from "@arcgis/core/widgets/Sketch/SketchViewModel";
-import { importModel } from "./GLTFImporter";
+import { importModel } from "./GlTFImporter";
 import GraphicsLayer from "@arcgis/core/layers/GraphicsLayer";
 import AppState from "../application/AppState";
 import { EditingInfo } from "./ComparePage";

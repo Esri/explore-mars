@@ -111,8 +111,6 @@ export class MeasurePage extends Widget {
       ),
     );
 
-    this.activeWidget = widget;
-
     return (
       <div class={styles.measurement}>
         <CloseButton
