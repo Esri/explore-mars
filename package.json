@@ -21,7 +21,6 @@
   "dependencies": {
     "@arcgis/core": "^4.27",
     "@esri/calcite-components": "1.4.2",
-    "@zip.js/zip.js": "^2.7.29",
     "classnames": "^2.3.2",
     "gl-matrix": "^3.4.3",
     "maquette-css-transitions": "^1.1.1",
@@ -39,6 +38,7 @@
     "prettier": "^3.0.3",
     "sass": "^1.63.4",
     "stylelint": "^15.10.3",
-    "stylelint-config-standard-scss": "^11.0.0"
+    "stylelint-config-standard-scss": "^11.0.0",
+    "vite-plugin-gltf": "^4.0.0"
   }
 }

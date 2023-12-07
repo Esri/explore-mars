@@ -1,3 +1,6 @@
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-expect-error the gltf plugin does not have type definitions
+import gltf from "vite-plugin-gltf";
 import { defineConfig } from "vite";
 
 export default defineConfig({
@@ -8,5 +11,5 @@ export default defineConfig({
   build: {
     target: "es2020",
   },
-  assetsInclude: ["**/*.zip", "**/*.gltf"],
+  plugins: [gltf()],
 });
