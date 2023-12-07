@@ -7,18 +7,17 @@ import Widget from "@arcgis/core/widgets/Widget";
 import { tsx } from "@arcgis/core/widgets/support/widget";
 import { PointSymbol3D, ObjectSymbol3DLayer } from "@arcgis/core/symbols";
 import SketchViewModel from "@arcgis/core/widgets/Sketch/SketchViewModel";
-import { importModel } from "./GlTFImporter";
 import GraphicsLayer from "@arcgis/core/layers/GraphicsLayer";
 import AppState from "../application/AppState";
 import { EditingInfo } from "./ComparePage";
 import { Item, SubMenu } from "../utility-components/SubMenu";
 import styles from "./AddObject.module.scss";
-import zurich from "./gltf/zurich.zip";
-import manhattan from "./gltf/manhattan.zip";
-import killimanjaro from "./gltf/killimanjaro.zip";
-import grandCanyon from "./gltf/grand-canyon.zip";
-import dubai from "./gltf/dubai.zip";
-import everest from "./gltf/everest.zip";
+import zurich from "./gltf/zurich/scene.gltf";
+import manhattan from "./gltf/manhattan/scene.gltf";
+import killimanjaro from "./gltf/killimanjaro/scene.gltf";
+import grandCanyon from "./gltf/grand-canyon/scene.gltf";
+import dubai from "./gltf/dubai/scene.gltf";
+import everest from "./gltf/everest/scene.gltf";
 
 interface GltfObject {
   id: string;
@@ -118,12 +117,12 @@ export class AddObjectPage extends Widget {
   }
 
   private async addGltf(url: string) {
-    const href = await importModel(url);
+    // const href = await importModel(url);
 
     const gltfModel = new ObjectSymbol3DLayer({
       anchor: "bottom",
       resource: {
-        href,
+        href: url,
       },
     });
     const view = AppState.view;
