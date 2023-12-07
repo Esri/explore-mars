@@ -323,11 +323,11 @@ function watchRotation(model: SketchViewModel, region: Region) {
     let current = country.geometry as Polygon;
 
     if (toolType === "rotate" || rotateStartStop) {
-      const infoAngle = (ev.toolEventInfo as __esri.RotateEventInfo).angle;
-      const angle = infoAngle - lastAngle;
+      const currentAngle = (ev.toolEventInfo as __esri.RotateEventInfo).angle;
+      const angleDiff = (currentAngle - lastAngle) * (Math.PI / 180);
 
-      current = spherical.rotate(current, angle);
-      lastAngle = rotateStartStop ? 0 : infoAngle;
+      current = spherical.rotate(current, angleDiff);
+      lastAngle = rotateStartStop ? 0 : currentAngle;
     } else {
       const newCenter = center.geometry as Point;
       current = spherical.moveTo(current, newCenter);
