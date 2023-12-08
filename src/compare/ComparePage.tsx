@@ -28,9 +28,8 @@ export class ComparePage extends Widget {
       (page) => {
         if (page === "menu") return;
         addRegionWidget?.start();
-        addRegionWidget?.clear();
+
         addObjectWidget?.start();
-        addObjectWidget?.clear();
       },
     );
     this.addHandles(watchPageHandle);

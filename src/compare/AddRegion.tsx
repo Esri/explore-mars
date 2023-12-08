@@ -36,6 +36,17 @@ export class AddRegionPage extends Widget {
   sketchViewModel!: SketchViewModel;
 
   @property()
+  get state(): "selecting" | "editing" | "clearing" {
+    if (AppState.page === "compare") {
+      if (this.placedRegion == null) return "selecting";
+      else return "editing";
+    } else {
+      // this means we are on our way out of the comparison page, we can use this state to ensure the globe doesn't flash for a few frames while the page is changed
+      return "clearing";
+    }
+  }
+
+  @property()
   viewGraphics!: GraphicsLayer;
 
   @property()
@@ -57,6 +68,8 @@ export class AddRegionPage extends Widget {
 
   start() {
     if (this.viewGraphics != null) return;
+    this.clear();
+
     const view = AppState.view;
 
     const viewGraphics = new GraphicsLayer({
@@ -81,7 +94,8 @@ export class AddRegionPage extends Widget {
     });
 
     sketchViewModel.on("delete", () => {
-      this.destroy();
+      AppState.page = "home";
+      this.clear();
     });
 
     this.editingGrapihcs = editingGraphics;
@@ -90,7 +104,7 @@ export class AddRegionPage extends Widget {
   }
 
   render() {
-    if (this.placedRegion != null) {
+    if (this.state !== "selecting") {
       return <EditingInfo />;
     }
 
@@ -179,30 +193,11 @@ export class AddRegionPage extends Widget {
     this.editingGrapihcs?.removeAll();
     this.selectedRegion?.destroy();
     this.placedRegion?.destroy();
-    this.graphicEditing.forEach((graphic) => {
+    this.graphicEditing?.forEach((graphic) => {
       graphic.destroy();
     });
     this.selectedRegion = null;
     this.placedRegion = null;
-  }
-
-  destroy(): void {
-    this.sketchViewModel.cancel();
-    this.graphicEditing.forEach((graphic) => {
-      graphic.destroy();
-    });
-    this.viewGraphics.removeAll();
-    this.editingGrapihcs.removeAll();
-
-    this.overlayGlobe?.destroy();
-    this.selectedRegion?.destroy();
-    this.placedRegion?.destroy();
-
-    if (!this.sketchViewModel.destroyed) this.sketchViewModel.destroy();
-
-    this.editingGrapihcs.destroy();
-    this.viewGraphics.destroy();
-    super.destroy();
   }
 }
 
