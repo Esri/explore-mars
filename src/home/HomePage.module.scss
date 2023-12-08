@@ -1,0 +1,181 @@
+@use "sass:math";
+@import "..//variables.module.scss";
+
+$graphicWidth: 1500px;
+
+.landingPage {
+  pointer-events: all;
+  opacity: 1;
+  transition: opacity 1s;
+  transition-delay: 0.2s;
+  overflow: hidden;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 3;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    to bottom,
+    rgb(0 0 0 / 50%) 40%,
+    rgb(0 0 0 / 20%) 70%,
+    rgb(0 0 0 / 50%) 100%
+  );
+
+  * {
+    transition: opacity 1s;
+  }
+}
+
+.hidden {
+  pointer-events: none !important;
+  opacity: 0;
+
+  * {
+    opacity: 0;
+
+    &.left {
+      background-position: (-$graphicWidth) (-$graphicWidth);
+    }
+
+    &.right {
+      background-position: $graphicWidth (-$graphicWidth);
+    }
+
+    &.middle {
+      background-position: 0 (-$graphicWidth);
+    }
+  }
+}
+
+.content {
+  font-size: 1.5rem;
+  text-align: center;
+  z-index: 1;
+  text-shadow: 2px 2px 20px rgb(0 0 0 / 80%);
+  color: $highlightColor;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.heading {
+  font-size: 3.5em;
+}
+
+.small {
+  font-size: 0.7em;
+}
+
+.graphics {
+  width: 100%;
+  position: absolute;
+  top: 0;
+}
+
+.graphic {
+  width: $graphicWidth;
+  height: 890px * math.div($graphicWidth, 2400px);
+  background-size: cover;
+  position: absolute;
+  top: 0;
+  opacity: 1;
+  transition:
+    opacity 1s ease-in-out,
+    background-position 0.7s ease-in-out;
+  background-position: 0 0;
+  background-repeat: no-repeat;
+
+  &:nth-child(1) {
+    background-image: url("./images/background-1.png");
+  }
+
+  &:nth-child(2) {
+    background-image: url("./images/background-2.png");
+    transition-delay: 0.2s;
+  }
+
+  &:nth-child(3) {
+    background-image: url("./images/background-3.png");
+    transition-delay: 0.15s;
+  }
+
+  &:nth-child(4) {
+    background-image: url("./images/background-4.png");
+    transition-delay: 0.05s;
+  }
+
+  &:nth-child(5) {
+    background-image: url("./images/background-5.png");
+    transition-delay: 0.3s;
+  }
+
+  &:nth-child(6) {
+    background-image: url("./images/background-6.png");
+    transition-delay: 0.22s;
+  }
+
+  &:nth-child(7) {
+    background-image: url("./images/background-7.png");
+    transition-delay: 0.12s;
+  }
+
+  &:nth-child(8) {
+    background-image: url("./images/background-8.png");
+    transition-delay: 0.2s;
+  }
+
+  &:nth-child(0) {
+    background-image: url("./images/background-9.png");
+  }
+}
+
+.left {
+  left: 0;
+  background-position: 0 0;
+}
+
+.right {
+  right: 0;
+  background-position: 0 0;
+}
+
+.middle {
+  left: 50%;
+  transform: translate(-50%, 0);
+  background-position: 0 0;
+}
+
+.button {
+  font-size: 1.4em;
+  background: rgb(10 10 10 / 85%);
+  border: solid 1px rgb(100 100 100 / 40%);
+  height: 78px;
+  padding: 0 80px;
+  line-height: 78px;
+  border-radius: 39px;
+  opacity: 0.7;
+  color: $highlightColor;
+  transition: opacity 0.3s ease-out;
+  cursor: pointer;
+
+  &:hover {
+    opacity: 1;
+  }
+}
+
+@media screen and (width <= 745px), screen and (height <= 415px) {
+  $graphicWidth: 1000px;
+
+  .content {
+    padding-inline: 15px;
+  }
+
+  .heading {
+    font-size: 2em;
+  }
+
+  .graphic {
+    width: $graphicWidth;
+    height: 890px * math.div($graphicWidth, 2400px);
+  }
+}

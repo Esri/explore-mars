@@ -1,0 +1,29 @@
+.line {
+  background-image: url("./images/line.svg");
+  background-position-y: -3px;
+  background-position-x: 5px;
+  background-size: auto calc(100% - -8px);
+  padding-top: 23px;
+}
+
+.area {
+  background-image: url("./images/area.svg");
+  background-position-y: -3px;
+  background-position-x: 5px;
+  background-size: auto calc(100% - -8px);
+  padding-top: 23px;
+}
+
+.elevation {
+  background-image: url("./images/elevation.svg");
+  background-position-y: -3px;
+  background-position-x: -1px;
+  background-size: auto calc(100% - -4px);
+  padding-top: 23px;
+}
+
+.measurement {
+  display: flex;
+  flex-direction: column;
+  justify-content: end;
+}

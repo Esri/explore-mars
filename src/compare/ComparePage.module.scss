@@ -1,0 +1,25 @@
+.regions {
+  background-image: url("./images/regions.svg");
+  background-position-x: 50%;
+  background-position-y: -5px;
+  background-size: auto 200px;
+}
+
+.models {
+  background-image: url("./images/3d-objects.svg");
+  background-size: cover;
+}
+
+.compareInfo {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.close {
+  position: absolute;
+  z-index: 1;
+  top: 0;
+  right: 0;
+}

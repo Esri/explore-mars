@@ -1,0 +1,19 @@
+@import "..//variables.module.scss";
+
+.cookieBanner {
+  display: flex;
+  flex-direction: column;
+  justify-content: end;
+  padding: 15px 15px 0;
+}
+
+.hidden {
+  transform: translateY(1000%);
+  transition: transform 0.3s ease-out;
+}
+
+.close {
+  position: absolute;
+  top: 0;
+  right: 0;
+}

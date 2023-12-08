@@ -1,0 +1,46 @@
+@import "../variables.module";
+
+.page {
+  color: $highlightColor;
+  backdrop-filter: blur(15px);
+  background: rgb(10 10 10 / 30%);
+  width: $menuWidth;
+  border-radius: 39px 39px 0 0;
+  transform-origin: bottom;
+  border: solid 1px rgb(100 100 100 / 20%);
+  z-index: -1;
+  padding: 15px;
+  padding-bottom: 88px;
+  display: flex;
+  flex-direction: column;
+  align-items: end;
+  gap: 10px;
+  transition:
+    transform 0.3s ease-out,
+    opacity 0.2s ease-out 0.1s;
+}
+
+.hidden {
+  pointer-events: none !important;
+  transform: translateY(100vh);
+  opacity: 0;
+}
+
+.content {
+  width: 100%;
+  border-top-left-radius: 24px;
+  border-top-right-radius: 24px;
+}
+
+.obscureMenu {
+  padding-bottom: unset;
+}
+
+@media screen and (width <= 745px), screen and (height <= 415px) {
+  .page {
+    font-size: $fontSize * 0.7;
+    border-radius: 0;
+    min-width: 100%;
+    max-width: 100%;
+  }
+}

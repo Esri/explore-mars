@@ -1,0 +1,36 @@
+@import "..//variables.module.scss";
+
+.locationMenu {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.item {
+  height: 100px;
+  flex: 1;
+  background-color: rgba(0 0 0 / 70%);
+  border: none;
+  color: $highlightColor;
+  cursor: pointer;
+  transition: background-position 0.2s ease-out;
+  background-size: auto calc(100% + 6px);
+  background-repeat: no-repeat;
+
+  &:hover {
+    background-position: -6px -6px;
+    text-decoration: underline;
+  }
+}
+
+.perseverance {
+  background-image: url("./images/perseverance.svg");
+}
+
+.curiosity {
+  background-image: url("./images/discovery.svg");
+}
+
+.opportunity {
+  background-image: url("./images/opportunity.svg");
+}
