@@ -1,87 +1,58 @@
-# ArcGIS Maps SDK for JavaScript template
+# Explore Mars
 
-## Prerequisites
+An interactive 3D web application showing the planet Mars, using the [ArcGIS Maps SDK for Javascript](https://developers.arcgis.com/javascript/). This is a non-commercial demo application made by the Esri R&D Center Zurich. It is intended for presentations or as a starting point for new projects.t for new projects.
 
-- Node.js 16.0+
+[![screenshot](./screenshot.jpg)](https://esri.github.io/explore-mars)
 
-The template comes set up with Prettier for formatting, as well as ESLint and Stylelint for linting. You can have a look at their respective editor integration documentation to see how to use them with your development environment:
+The app uses multiple API features like [Elevation Profile](https://developers.arcgis.com/javascript/latest/api-reference/esri-widgets-ElevationProfile.html), [glTF import](https://developers.arcgis.com/javascript/latest/sample-code/import-gltf/index.html) and a [custom Spatial Reference](https://developers.arcgis.com/javascript/latest/api-reference/esri-geometry-SpatialReference.html).
 
-- [Prettier](https://prettier.io/docs/en/editors)
-- [ESLint](https://eslint.org/docs/latest/use/integrations#editors)
-- [Stylelint](https://github.com/stylelint/awesome-stylelint#editor-integrations)
+On the technical side the app is built using [TypeScript](https://www.typescriptlang.org/), [npm](https://www.npmjs.com/) and [Vite](https://vitejs.dev/).
 
-## Run project locally
+## Instructions
 
-To start:
+A live version is available [here](https://esri.github.io/participatory-planning).
+
+To run the source code locally, follow these steps:
 
 ```
+git clone https://github.com/Esri/explore-mars.git
+cd explore-mars/
 npm install
-npm run dev
+npm run start # serves application at http://localhost:3000
 ```
 
-Then open your browser at http://localhost:3000/
+For more details about running and deploying the application see our [development and deployment instructions](./DEVELOP_AND_DEPLOY.md).
 
-## Create productive build
+## Resources
 
-```
-npm run build
-```
+The following external libraries, APIs, open datasets and specifications were used to make this application:
 
-The `dist` folder then contains all the files for the web app which can either be copied to a web server or pushed to the `gh-pages` branch to be served at `https://arnofiva.github.io/arcgis-core-template`.
+- [ArcGIS Maps SDK for JavaScript](https://developers.arcgis.com/javascript/)
+- [zip.js](https://gildas-lormeau.github.io/zip.js/) for extracting glTF models
+- [Calcite Web](http://esri.github.io/calcite-web/)
 
-In order to use the `gh-pages` approach, see the following instructions. Make sure you remove an existing `dist` folder if it has been created from a previous build.
+## Disclaimer
 
-## Deploy to [GitHub Pages](https://pages.github.com/)
+This demo application is for illustrative purposes only and it is not maintained. There is no support available for deployment or development of the application.
 
-### Create `gh-pages` branch
+## Contributing
 
-You can skip this part if you used the template by copying all branches, which includs the `gh-pages` branch that is part of this project.
-
-If you only copied the `main` branch, follow these steps to create an orphan `gh-pages` branch (meaning it does not share any history with `main`):
-
-```
-rm -rf dist
-git checkout --orphan gh-pages
-git rm -rf .
-git commit --allow-empty -m "Init empty branch"
-git push origin gh-pages
-```
-
-Return to `main` branch:
-
-```
-git checkout main
-```
-
-### Checkout `gh-pages` branch in `dist/` folder
-
-The following will create a `dist` folder (fails if it already exists) and make it point to the root of the `gh-pages` branch:
-
-```
-git worktree add dist gh-pages
-```
-
-### Deploy new version on `gh-pages` branch
-
-Once the previous steps have been completed, you can repeat the following every time you want to deploy a new version of your local code:
-
-```
-npm run build
-cd dist/
-git add .
-git commit -am '🎉'
-git push origin gh-pages
-cd ../
-```
+Esri welcomes contributions from anyone and everyone. Please see our [guidelines for contributing](https://github.com/esri/contributing).
 
 ## Licensing
 
 Copyright 2023 Esri
 
-Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
 http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 
 A copy of the license is available in the repository's [license.txt](./license.txt) file.
