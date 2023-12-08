@@ -10,7 +10,7 @@ On the technical side the app is built using [TypeScript](https://www.typescript
 
 ## Instructions
 
-A live version is available [here](https://esri.github.io/participatory-planning).
+A live version is available [here](https://esri.github.io/explore-mars).
 
 To run the source code locally, follow these steps:
 
