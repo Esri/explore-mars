@@ -7,11 +7,11 @@ import Widget from "@arcgis/core/widgets/Widget";
 import { tsx } from "@arcgis/core/widgets/support/widget";
 import { PointSymbol3D, ObjectSymbol3DLayer } from "@arcgis/core/symbols";
 import SketchViewModel from "@arcgis/core/widgets/Sketch/SketchViewModel";
-import { importModel } from "./GlTFImporter";
+import { importModel } from "./GLTFImporter";
 import GraphicsLayer from "@arcgis/core/layers/GraphicsLayer";
-import AppState from "../application/AppState";
-import { EditingInfo } from "./ComparePage";
-import { Item, SubMenu } from "../utility-components/SubMenu";
+import AppState from "../../application/AppState";
+import { EditingInfo } from "../ComparePage";
+import { Item, SubMenu } from "../../utility-components/SubMenu";
 import styles from "./AddObject.module.scss";
 import zurich from "./gltf/zurich.zip";
 import manhattan from "./gltf/manhattan.zip";
@@ -101,7 +101,6 @@ export class AddObjectPage extends Widget {
   }
 
   render() {
-    console.log("rendering....");
     if (this.placedObject != null) {
       return <EditingInfo />;
     }

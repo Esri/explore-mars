@@ -8,5 +8,5 @@ export default defineConfig({
   build: {
     target: "es2020",
   },
-  assetsInclude: ["**/*.zip", "**/*.gltf"],
+  assetsInclude: ["**/*.zip"],
 });

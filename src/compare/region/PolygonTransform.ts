@@ -27,7 +27,8 @@ export default class PolygonTransform {
     );
 
     const mat = mat4.create();
-    mat4.rotate(mat, mat, angle, rot);
+    const radians = angle * (Math.PI / 180);
+    mat4.rotate(mat, mat, radians, rot);
     return this.transformPolygon(polygon, mat);
   }
 
@@ -44,18 +45,48 @@ export default class PolygonTransform {
     return this.transformPolygon(polygon, mat);
   }
 
+  public async moveToAsync(polygon: Polygon, point: Point) {
+    const centroid = polygon.centroid;
+    const mat = mat4.create();
+
+    this.addZRotation(point, mat, false);
+    this.addYRotation(point, mat, false);
+
+    this.addYRotation(centroid, mat, true);
+    this.addZRotation(centroid, mat, true);
+
+    return await this.transformPolygonAsync(polygon, mat);
+  }
+
   public scale(polygon: Polygon, factor: number) {
     const cx = polygon.centroid.x;
     const cy = polygon.centroid.y;
 
     const result = polygon.clone();
-
     result.rings.forEach((ring) => {
       ring.forEach((v) => {
         v[0] += (v[0] - cx) * (factor - 1);
         v[1] += (v[1] - cy) * (factor - 1);
       });
     });
+
+    return result;
+  }
+
+  public async scaleAsync(polygon: Polygon, factor: number) {
+    const cx = polygon.centroid.x;
+    const cy = polygon.centroid.y;
+
+    const result = polygon.clone();
+    for (const ring of result.rings) {
+      await new Promise<void>((resolve) => {
+        ring.forEach((v) => {
+          v[0] += (v[0] - cx) * (factor - 1);
+          v[1] += (v[1] - cy) * (factor - 1);
+        });
+        resolve();
+      });
+    }
 
     return result;
   }
@@ -152,6 +183,47 @@ export default class PolygonTransform {
         newCoords.push([lon, lat]);
       }
       rings.push(newCoords);
+    }
+
+    return new Polygon({
+      rings,
+      spatialReference: sr,
+    });
+  }
+
+  private async transformPolygonAsync(polygon: Polygon, mat: mat4) {
+    const rings: number[][][] = [];
+
+    const sr = polygon.spatialReference;
+
+    const [cLon] = this.transformCoordinates(
+      polygon.centroid.x,
+      polygon.centroid.y,
+      sr,
+      mat,
+    );
+
+    for (const ring of polygon.rings) {
+      const coords = await new Promise<number[][]>((resolve) => {
+        const newCoords: number[][] = [];
+        for (const coord of ring) {
+          let [lon, lat] = this.transformCoordinates(
+            coord[0],
+            coord[1],
+            sr,
+            mat,
+          );
+
+          const angle = lon - cLon;
+          if (MAX_LON < Math.abs(angle)) {
+            lon = cLon < 0 ? lon - 2 * MAX_LON : lon + 2 * MAX_LON;
+          }
+
+          newCoords.push([lon, lat]);
+        }
+        resolve(newCoords);
+      });
+      rings.push(coords);
     }
 
     return new Polygon({

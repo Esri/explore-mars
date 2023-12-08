@@ -1,19 +1,15 @@
 import Graphic from "@arcgis/core/Graphic";
-import type { Polygon } from "@arcgis/core/geometry";
-import { Point, SpatialReference } from "@arcgis/core/geometry";
-import * as geometryEngine from "@arcgis/core/geometry/geometryEngine";
-import * as projection from "@arcgis/core/geometry/projection";
+import { type Polygon, Point, SpatialReference } from "@arcgis/core/geometry";
 import type FeatureLayer from "@arcgis/core/layers/FeatureLayer";
 import { FillSymbol3DLayer, PolygonSymbol3D } from "@arcgis/core/symbols";
 import type SceneView from "@arcgis/core/views/SceneView";
 import PolygonTransform from "./PolygonTransform";
+import { PolygonWorker } from "./PolygonWorker/PolygonWorker";
 
 export async function graphicFromCountry(
   selectedRegion: Graphic,
   view: SceneView,
 ) {
-  await projection.load();
-
   const layer = selectedRegion.layer as FeatureLayer;
 
   const displayField = layer.displayField;
@@ -23,10 +19,9 @@ export async function graphicFromCountry(
   query.returnGeometry = true;
   query.outFields = [displayField];
   query.outSpatialReference = SpatialReference.WebMercator;
-  // query.outSpatialReference = view.spatialReference;
-  // query.maxAllowableOffset = 1000;
 
   const result = await layer.queryFeatures(query);
+
   const feature = result.features[0];
 
   const viewCenter = new Point({
@@ -39,11 +34,9 @@ export async function graphicFromCountry(
 
   const label = feature.getAttribute(displayField);
   let geometry = feature.geometry as Polygon;
-  geometry = geometryEngine.buffer(geometry, 1.887, "meters") as Polygon;
-  geometry = projection.project(geometry, viewSR) as Polygon;
-  geometry = spherical.moveTo(geometry, viewCenter);
-
-  const current = spherical.scale(geometry, 1.887);
+  geometry = await PolygonWorker.project(geometry, viewSR);
+  geometry = await spherical.moveToAsync(geometry, viewCenter);
+  const current = await spherical.scaleAsync(geometry, 1.887);
 
   const country = new Graphic({
     attributes: {
