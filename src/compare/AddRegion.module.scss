@@ -19,7 +19,7 @@
   border-radius: 25px;
 
   &:focus-within {
-    outline: 4px solid rgba(207 88 25 / 0.5);
+    outline: 4px solid rgba(207 88 25 / 50%);
   }
 
   .esri-view-surface:focus {

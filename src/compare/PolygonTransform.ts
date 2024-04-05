@@ -1,8 +1,8 @@
 import type { Point, SpatialReference } from "@arcgis/core/geometry";
 import { Polygon } from "@arcgis/core/geometry";
-import * as externalRenderers from "@arcgis/core/views/3d/externalRenderers";
 import type SceneView from "@arcgis/core/views/SceneView";
 import { mat4, vec3, type vec4 } from "gl-matrix";
+import * as webgl from "@arcgis/core/views/3d/webgl.js";
 
 const MAX_LON = 180;
 
@@ -16,7 +16,7 @@ export default class PolygonTransform {
   public rotate(polygon: Polygon, angle: number) {
     const rot = vec3.create();
 
-    externalRenderers.toRenderCoordinates(
+    webgl.toRenderCoordinates(
       this.view,
       [polygon.centroid.x, polygon.centroid.y, 0],
       0,
@@ -100,7 +100,7 @@ export default class PolygonTransform {
   ) {
     const newCoord = vec3.fromValues(0, 0, 0);
 
-    externalRenderers.toRenderCoordinates(
+    webgl.toRenderCoordinates(
       this.view,
       [x, y, 0],
       0,
@@ -112,7 +112,7 @@ export default class PolygonTransform {
 
     vec3.transformMat4(newCoord, newCoord, mat);
     const newCoordSR = [0, 0, 0];
-    externalRenderers.fromRenderCoordinates(
+    webgl.fromRenderCoordinates(
       this.view,
       newCoord,
       0,
@@ -164,7 +164,7 @@ export default class PolygonTransform {
     const nullCoords = vec3.create();
     const currentCoords = vec3.create();
 
-    externalRenderers.toRenderCoordinates(
+    webgl.toRenderCoordinates(
       this.view,
       [0, 0, 0],
       0,
@@ -174,7 +174,7 @@ export default class PolygonTransform {
       1,
     );
 
-    externalRenderers.toRenderCoordinates(
+    webgl.toRenderCoordinates(
       this.view,
       [point.x, 0, 0],
       0,
@@ -197,7 +197,7 @@ export default class PolygonTransform {
     const nullCoords = vec3.create();
     const currentCoords = vec3.create();
 
-    externalRenderers.toRenderCoordinates(
+    webgl.toRenderCoordinates(
       this.view,
       [0, 0, 0],
       0,
@@ -207,7 +207,7 @@ export default class PolygonTransform {
       1,
     );
 
-    externalRenderers.toRenderCoordinates(
+    webgl.toRenderCoordinates(
       this.view,
       [0, point.y, 0],
       0,
