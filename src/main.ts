@@ -61,8 +61,8 @@ popup.dockOptions = {
   breakpoint: false,
 };
 
-popup.spinnerEnabled = true;
-popup.collapseEnabled = false;
+popup.visibleElements.spinner = true;
+popup.visibleElements.collapseButton = false;
 
 const spinGlobe = addFrameTask({
   update: () => {
