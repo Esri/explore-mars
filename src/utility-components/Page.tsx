@@ -2,8 +2,7 @@ import { tsx } from "@arcgis/core/widgets/support/widget";
 import styles from "./page.module.scss";
 import cx from "classnames";
 import { PointerEventsContainer } from "./PointerEventsContainer";
-
-interface CookieBannerProps {
+interface PageProps {
   key?: string;
   hidden?: boolean;
   class?: string;
@@ -15,7 +14,7 @@ export function Page({
   hidden,
   class: clazz,
   children = [],
-}: CookieBannerProps) {
+}: PageProps) {
   return (
     <PointerEventsContainer
       children={

@@ -1,3 +1,10 @@
 .credit {
   color: rgb(255 255 255 / 30%);
 }
+
+.close {
+  position: absolute;
+  z-index: 1;
+  top: 0;
+  right: 0;
+}
