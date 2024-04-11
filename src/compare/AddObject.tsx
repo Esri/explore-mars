@@ -71,7 +71,7 @@ const graphics = new GraphicsLayer({
   title: "SVM layer for comparison",
   listMode: "hide",
   elevationInfo: {
-    mode: "on-the-ground",
+    mode: 'relative-to-ground',
   },
 });
 
@@ -133,7 +133,12 @@ export class AddObjectPage extends Widget {
     const href = await importModel(url);
 
     const view = AppState.view;
-    const mesh = await Mesh.createFromGLTF(view.center, href);
+
+    const center = view.center.clone();
+    center.z = 0;
+
+    const mesh = await Mesh.createFromGLTF(center, href);
+
 
     const graphic = new Graphic({
       geometry: mesh,

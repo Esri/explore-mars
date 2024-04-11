@@ -20,6 +20,7 @@ import GraphicsLayer from "@arcgis/core/layers/GraphicsLayer";
 import * as meshUtils from "@arcgis/core/geometry/support/meshUtils";
 import { Mesh, Multipoint } from "@arcgis/core/geometry";
 import ElevationSampler from "@arcgis/core/layers/support/ElevationSampler";
+import ElevationProfileViewModel from "@arcgis/core/widgets/ElevationProfile/ElevationProfileViewModel";
 
 type Page = "menu" | "area" | "line" | "elevation";
 
@@ -28,6 +29,9 @@ export const MeasureRoute = new Route({
   path: "menu",
   paths: ["line", "area", "elevation"],
 });
+
+declare const x: ElevationProfile;
+
 @subclass("ExploreMars.page.Measure")
 export class MeasurePage extends Widget {
   @property()
@@ -37,9 +41,12 @@ export class MeasurePage extends Widget {
   meshSampler?: ElevationSampler;
 
   @property()
+  mesh?: Mesh;
+
+  @property()
   get elevationProfile() {
     const meshSampler = this.meshSampler;
-
+    const mesh = this.mesh;
     return new ElevationProfileLineQuery({
       color: "rgb(0,255,0)",
       source: {
@@ -58,10 +65,15 @@ export class MeasurePage extends Widget {
           const finalSample = groundSample.geometry.clone() as Multipoint;
 
           if (modelSample) {
+            const getMeshHeightAdjustment = (z: number) => {
+              const isMissingData = !Number.isFinite(z) && 0 > z;
+              return !isMissingData ? z + mesh!.vertexSpace.origin[2] : 0;
+            }
+
             const adjustedPoints = finalSample.points.map(([x, y, z], i) => [
               x,
               y,
-              z + modelSample.points[i][2],
+              Math.max(z, z + getMeshHeightAdjustment(modelSample.points?.[i]?.[2])),
             ]);
             finalSample.points = adjustedPoints;
           }
@@ -96,8 +108,9 @@ export class MeasurePage extends Widget {
       async (mesh) => {
         if (mesh != null)
           this.meshSampler = await meshUtils.createElevationSampler(mesh, {
-            noDataValue: 0,
+            noDataValue: -Infinity,
           });
+        this.mesh = mesh;
       },
       { initial: true },
     );
@@ -132,8 +145,23 @@ export class MeasurePage extends Widget {
         <ElevationProfile
           //@ts-ignore
           afterCreate={(node) => {
-            node.viewModel.start();
-          }}
+            const vm = (node.viewModel as ElevationProfileViewModel);
+            vm.start();
+            (vm).addHandles(
+              reactiveUtils.watch(
+                () => {
+                  const layer = AppState.view.map.layers.find(
+                    (layer) => layer.id === "add-object",
+                  ) as GraphicsLayer;
+                  const graphic = layer?.graphics.getItemAt(0);
+                  return graphic?.geometry as Mesh;
+                },
+                async () => {
+                  vm.input = vm.input.clone();
+                })
+            )
+          }
+          }
           view={AppState.view}
           profiles={[this.elevationProfile]}
           visibleElements={{
