@@ -154,13 +154,6 @@ export class Store extends Accessor {
   status: "uninitialized" | "idle" | "loading" | "editing";
 
   async initialize() {
-    this.route.addHandles([
-      reactiveUtils.watch(() => [
-        this.route.path,
-        this.route.state,
-        this.route.children,
-      ]),
-    ]);
     this.status = "uninitialized";
     await reactiveUtils.whenOnce(() => this.view != null);
     await this.view?.when();

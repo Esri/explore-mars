@@ -14,7 +14,7 @@ export function Page({
   key,
   hidden,
   class: clazz,
-  children = []
+  children = [],
 }: CookieBannerProps) {
   return (
     <PointerEventsContainer

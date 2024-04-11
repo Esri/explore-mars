@@ -28,20 +28,15 @@ const getCookie = (name: string) => {
 const DISCLAIMER_COOKIE_NAME = "disclaimerCookie";
 const DISCLAIMER_COOKIE_VALUE = "true";
 
-interface CookieBannerProps {
-  hidden: boolean;
-}
-
-export function CookieBanner({ hidden }: CookieBannerProps) {
+export function CookieBanner() {
   const disclaimerCookie = getCookie(DISCLAIMER_COOKIE_NAME);
-  const needsAcceptence =
-    !hidden && disclaimerCookie !== DISCLAIMER_COOKIE_VALUE;
+  const needsAcceptance = disclaimerCookie !== DISCLAIMER_COOKIE_VALUE;
 
   return (
     <Page
       key="cookies"
-      hidden={!needsAcceptence}
-      content={
+      hidden={!needsAcceptance}
+      children={
         <div class={styles.cookieBanner}>
           <span class={styles.close}>
             <CloseButton

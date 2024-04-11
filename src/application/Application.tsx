@@ -1,6 +1,4 @@
-import {
-  subclass,
-} from "@arcgis/core/core/accessorSupport/decorators";
+import { subclass } from "@arcgis/core/core/accessorSupport/decorators";
 import Widget from "@arcgis/core/widgets/Widget";
 import { tsx } from "@arcgis/core/widgets/support/widget";
 import AppState from "./AppState";
@@ -21,14 +19,13 @@ import { Page as PageWrapper } from "../utility-components/Page";
 
 @subclass("ExploreMars.Application")
 class Application extends Widget {
-
   initialize() {
     this.addHandles([
       reactiveUtils.when(
         () => AppState.status !== "uninitialized",
         () => {
           enableBasemapSwitcher(AppState.view);
-        }
+        },
       ),
     ]);
   }
@@ -41,7 +38,7 @@ class Application extends Widget {
       .with("compare", () => <ComparePage />)
       .with("credits", () => <CreditsPage />)
       .with("locations", () => <LocationPage />)
-      .run()!
+      .run()!;
   }
 
   render() {
@@ -49,7 +46,7 @@ class Application extends Widget {
 
     const content = match(AppState.status)
       .with("loading", () => <Loading />)
-      .otherwise(() => this.renderPage(path))
+      .otherwise(() => this.renderPage(path));
 
     return (
       <div class={styles.wrapper}>
@@ -58,14 +55,16 @@ class Application extends Widget {
             this.goToPage(item);
           }}
         />
-        <CookieBanner hidden={AppState.route.match('landing')} />
+        <CookieBanner />
         <PageWrapper
-          hidden={AppState.route.match('home') || AppState.route.match('landing')}
+          hidden={
+            AppState.route.match("home") || AppState.route.match("landing")
+          }
           children={content}
           class={AppState.status === "editing" ? styles.obscureMenu : ""}
         />
         <LandingPage
-          hidden={!AppState.route.match('landing')}
+          hidden={!AppState.route.match("landing")}
           onStart={() => {
             this.goToPage("home");
           }}

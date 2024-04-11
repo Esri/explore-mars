@@ -34,23 +34,22 @@ const viewGraphics = new GraphicsLayer({
   title: "Country comparison",
   listMode: "hide",
   elevationInfo: {
-    mode: "on-the-ground"
-  }
+    mode: "on-the-ground",
+  },
 });
 
 const editingGraphics = new GraphicsLayer({
   title: "SVM layer for comparison",
   listMode: "hide",
   elevationInfo: {
-    mode: "on-the-ground"
-  }
+    mode: "on-the-ground",
+  },
 });
 
 @subclass("ExploreMars.page.AddRegionPage")
 export class AddRegionPage extends Widget {
-
   @property()
-  state: "selecting" | "editing" = 'selecting';
+  state: "selecting" | "editing" = "selecting";
 
   @property()
   sketchViewModel = new SketchViewModel({
@@ -77,11 +76,13 @@ export class AddRegionPage extends Widget {
 
     this.sketchViewModel.on("delete", () => {
       this.clear();
-      if (AppState.route.children?.match(compareRoute) && compareRoute.path === "regions") {
+      if (
+        AppState.route.children?.match(compareRoute) &&
+        compareRoute.path === "regions"
+      ) {
         AppState.route.children.back();
       }
     });
-
   }
 
   render() {
@@ -90,7 +91,7 @@ export class AddRegionPage extends Widget {
         <div>
           <EditingInfo />
         </div>
-      )
+      );
     }
 
     return (
@@ -127,7 +128,9 @@ export class AddRegionPage extends Widget {
       promiseUtils.debounce(async (e) => {
         this.highlight?.remove();
 
-        let resolveSelectedRegion: (value: Graphic | PromiseLike<Graphic>) => void;
+        let resolveSelectedRegion: (
+          value: Graphic | PromiseLike<Graphic>,
+        ) => void;
         const promise = new Promise<Graphic>((resolve) => {
           resolveSelectedRegion = resolve;
         });
@@ -138,12 +141,14 @@ export class AddRegionPage extends Widget {
         if (hitTest.results.length > 0) {
           const result = hitTest.results[hitTest.results.length - 1];
           if (result.type === "graphic") {
-
             const layerView = await overlayGlobe.whenLayerView(
               result.graphic.layer as FeatureLayer,
             );
             this.highlight = layerView.highlight(result.graphic);
-            const country = await graphicFromCountry(result.graphic, AppState.view);
+            const country = await graphicFromCountry(
+              result.graphic,
+              AppState.view,
+            );
             resolveSelectedRegion!(country);
           }
         }
@@ -156,7 +161,7 @@ export class AddRegionPage extends Widget {
   }
 
   private async addCountry(country: Graphic) {
-    compareRoute.state = 'editing';
+    compareRoute.state = "editing";
 
     const center = createRegionCenter(country);
     const label = createRegionLabel(country);
@@ -172,19 +177,18 @@ export class AddRegionPage extends Widget {
       ),
       AppState.view.on("click", async (event) => {
         const hitTest = await AppState.view.hitTest(event);
-        const isHit = hitTest.results.some(result => {
-          return result.type === 'graphic' && result.graphic === country
+        const isHit = hitTest.results.some((result) => {
+          return result.type === "graphic" && result.graphic === country;
         });
 
         if (isHit)
           void this.sketchViewModel.update(center, {
             enableScaling: false,
           });
-      })
+      }),
     ]);
 
-
-    void AppState.view.goTo(country)
+    void AppState.view.goTo(country);
     void this.sketchViewModel.update(center, {
       enableScaling: false,
     });

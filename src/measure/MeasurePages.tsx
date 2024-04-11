@@ -23,7 +23,11 @@ import ElevationSampler from "@arcgis/core/layers/support/ElevationSampler";
 
 type Page = "menu" | "area" | "line" | "elevation";
 
-export const MeasureRoute = new Route({ route: 'measure', path: 'menu', paths: ['line', 'area', 'elevation'] });
+export const MeasureRoute = new Route({
+  route: "measure",
+  path: "menu",
+  paths: ["line", "area", "elevation"],
+});
 @subclass("ExploreMars.page.Measure")
 export class MeasurePage extends Widget {
   @property()
@@ -37,31 +41,35 @@ export class MeasurePage extends Widget {
     const meshSampler = this.meshSampler;
 
     return new ElevationProfileLineQuery({
-      color: 'rgb(0,255,0)',
+      color: "rgb(0,255,0)",
       source: {
         async queryElevation(point) {
-          const modelSamplePromise = meshSampler?.queryElevation(point) as Multipoint;
-          const groundSamplePromise = AppState.view.map.ground.queryElevation(point);
+          const modelSamplePromise = meshSampler?.queryElevation(
+            point,
+          ) as Multipoint;
+          const groundSamplePromise =
+            AppState.view.map.ground.queryElevation(point);
 
-          const [
-            modelSample,
-            groundSample
-          ] = await Promise.all([
+          const [modelSample, groundSample] = await Promise.all([
             modelSamplePromise,
-            groundSamplePromise
+            groundSamplePromise,
           ]);
 
           const finalSample = groundSample.geometry.clone() as Multipoint;
 
           if (modelSample) {
-            const adjustedPoints = finalSample.points.map(([x, y, z], i) => [x, y, z + modelSample.points[i][2]])
+            const adjustedPoints = finalSample.points.map(([x, y, z], i) => [
+              x,
+              y,
+              z + modelSample.points[i][2],
+            ]);
             finalSample.points = adjustedPoints;
           }
 
           return { geometry: finalSample, noDataValue: 0 };
-        }
-      }
-    })
+        },
+      },
+    });
   }
 
   constructor() {
@@ -77,14 +85,22 @@ export class MeasurePage extends Widget {
       },
     );
 
-    const watchModelGraphic = reactiveUtils.watch(() => {
-      const layer = AppState.view.map.layers.find(layer => layer.id === "add-object") as GraphicsLayer;
-      const graphic = layer?.graphics.getItemAt(0);
-      return graphic?.geometry as Mesh;
-    }, async (mesh) => {
-      if (mesh != null)
-        this.meshSampler = await meshUtils.createElevationSampler(mesh, { noDataValue: 0 });
-    }, { initial: true });
+    const watchModelGraphic = reactiveUtils.watch(
+      () => {
+        const layer = AppState.view.map.layers.find(
+          (layer) => layer.id === "add-object",
+        ) as GraphicsLayer;
+        const graphic = layer?.graphics.getItemAt(0);
+        return graphic?.geometry as Mesh;
+      },
+      async (mesh) => {
+        if (mesh != null)
+          this.meshSampler = await meshUtils.createElevationSampler(mesh, {
+            noDataValue: 0,
+          });
+      },
+      { initial: true },
+    );
 
     this.addHandles([watchPage, watchModelGraphic]);
   }
@@ -92,30 +108,30 @@ export class MeasurePage extends Widget {
   render() {
     if (MeasureRoute.path === "menu") {
       return (
-        <div styles={{ display: 'contents' }}>
+        <div styles={{ display: "contents" }}>
           <MeasureMenu
             selectTool={(tool) => {
               MeasureRoute.push(tool);
             }}
           />
-        </ div>
+        </div>
       );
     }
 
     const tool = match(MeasureRoute.path)
-      .with('area', () => (
+      .with("area", () => (
         <AreaMeasurement3D
           //@ts-ignore
-          afterCreate={node => {
-            node.viewModel.start()
+          afterCreate={(node) => {
+            node.viewModel.start();
           }}
           view={AppState.view}
         />
       ))
-      .with('elevation', () => (
+      .with("elevation", () => (
         <ElevationProfile
           //@ts-ignore
-          afterCreate={node => {
+          afterCreate={(node) => {
             node.viewModel.start();
           }}
           view={AppState.view}
@@ -125,19 +141,19 @@ export class MeasurePage extends Widget {
           }}
         />
       ))
-      .with('line', () => (
+      .with("line", () => (
         <DirectLineMeasurement3D
           //@ts-ignore
-          afterCreate={node => {
-            node.viewModel.start()
+          afterCreate={(node) => {
+            node.viewModel.start();
           }}
           view={AppState.view}
         />
       ))
-      .run()
+      .run();
 
     return (
-      <div styles={{ display: 'contents' }}>
+      <div styles={{ display: "contents" }}>
         <div class={styles.measurement}>
           <CloseButton
             onClose={() => {

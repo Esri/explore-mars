@@ -16,9 +16,9 @@ import AppState, { Route } from "../application/AppState";
 type Page = "menu" | "regions" | "models";
 
 export const compareRoute = new Route({
-  path: 'menu', route: 'compare', paths: [
-    'menu', 'models', 'regions'
-  ]
+  path: "menu",
+  route: "compare",
+  paths: ["menu", "models", "regions"],
 });
 
 @subclass("ExploreMars.page.CompareObject")
@@ -28,13 +28,13 @@ export class ComparePage extends Widget {
       () => compareRoute.path,
       (page) => {
         match(page)
-          .with('menu', () => {
+          .with("menu", () => {
             AppState.status = "idle";
           })
-          .with('models', () => {
+          .with("models", () => {
             AppState.status = "editing";
           })
-          .with('regions', () => {
+          .with("regions", () => {
             AppState.status = "editing";
           })
           .run();

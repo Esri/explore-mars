@@ -5,7 +5,12 @@ import {
 } from "@arcgis/core/core/accessorSupport/decorators";
 import Widget from "@arcgis/core/widgets/Widget";
 import { tsx } from "@arcgis/core/widgets/support/widget";
-import { PointSymbol3D, ObjectSymbol3DLayer, MeshSymbol3D, FillSymbol3DLayer } from "@arcgis/core/symbols";
+import {
+  PointSymbol3D,
+  ObjectSymbol3DLayer,
+  MeshSymbol3D,
+  FillSymbol3DLayer,
+} from "@arcgis/core/symbols";
 import SketchViewModel from "@arcgis/core/widgets/Sketch/SketchViewModel";
 import { importModel } from "./GlTFImporter";
 import GraphicsLayer from "@arcgis/core/layers/GraphicsLayer";
@@ -62,12 +67,12 @@ const objects: GltfObject[] = [
 ];
 
 const graphics = new GraphicsLayer({
-  id: 'add-object',
+  id: "add-object",
   title: "SVM layer for comparison",
   listMode: "hide",
   elevationInfo: {
-    mode: 'on-the-ground',
-  }
+    mode: "on-the-ground",
+  },
 });
 
 @subclass("ExploreMars.page.AddObjectPage")
@@ -84,7 +89,7 @@ export class AddObjectPage extends Widget {
   });
 
   @property()
-  state: "selecting" | "editing" = 'selecting';
+  state: "selecting" | "editing" = "selecting";
 
   postInitialize() {
     const view = AppState.view;
@@ -93,7 +98,10 @@ export class AddObjectPage extends Widget {
     this.sketchViewModel.on("delete", () => {
       graphics.removeAll();
 
-      if (AppState.route.match(compareRoute) && compareRoute.path === "models") {
+      if (
+        AppState.route.match(compareRoute) &&
+        compareRoute.path === "models"
+      ) {
         compareRoute.back();
       }
     });
@@ -112,8 +120,11 @@ export class AddObjectPage extends Widget {
 
     return (
       <div style="display:contents">
-        {AppState.route.match(compareRoute, 'editing') ? <EditingInfo /> :
-          <SubMenu class={styles.container} items={items} />}
+        {AppState.route.match(compareRoute, "editing") ? (
+          <EditingInfo />
+        ) : (
+          <SubMenu class={styles.container} items={items} />
+        )}
       </div>
     );
   }
@@ -127,15 +138,13 @@ export class AddObjectPage extends Widget {
     const graphic = new Graphic({
       geometry: mesh,
       symbol: new MeshSymbol3D({
-        symbolLayers: [
-          new FillSymbol3DLayer()
-        ]
-      })
+        symbolLayers: [new FillSymbol3DLayer()],
+      }),
     });
 
     graphics.add(graphic);
 
-    compareRoute.state = 'editing';
+    compareRoute.state = "editing";
 
     void AppState.view.goTo({
       target: graphic,
