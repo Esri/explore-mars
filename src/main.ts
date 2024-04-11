@@ -60,6 +60,9 @@ const view = new SceneView({
       collapseButton: false,
     },
   },
+  theme: {
+    accentColor: "rgb(0,255,0)",
+  },
 });
 view.ui.remove("attribution");
 view.map.ground.layers.add(marsElevation);
