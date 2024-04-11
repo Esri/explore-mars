@@ -9,9 +9,11 @@ import location from "./images/location.svg";
 import measure from "./images/measure.svg";
 import compare from "./images/compare.svg";
 import esriLogo from "./images/esri-logo.png";
+import { compareRoute } from "../../compare/ComparePage";
+import { MeasureRoute } from "../../measure/MeasurePages";
 
 interface MenuBarProps {
-  onItemClick: (item: Page) => void;
+  onItemClick: (item: Page | any) => void;
 }
 export function MenuBar({ onItemClick }: MenuBarProps) {
   return (
@@ -21,7 +23,7 @@ export function MenuBar({ onItemClick }: MenuBarProps) {
           <a
             class={cx(styles.menuItem, styles.logoItem, styles.explore)}
             onclick={(e: Event) => {
-              if (AppState.page === "landing") onItemClick("home");
+              if (AppState.route.path === "landing") onItemClick("home");
               else onItemClick("landing");
             }}
           >
@@ -40,7 +42,7 @@ export function MenuBar({ onItemClick }: MenuBarProps) {
             <a
               class={cx(styles.menuItem, styles.location)}
               onclick={(e: Event) => {
-                if (AppState.page === "locations") onItemClick("home");
+                if (AppState.route.path === "locations") onItemClick("home");
                 else onItemClick("locations");
               }}
             >
@@ -50,8 +52,8 @@ export function MenuBar({ onItemClick }: MenuBarProps) {
             <a
               class={cx(styles.menuItem)}
               onclick={(e: Event) => {
-                if (AppState.page === "measure") onItemClick("home");
-                else onItemClick("measure");
+                if (AppState.route.path === "measure") onItemClick("home");
+                else onItemClick(MeasureRoute);
               }}
             >
               <img class={styles.icon} alt="" src={measure} />
@@ -60,8 +62,8 @@ export function MenuBar({ onItemClick }: MenuBarProps) {
             <a
               class={cx(styles.menuItem, styles.compare)}
               onclick={(e: Event) => {
-                if (AppState.page === "compare") onItemClick("home");
-                else onItemClick("compare");
+                if (AppState.route.match(compareRoute)) onItemClick("home");
+                else onItemClick(compareRoute);
               }}
             >
               <img class={styles.icon} alt="" src={compare} />
@@ -71,7 +73,7 @@ export function MenuBar({ onItemClick }: MenuBarProps) {
           <a
             class={cx(styles.menuItem, styles.logoItem, styles.credits)}
             onclick={(e: Event) => {
-              if (AppState.page === "credits") onItemClick("home");
+              if (AppState.route.path === "credits") onItemClick("home");
               else onItemClick("credits");
             }}
           >

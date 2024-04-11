@@ -11,66 +11,65 @@ import { watch } from "@arcgis/core/core/reactiveUtils";
 import { Item, SubMenu } from "../utility-components/SubMenu";
 import styles from "./ComparePage.module.scss";
 import { CloseButton } from "../utility-components/close-button/CloseButton";
-import AppState from "../application/AppState";
+import AppState, { Route } from "../application/AppState";
 
 type Page = "menu" | "regions" | "models";
 
-const addRegionWidget = new AddRegionPage();
-const addObjectWidget = new AddObjectPage();
+export const compareRoute = new Route({
+  path: 'menu', route: 'compare', paths: [
+    'menu', 'models', 'regions'
+  ]
+});
+
 @subclass("ExploreMars.page.CompareObject")
 export class ComparePage extends Widget {
-  @property()
-  page: Page = "menu";
-
-  initialize() {
+  postInitialize() {
     const watchPageHandle = watch(
-      () => this.page,
+      () => compareRoute.path,
       (page) => {
-        if (page === "menu") return;
-        addRegionWidget?.start();
-
-        addObjectWidget?.start();
+        match(page)
+          .with('menu', () => {
+            AppState.status = "idle";
+          })
+          .with('models', () => {
+            AppState.status = "editing";
+          })
+          .with('regions', () => {
+            AppState.status = "editing";
+          })
+          .run();
       },
     );
     this.addHandles(watchPageHandle);
   }
 
   render() {
-    if (this.page === "menu") {
-      AppState.status = "idle";
-
+    if (compareRoute.path === "menu") {
       return (
-        <CompareMenu
-          selectTool={(tool) => {
-            this.page = tool;
-          }}
-        />
+        <div>
+          <CompareMenu
+            selectTool={(tool) => {
+              compareRoute.push(tool, "selecting");
+            }}
+          />
+        </div>
       );
     }
-
-    AppState.status = "editing";
-
-    const widget = match(this.page)
-      .with("regions", () => addRegionWidget)
-      .with("models", () => addObjectWidget)
-      .exhaustive();
 
     return (
       <div class={styles.compareInfo}>
         <span class={styles.close}>
           <CloseButton
             onClose={() => {
-              this.page = "menu";
+              compareRoute.reset();
+              AppState.route.back();
             }}
           />
         </span>
-        {widget.render()}
+        {compareRoute.path === "regions" ? <AddRegionPage /> : null}
+        {compareRoute.path === "models" ? <AddObjectPage /> : null}
       </div>
     );
-  }
-
-  destroy() {
-    super.destroy();
   }
 }
 

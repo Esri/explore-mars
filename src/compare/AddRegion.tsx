@@ -20,7 +20,7 @@ import {
 import GraphicsLayer from "@arcgis/core/layers/GraphicsLayer";
 import SketchViewModel from "@arcgis/core/widgets/Sketch/SketchViewModel";
 import PolygonTransform from "./PolygonTransform";
-import { EditingInfo } from "./ComparePage";
+import { EditingInfo, compareRoute } from "./ComparePage";
 import AppState from "../application/AppState";
 import styles from "./AddRegion.module.scss";
 
@@ -30,82 +30,67 @@ interface Region {
   country: Graphic;
 }
 
+const viewGraphics = new GraphicsLayer({
+  title: "Country comparison",
+  listMode: "hide",
+  elevationInfo: {
+    mode: "on-the-ground"
+  }
+});
+
+const editingGraphics = new GraphicsLayer({
+  title: "SVM layer for comparison",
+  listMode: "hide",
+  elevationInfo: {
+    mode: "on-the-ground"
+  }
+});
+
 @subclass("ExploreMars.page.AddRegionPage")
 export class AddRegionPage extends Widget {
-  @property()
-  sketchViewModel!: SketchViewModel;
 
   @property()
-  get state(): "selecting" | "editing" | "clearing" {
-    if (AppState.page === "compare") {
-      if (this.placedRegion == null) return "selecting";
-      else return "editing";
-    } else {
-      // this means we are on our way out of the comparison page, we can use this state to ensure the globe doesn't flash for a few frames while the page is changed
-      return "clearing";
-    }
-  }
+  state: "selecting" | "editing" = 'selecting';
 
   @property()
-  viewGraphics!: GraphicsLayer;
+  sketchViewModel = new SketchViewModel({
+    view: AppState.view,
+    layer: editingGraphics,
+    defaultUpdateOptions: {
+      toggleToolOnClick: false,
+      enableScaling: false,
+      enableZ: true,
+    },
+  });
 
   @property()
-  editingGrapihcs: GraphicsLayer;
-
-  @aliasOf("viewGraphics.graphics")
-  graphicEditing: Graphic[] = [];
-
-  @property()
-  selectedRegion: Graphic | null = null;
-
-  @property()
-  placedRegion: Graphic | null = null;
+  selectedRegion: Promise<Graphic> | null = null;
 
   @property()
   highlight?: IHandle;
 
   overlayGlobe?: SceneView | null;
 
-  start() {
-    if (this.viewGraphics != null) return;
-    this.clear();
-
+  postInitialize(): void {
     const view = AppState.view;
-
-    const viewGraphics = new GraphicsLayer({
-      title: "Country comparison",
-      listMode: "hide",
-    });
-    const editingGraphics = new GraphicsLayer({
-      title: "SVM layer for comparison",
-      listMode: "hide",
-    });
-
     view.map.layers.addMany([viewGraphics, editingGraphics]);
 
-    const sketchViewModel = new SketchViewModel({
-      layer: editingGraphics,
-      view,
-      defaultUpdateOptions: {
-        toggleToolOnClick: false,
-        enableScaling: false,
-        enableZ: true,
-      },
-    });
-
-    sketchViewModel.on("delete", () => {
-      AppState.page = "home";
+    this.sketchViewModel.on("delete", () => {
       this.clear();
+      if (AppState.route.children?.match(compareRoute) && compareRoute.path === "regions") {
+        AppState.route.children.back();
+      }
     });
 
-    this.editingGrapihcs = editingGraphics;
-    this.viewGraphics = viewGraphics;
-    this.sketchViewModel = sketchViewModel;
   }
 
   render() {
-    if (this.state !== "selecting") {
-      return <EditingInfo />;
+    if (compareRoute.state !== "selecting") {
+      return (
+        <div>
+          <EditingInfo />
+        </div>
+      )
     }
 
     return (
@@ -120,8 +105,12 @@ export class AddRegionPage extends Widget {
         <button
           class="esri-button esri-button--primary"
           disabled={this.selectedRegion == null}
-          onclick={() => {
-            void AppState.load(this.addCountry());
+          onclick={async () => {
+            const country = await this.selectedRegion;
+            if (country) {
+              await this.clear();
+              void AppState.load(this.addCountry(country));
+            }
           }}
         >
           Place it on Mars
@@ -137,16 +126,25 @@ export class AddRegionPage extends Widget {
       "click",
       promiseUtils.debounce(async (e) => {
         this.highlight?.remove();
+
+        let resolveSelectedRegion: (value: Graphic | PromiseLike<Graphic>) => void;
+        const promise = new Promise<Graphic>((resolve) => {
+          resolveSelectedRegion = resolve;
+        });
+        this.selectedRegion = promise;
+
         const hitTest = await overlayGlobe.hitTest(e);
 
         if (hitTest.results.length > 0) {
           const result = hitTest.results[hitTest.results.length - 1];
           if (result.type === "graphic") {
-            this.selectedRegion = result.graphic;
+
             const layerView = await overlayGlobe.whenLayerView(
               result.graphic.layer as FeatureLayer,
             );
             this.highlight = layerView.highlight(result.graphic);
+            const country = await graphicFromCountry(result.graphic, AppState.view);
+            resolveSelectedRegion!(country);
           }
         }
       }),
@@ -157,47 +155,45 @@ export class AddRegionPage extends Widget {
     this.overlayGlobe = overlayGlobe;
   }
 
-  private async addCountry() {
-    if (this.selectedRegion == null) {
-      return;
-    }
-
-    const region = this.selectedRegion;
-    this.placedRegion = this.selectedRegion;
-    const country = await graphicFromCountry(region, AppState.view);
+  private async addCountry(country: Graphic) {
+    compareRoute.state = 'editing';
 
     const center = createRegionCenter(country);
     const label = createRegionLabel(country);
-    this.selectedRegion = null;
 
-    this.viewGraphics.addMany([country, label]);
-    this.editingGrapihcs.add(center);
+    this.clear();
 
-    this.viewGraphics.elevationInfo = { mode: "on-the-ground" };
+    viewGraphics.addMany([country, label]);
+    editingGraphics.add(center);
+    country.addHandles([
+      this.sketchViewModel.on(
+        "update",
+        watchRotation({ country, center, label }),
+      ),
+      AppState.view.on("click", async (event) => {
+        const hitTest = await AppState.view.hitTest(event);
+        const isHit = hitTest.results.some(result => {
+          return result.type === 'graphic' && result.graphic === country
+        });
 
-    void AppState.view.goTo(country.geometry);
+        if (isHit)
+          void this.sketchViewModel.update(center, {
+            enableScaling: false,
+          });
+      })
+    ]);
+
+
+    void AppState.view.goTo(country)
     void this.sketchViewModel.update(center, {
       enableScaling: false,
     });
-
-    this.addHandles(
-      this.sketchViewModel.on(
-        "update",
-        watchRotation(this.sketchViewModel, { country, center, label }),
-      ),
-    );
   }
 
   clear() {
-    this.viewGraphics?.removeAll();
-    this.editingGrapihcs?.removeAll();
-    this.selectedRegion?.destroy();
-    this.placedRegion?.destroy();
-    this.graphicEditing?.forEach((graphic) => {
-      graphic.destroy();
-    });
+    viewGraphics.removeAll();
+    editingGraphics.removeAll();
     this.selectedRegion = null;
-    this.placedRegion = null;
   }
 }
 
@@ -300,13 +296,12 @@ function createRegionLabel(country: Graphic): Region["label"] {
   });
 }
 
-function watchRotation(model: SketchViewModel, region: Region) {
+function watchRotation(region: Region) {
   let lastAngle = 0;
-  const view = model.view as SceneView;
+  const view = AppState.view;
 
   const { country, center, label } = region;
   const spherical = new PolygonTransform(view);
-
   return (ev: __esri.SketchViewModelUpdateEvent) => {
     if (ev.state !== "active") {
       return;

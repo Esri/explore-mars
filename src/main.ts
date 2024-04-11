@@ -14,7 +14,7 @@ import {
 import SceneView from "@arcgis/core/views/SceneView";
 import Map from "@arcgis/core/Map";
 import { addFrameTask } from "@arcgis/core/core/scheduling";
-import { when } from "@arcgis/core/core/reactiveUtils";
+import * as reactiveUtils from "@arcgis/core/core/reactiveUtils";
 import AppState from "./application/AppState";
 
 const map = new Map({
@@ -47,22 +47,23 @@ const view = new SceneView({
     heading: 293.23407097843636,
     tilt: 43.952125030140685,
   },
+  popup: {
+    actions: [],
+    dockEnabled: true,
+    dockOptions: {
+      buttonEnabled: false,
+      position: "top-right",
+      breakpoint: false,
+    },
+    visibleElements: {
+      spinner: true,
+      collapseButton: false,
+    },
+  },
 });
 view.ui.remove("attribution");
 view.map.ground.layers.add(marsElevation);
 view.map.layers.addMany([marsNamesLayer, missionLayer]);
-
-const popup = view.popup;
-popup.actions?.removeAll();
-popup.dockEnabled = true;
-popup.dockOptions = {
-  buttonEnabled: false,
-  position: "top-right",
-  breakpoint: false,
-};
-
-popup.visibleElements.spinner = true;
-popup.visibleElements.collapseButton = false;
 
 const spinGlobe = addFrameTask({
   update: () => {
@@ -82,8 +83,8 @@ const app = new Application({
   container: "application",
 });
 
-when(
-  () => AppState.page !== "landing",
+reactiveUtils.when(
+  () => AppState.route.path !== "landing",
   () => {
     spinGlobe.remove();
     const camera = view.camera.clone();

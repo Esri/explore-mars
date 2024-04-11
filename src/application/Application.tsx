@@ -1,5 +1,4 @@
 import {
-  property,
   subclass,
 } from "@arcgis/core/core/accessorSupport/decorators";
 import Widget from "@arcgis/core/widgets/Widget";
@@ -7,7 +6,7 @@ import { tsx } from "@arcgis/core/widgets/support/widget";
 import AppState from "./AppState";
 import { ComparePage } from "../compare/ComparePage";
 import { MeasurePage } from "../measure/MeasurePages";
-import { match, P } from "ts-pattern";
+import { match } from "ts-pattern";
 import type { Page } from "./AppState";
 import { LocationPage } from "../location/LocationPage";
 import { CreditsPage } from "../credits/CreditsPage";
@@ -22,47 +21,35 @@ import { Page as PageWrapper } from "../utility-components/Page";
 
 @subclass("ExploreMars.Application")
 class Application extends Widget {
-  @property()
-  private content: any;
 
-  @property()
-  private previousContent: any;
+  initialize() {
+    this.addHandles([
+      reactiveUtils.when(
+        () => AppState.status !== "uninitialized",
+        () => {
+          enableBasemapSwitcher(AppState.view);
+        }
+      ),
+    ]);
+  }
 
-  async initialize() {
-    const watchPage = reactiveUtils.watch(
-      () => AppState.page,
-      async (page) => {
-        this.previousContent = this.content;
-
-        this.content = null;
-        const content = await this.refreshContent(page);
-
-        setTimeout(() => {
-          this.previousContent?.destroy();
-          this.previousContent = null;
-          this.content = content;
-        }, 200);
-      },
-    );
-
-    reactiveUtils.when(
-      () => AppState.status !== "uninitialized",
-      () => {
-        enableBasemapSwitcher(AppState.view);
-      },
-    );
-
-    this.addHandles(watchPage);
+  renderPage(page: string) {
+    return match(page)
+      .with("home", () => <div style="display:none;" />)
+      .with("landing", () => <div style="display:none;" />)
+      .with("measure", () => <MeasurePage />)
+      .with("compare", () => <ComparePage />)
+      .with("credits", () => <CreditsPage />)
+      .with("locations", () => <LocationPage />)
+      .run()!
   }
 
   render() {
-    const content = this.content?.render();
-    const prev = this.previousContent?.render() ?? null;
+    const path = AppState.route.path;
 
-    const renderedContent = match([AppState.status, content])
-      .with(["loading", P._], () => <Loading />)
-      .with([P._, P.nullish], () => prev)
-      .otherwise(() => content);
+    const content = match(AppState.status)
+      .with("loading", () => <Loading />)
+      .otherwise(() => this.renderPage(path))
 
     return (
       <div class={styles.wrapper}>
@@ -71,14 +58,14 @@ class Application extends Widget {
             this.goToPage(item);
           }}
         />
-        <CookieBanner hidden={false || AppState.page === "landing"} />
+        <CookieBanner hidden={AppState.route.match('landing')} />
         <PageWrapper
-          hidden={AppState.page === "home" || AppState.page === "landing"}
-          content={renderedContent}
+          hidden={AppState.route.match('home') || AppState.route.match('landing')}
+          children={content}
           class={AppState.status === "editing" ? styles.obscureMenu : ""}
         />
         <LandingPage
-          hidden={AppState.page !== "landing"}
+          hidden={!AppState.route.match('landing')}
           onStart={() => {
             this.goToPage("home");
           }}
@@ -88,32 +75,7 @@ class Application extends Widget {
   }
 
   private goToPage(page: Page) {
-    if (AppState.page === page) {
-      AppState.page = "home";
-    }
-    AppState.page = page;
-  }
-
-  private async refreshContent(page: Page) {
-    const ContentConstructor = match(page)
-      .with("home", () => null)
-      .with("landing", () => null)
-      .with("measure", () => MeasurePage)
-      .with("compare", () => ComparePage)
-      .with("credits", () => CreditsPage)
-      .with("locations", () => LocationPage)
-      .exhaustive();
-
-    if (ContentConstructor == null) return;
-
-    const content =
-      this.content instanceof ContentConstructor
-        ? this.content
-        : new ContentConstructor(AppState.view);
-
-    await content.when();
-
-    return content;
+    AppState.route.push(page);
   }
 }
 

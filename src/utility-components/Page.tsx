@@ -5,16 +5,16 @@ import { PointerEventsContainer } from "./PointerEventsContainer";
 
 interface CookieBannerProps {
   key?: string;
-  content: tsx.JSX.Element;
   hidden?: boolean;
   class?: string;
+  children: tsx.JSX.Element | tsx.JSX.Element[];
 }
 
 export function Page({
   key,
-  content,
   hidden,
   class: clazz,
+  children = []
 }: CookieBannerProps) {
   return (
     <PointerEventsContainer
@@ -23,7 +23,7 @@ export function Page({
           key={key}
           class={cx(styles.page, { [styles.hidden]: hidden }, clazz)}
         >
-          <div class={styles.content}>{content}</div>
+          <div class={styles.content}>{children}</div>
         </div>
       }
     />

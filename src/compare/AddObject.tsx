@@ -5,12 +5,12 @@ import {
 } from "@arcgis/core/core/accessorSupport/decorators";
 import Widget from "@arcgis/core/widgets/Widget";
 import { tsx } from "@arcgis/core/widgets/support/widget";
-import { PointSymbol3D, ObjectSymbol3DLayer } from "@arcgis/core/symbols";
+import { PointSymbol3D, ObjectSymbol3DLayer, MeshSymbol3D, FillSymbol3DLayer } from "@arcgis/core/symbols";
 import SketchViewModel from "@arcgis/core/widgets/Sketch/SketchViewModel";
 import { importModel } from "./GlTFImporter";
 import GraphicsLayer from "@arcgis/core/layers/GraphicsLayer";
 import AppState from "../application/AppState";
-import { EditingInfo } from "./ComparePage";
+import { EditingInfo, compareRoute } from "./ComparePage";
 import { Item, SubMenu } from "../utility-components/SubMenu";
 import styles from "./AddObject.module.scss";
 import zurich from "./gltf/zurich.zip";
@@ -19,6 +19,8 @@ import killimanjaro from "./gltf/killimanjaro.zip";
 import grandCanyon from "./gltf/grand-canyon.zip";
 import dubai from "./gltf/dubai.zip";
 import everest from "./gltf/everest.zip";
+import Mesh from "@arcgis/core/geometry/Mesh";
+import * as reactiveUtils from "@arcgis/core/core/reactiveUtils";
 
 interface GltfObject {
   id: string;
@@ -59,116 +61,90 @@ const objects: GltfObject[] = [
   },
 ];
 
+const graphics = new GraphicsLayer({
+  id: 'add-object',
+  title: "SVM layer for comparison",
+  listMode: "hide",
+  elevationInfo: {
+    mode: 'on-the-ground',
+  }
+});
+
 @subclass("ExploreMars.page.AddObjectPage")
 export class AddObjectPage extends Widget {
   @property()
-  sketchViewModel!: SketchViewModel;
+  sketchViewModel = new SketchViewModel({
+    view: AppState.view,
+    layer: graphics,
+    defaultUpdateOptions: {
+      toggleToolOnClick: false,
+      enableScaling: false,
+      enableZ: true,
+    },
+  });
 
   @property()
-  viewGraphics!: GraphicsLayer;
+  state: "selecting" | "editing" = 'selecting';
 
-  @property()
-  placedObject: Graphic | null = null;
-
-  start() {
-    if (this.viewGraphics != null) return;
-
+  postInitialize() {
     const view = AppState.view;
 
-    const graphics = new GraphicsLayer({
-      title: "SVM layer for comparison",
-      listMode: "hide",
+    view.map.add(graphics);
+    this.sketchViewModel.on("delete", () => {
+      graphics.removeAll();
+
+      if (AppState.route.match(compareRoute) && compareRoute.path === "models") {
+        compareRoute.back();
+      }
     });
-
-    view.map.layers.add(graphics);
-
-    const sketchViewModel = new SketchViewModel({
-      layer: graphics,
-      view,
-      defaultUpdateOptions: {
-        toggleToolOnClick: false,
-        enableScaling: false,
-        enableZ: true,
-      },
-    });
-
-    sketchViewModel.on("delete", () => {
-      this.destroy();
-    });
-
-    this.viewGraphics = graphics;
-    this.sketchViewModel = sketchViewModel;
   }
 
   render() {
-    console.log("rendering....");
-    if (this.placedObject != null) {
-      return <EditingInfo />;
-    }
-
     const items = objects.map((o) => (
       <Object
         gltf={o}
         onClick={(el) => {
+          graphics.removeAll();
           void AppState.load(this.addGltf(el.gltf));
         }}
       />
     ));
-    return <SubMenu class={styles.container} items={items} />;
+
+    return (
+      <div style="display:contents">
+        {AppState.route.match(compareRoute, 'editing') ? <EditingInfo /> :
+          <SubMenu class={styles.container} items={items} />}
+      </div>
+    );
   }
 
   private async addGltf(url: string) {
     const href = await importModel(url);
 
-    const gltfModel = new ObjectSymbol3DLayer({
-      anchor: "bottom",
-      resource: {
-        href,
-      },
-    });
     const view = AppState.view;
-    const geometry = view.center.clone();
-    geometry.z = 0;
+    const mesh = await Mesh.createFromGLTF(view.center, href);
+
     const graphic = new Graphic({
-      geometry,
-      symbol: new PointSymbol3D({
-        symbolLayers: [gltfModel],
-      }),
+      geometry: mesh,
+      symbol: new MeshSymbol3D({
+        symbolLayers: [
+          new FillSymbol3DLayer()
+        ]
+      })
     });
 
-    this.placedObject = graphic;
+    graphics.add(graphic);
 
-    this.viewGraphics.add(graphic);
+    compareRoute.state = 'editing';
 
     void AppState.view.goTo({
-      target: graphic.geometry,
+      target: graphic,
       scale: 250_000,
       tilt: 70,
     });
-
     void this.sketchViewModel.update(graphic, {
       enableScaling: false,
     });
-  }
-
-  clear() {
-    this.viewGraphics?.removeAll();
-    this.placedObject?.destroy();
-    this.placedObject = null;
-  }
-
-  destroy(): void {
-    this.sketchViewModel.cancel();
-    this.viewGraphics.graphics.forEach((graphic) => {
-      graphic.destroy();
-    });
-    this.viewGraphics.removeAll();
-    this.placedObject = null;
-
-    if (!this.sketchViewModel.destroyed) this.sketchViewModel.destroy();
-    this.viewGraphics.destroy();
-
-    super.destroy();
   }
 }
 

@@ -8,127 +8,151 @@ import ElevationProfile from "@arcgis/core/widgets/ElevationProfile";
 import Widget from "@arcgis/core/widgets/Widget";
 import { tsx } from "@arcgis/core/widgets/support/widget";
 import { match } from "ts-pattern";
-import type SceneView from "@arcgis/core/views/SceneView";
 import { Item, SubMenu } from "../utility-components/SubMenu";
 import styles from "./MeasurePages.module.scss";
 import { CloseButton } from "../utility-components/close-button/CloseButton";
 import * as reactiveUtils from "@arcgis/core/core/reactiveUtils";
-import ElevationProfileLineView from "@arcgis/core/widgets/ElevationProfile/ElevationProfileLineView";
-import AppState from "../application/AppState";
+import AppState, { Route } from "../application/AppState";
 
 import "./esri-measurement-widget-overwrites.scss";
+import ElevationProfileLineQuery from "@arcgis/core/widgets/ElevationProfile/ElevationProfileLineQuery";
+import GraphicsLayer from "@arcgis/core/layers/GraphicsLayer";
+import * as meshUtils from "@arcgis/core/geometry/support/meshUtils";
+import { Mesh, Multipoint } from "@arcgis/core/geometry";
+import ElevationSampler from "@arcgis/core/layers/support/ElevationSampler";
 
 type Page = "menu" | "area" | "line" | "elevation";
 
-const areaMeasurement = new AreaMeasurement3D({});
-
-const lineMeasurement = new DirectLineMeasurement3D({});
-const elevationProfile = new ElevationProfile({
-  profiles: [new ElevationProfileLineView()],
-  visibleElements: {
-    selectButton: false,
-    legend: false,
-  },
-});
-
-reactiveUtils.watch(
-  () => (elevationProfile as any)?._chart?.amChart,
-  (amChart) => {
-    if (amChart != null) {
-      amChart.paddingLeft = 1;
-      if (amChart?.yAxes?._values[0] != null) {
-        amChart.yAxes._values[0].renderer.opposite = true;
-      }
-    }
-  },
-);
-
+export const MeasureRoute = new Route({ route: 'measure', path: 'menu', paths: ['line', 'area', 'elevation'] });
 @subclass("ExploreMars.page.Measure")
 export class MeasurePage extends Widget {
   @property()
   page: Page = "menu";
 
-  constructor(view: SceneView) {
+  @property()
+  meshSampler?: ElevationSampler;
+
+  @property()
+  get elevationProfile() {
+    const meshSampler = this.meshSampler;
+
+    return new ElevationProfileLineQuery({
+      color: 'rgb(0,255,0)',
+      source: {
+        async queryElevation(point) {
+          const modelSamplePromise = meshSampler?.queryElevation(point) as Multipoint;
+          const groundSamplePromise = AppState.view.map.ground.queryElevation(point);
+
+          const [
+            modelSample,
+            groundSample
+          ] = await Promise.all([
+            modelSamplePromise,
+            groundSamplePromise
+          ]);
+
+          const finalSample = groundSample.geometry.clone() as Multipoint;
+
+          if (modelSample) {
+            const adjustedPoints = finalSample.points.map(([x, y, z], i) => [x, y, z + modelSample.points[i][2]])
+            finalSample.points = adjustedPoints;
+          }
+
+          return { geometry: finalSample, noDataValue: 0 };
+        }
+      }
+    })
+  }
+
+  constructor() {
     super();
-
-    areaMeasurement.view ??= view;
-    lineMeasurement.view ??= view;
-    elevationProfile.view ??= view;
-
     const watchPage = reactiveUtils.watch(
-      () => this.page,
+      () => MeasureRoute.path,
       (page) => {
-        if (page !== "menu") {
-          areaMeasurement?.viewModel.clear();
-          lineMeasurement?.viewModel.clear();
-          elevationProfile?.viewModel.clear();
-
-          match(page)
-            .with("area", () => {
-              areaMeasurement.viewModel.start();
-            })
-            .with("elevation", () => {
-              elevationProfile.viewModel.start();
-            })
-            .with("line", () => {
-              lineMeasurement.viewModel.start();
-            })
-            .exhaustive();
+        if (page === "menu") {
+          AppState.status = "idle";
+        } else {
+          AppState.status = "editing";
         }
       },
     );
-    this.addHandles(watchPage);
+
+    const watchModelGraphic = reactiveUtils.watch(() => {
+      const layer = AppState.view.map.layers.find(layer => layer.id === "add-object") as GraphicsLayer;
+      const graphic = layer?.graphics.getItemAt(0);
+      return graphic?.geometry as Mesh;
+    }, async (mesh) => {
+      if (mesh != null)
+        this.meshSampler = await meshUtils.createElevationSampler(mesh, { noDataValue: 0 });
+    }, { initial: true });
+
+    this.addHandles([watchPage, watchModelGraphic]);
   }
 
   render() {
-    if (this.page === "menu") {
-      AppState.status = "idle";
+    if (MeasureRoute.path === "menu") {
       return (
-        <MeasureMenu
-          selectTool={(tool) => {
-            this.page = tool;
-          }}
-        />
+        <div styles={{ display: 'contents' }}>
+          <MeasureMenu
+            selectTool={(tool) => {
+              MeasureRoute.push(tool);
+            }}
+          />
+        </ div>
       );
     }
 
-    AppState.status = "editing";
-
-    const widget = match(this.page)
-      .with("area", () => areaMeasurement)
-      .with("elevation", () => elevationProfile)
-      .with("line", () => lineMeasurement)
-      .exhaustive();
-
-    widget.visible = true;
-
-    widget.viewModel.addHandles(
-      reactiveUtils.when(
-        () => widget.viewModel.state === "creating",
-        () => {
-          if (widget !== elevationProfile) widget.viewModel.clear();
-        },
-      ),
-    );
-
-    return (
-      <div class={styles.measurement}>
-        <CloseButton
-          onClose={() => {
-            this.close();
+    const tool = match(MeasureRoute.path)
+      .with('area', () => (
+        <AreaMeasurement3D
+          //@ts-ignore
+          afterCreate={node => {
+            node.viewModel.start()
+          }}
+          view={AppState.view}
+        />
+      ))
+      .with('elevation', () => (
+        <ElevationProfile
+          //@ts-ignore
+          afterCreate={node => {
+            node.viewModel.start();
+          }}
+          view={AppState.view}
+          profiles={[this.elevationProfile]}
+          visibleElements={{
+            legend: false,
           }}
         />
-        {widget.render()}
+      ))
+      .with('line', () => (
+        <DirectLineMeasurement3D
+          //@ts-ignore
+          afterCreate={node => {
+            node.viewModel.start()
+          }}
+          view={AppState.view}
+        />
+      ))
+      .run()
+
+    return (
+      <div styles={{ display: 'contents' }}>
+        <div class={styles.measurement}>
+          <CloseButton
+            onClose={() => {
+              this.close();
+            }}
+          />
+          {tool}
+        </div>
       </div>
     );
   }
 
   close() {
-    this.page = "menu";
-  }
-
-  destroy(): void {
-    super.destroy();
+    MeasureRoute.reset();
+    AppState.route.back();
   }
 }
 
