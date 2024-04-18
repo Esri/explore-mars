@@ -83,3 +83,19 @@ textarea {
   // we manage the accessibility glow manually
   outline: 0 !important;
 }
+
+.esri-measurement-widget-content__measurement-item.esri-measurement-widget-content__measurement-item--disabled {
+  display: none;
+}
+
+:root {
+  --calcite-color-brand: green;
+  --calcite-color-foreground-1: black;
+  --calcite-color-text-inverse: white;
+  --calcite-color-brand-press: color-mix(in lch, black 60%, green);
+  --calcite-color-brand-hover: color-mix(in lch, black 40%, green);
+  --calcite-color-text-3: white;
+  --calcite-color-text-2: white;
+  --calcite-color-text-1: white;
+  --calcite-color-foreground-2: black;
+}

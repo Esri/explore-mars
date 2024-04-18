@@ -166,6 +166,8 @@ export class MeasurePage extends Widget {
           profiles={[this.elevationProfile]}
           visibleElements={{
             legend: false,
+            selectButton: false,
+            sketchButton: true
           }}
         />
       ))
@@ -232,3 +234,4 @@ function MeasureMenu({ selectTool }: MeasureMenuProps) {
     />
   );
 }
+
