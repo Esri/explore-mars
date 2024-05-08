@@ -29,12 +29,10 @@ import * as reactiveUtils from "@arcgis/core/core/reactiveUtils";
 import AppState, { Route } from "../application/AppState";
 
 import "./esri-measurement-widget-overwrites.scss";
-import ElevationProfileLineQuery from "@arcgis/core/widgets/ElevationProfile/ElevationProfileLineQuery";
 import GraphicsLayer from "@arcgis/core/layers/GraphicsLayer";
-import * as meshUtils from "@arcgis/core/geometry/support/meshUtils";
-import { Mesh, Multipoint } from "@arcgis/core/geometry";
-import ElevationSampler from "@arcgis/core/layers/support/ElevationSampler";
-import ElevationProfileViewModel from "@arcgis/core/widgets/ElevationProfile/ElevationProfileViewModel";
+import { Mesh } from "@arcgis/core/geometry";
+import ElevationProfileLineGround from "@arcgis/core/widgets/ElevationProfile/ElevationProfileLineGround";
+import ElevationProfileLineView from "@arcgis/core/widgets/ElevationProfile/ElevationProfileLineView";
 
 type Page = "menu" | "area" | "line" | "elevation";
 
@@ -44,7 +42,11 @@ export const MeasureRoute = new Route({
   paths: ["line", "area", "elevation"],
 });
 
-declare const x: ElevationProfile;
+const groundProfile = new ElevationProfileLineGround({
+  color: 'green'
+})
+
+const viewProfile = new ElevationProfileLineView();
 
 @subclass("ExploreMars.page.Measure")
 export class MeasurePage extends Widget {
@@ -52,51 +54,13 @@ export class MeasurePage extends Widget {
   page: Page = "menu";
 
   @property()
-  meshSampler?: ElevationSampler;
-
-  @property()
   mesh?: Mesh;
 
-  @property()
-  get elevationProfile() {
-    const meshSampler = this.meshSampler;
-    const mesh = this.mesh;
-    return new ElevationProfileLineQuery({
-      color: "rgb(0,255,0)",
-      source: {
-        async queryElevation(point) {
-          const modelSamplePromise = meshSampler?.queryElevation(
-            point,
-          ) as Multipoint;
-          const groundSamplePromise =
-            AppState.view.map.ground.queryElevation(point);
+  groundProfile = new ElevationProfileLineGround({
+    color: 'green'
+  })
 
-          const [modelSample, groundSample] = await Promise.all([
-            modelSamplePromise,
-            groundSamplePromise,
-          ]);
-
-          const finalSample = groundSample.geometry.clone() as Multipoint;
-
-          if (modelSample) {
-            const getMeshHeightAdjustment = (z: number) => {
-              const isMissingData = !Number.isFinite(z) && 0 > z;
-              return !isMissingData ? z + mesh!.vertexSpace.origin[2] : 0;
-            }
-
-            const adjustedPoints = finalSample.points.map(([x, y, z], i) => [
-              x,
-              y,
-              Math.max(z, z + getMeshHeightAdjustment(modelSample.points?.[i]?.[2])),
-            ]);
-            finalSample.points = adjustedPoints;
-          }
-
-          return { geometry: finalSample, noDataValue: 0 };
-        },
-      },
-    });
-  }
+  viewProfile = new ElevationProfileLineView();
 
   constructor() {
     super();
@@ -120,10 +84,6 @@ export class MeasurePage extends Widget {
         return graphic?.geometry as Mesh;
       },
       async (mesh) => {
-        if (mesh != null)
-          this.meshSampler = await meshUtils.createElevationSampler(mesh, {
-            noDataValue: -Infinity,
-          });
         this.mesh = mesh;
       },
       { initial: true },
@@ -145,6 +105,12 @@ export class MeasurePage extends Widget {
       );
     }
 
+    const profiles: Array<ElevationProfileLineGround | ElevationProfileLineView> = [this.groundProfile];
+
+    if (this.mesh) {
+      profiles.push(this.viewProfile);
+    }
+
     const tool = match(MeasureRoute.path)
       .with("area", () => (
         <AreaMeasurement3D
@@ -159,25 +125,10 @@ export class MeasurePage extends Widget {
         <ElevationProfile
           //@ts-ignore
           afterCreate={(node) => {
-            const vm = (node.viewModel as ElevationProfileViewModel);
-            vm.start();
-            (vm).addHandles(
-              reactiveUtils.watch(
-                () => {
-                  const layer = AppState.view.map.layers.find(
-                    (layer) => layer.id === "add-object",
-                  ) as GraphicsLayer;
-                  const graphic = layer?.graphics.getItemAt(0);
-                  return graphic?.geometry as Mesh;
-                },
-                async () => {
-                  vm.input = vm.input.clone();
-                })
-            )
-          }
-          }
+            node.viewModel.start();
+          }}
           view={AppState.view}
-          profiles={[this.elevationProfile]}
+          profiles={profiles}
           visibleElements={{
             legend: false,
             selectButton: false,
