@@ -18,7 +18,7 @@ export default defineConfig({
   server: {
     port: 3000,
   },
-  base: "/explore-mars/",
+  base: "/",
   build: {
     target: "es2020",
   },
