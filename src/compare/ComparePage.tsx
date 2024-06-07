@@ -116,7 +116,7 @@ function CompareMenu({ selectTool }: CompareMenuProps) {
 export function EditingInfo() {
   return (
     <p>
-      Move the object in the view using the orange handles. Press "delete" to
+      Move the object in the view using the green handles. Press "delete" to
       remove the object.
     </p>
   );
