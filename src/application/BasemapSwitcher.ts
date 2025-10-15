@@ -19,7 +19,7 @@ import BasemapToggle from "@arcgis/core/widgets/BasemapToggle";
 import {
   marsHiRiseImagery,
   marsImageryBasemap,
-  marsReconnaissanceImagery,
+  // marsReconnaissanceImagery,
   shadedReliefBasemap,
 } from "../utilities/layers";
 
@@ -32,7 +32,7 @@ async function updateBasemap(view: SceneView) {
 
   const d =
     result.ground.mapPoint != null ? result.ground.distance : Number.MAX_VALUE;
-  marsReconnaissanceImagery.visible = d < 100000;
+  // marsReconnaissanceImagery.visible = d < 100000;
   marsHiRiseImagery.visible = d < 10000;
 }
 
