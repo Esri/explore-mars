@@ -19,7 +19,6 @@ import FeatureLayer from "@arcgis/core/layers/FeatureLayer";
 import GroupLayer from "@arcgis/core/layers/GroupLayer";
 import TileLayer from "@arcgis/core/layers/TileLayer";
 
-// const wgs84SR = SpatialReference.WGS84;
 export const marsSR = new SpatialReference({ wkid: 104971 });
 
 export const marsElevation = new ElevationLayer({
@@ -41,16 +40,16 @@ export const marsHiRiseImagery = new TileLayer({
   visible: false,
 });
 
-export const marsReconnaissanceImagery = new TileLayer({
-  id: "marsReconnaissanceImagery",
-  portalItem: {
-    id: "e6c448d134404fc082c73678accca7e5",
-  },
-  title: "Mars Reconnaissance Imagery",
-  // minScale: 400000,
-  opacity: 0.8,
-  visible: false,
-});
+// export const marsReconnaissanceImagery = new TileLayer({
+//   id: "marsReconnaissanceImagery",
+//   portalItem: {
+//     id: "e6c448d134404fc082c73678accca7e5",
+//   },
+//   title: "Mars Reconnaissance Imagery",
+//   // minScale: 400000,
+//   opacity: 0.8,
+//   visible: false,
+// });
 
 export const marsImagery = new TileLayer({
   id: "marsImagery",
@@ -68,7 +67,8 @@ export const marsImageryBasemap = new Basemap({
   title: "marsImageryBasemap",
   thumbnailUrl:
     "https://www.arcgis.com/sharing/rest/content/items/1efb16809db84f0c892b9b0662dab0c8/info/thumbnail/thumbnail1552849034608.png",
-  baseLayers: [marsImagery, marsReconnaissanceImagery, marsHiRiseImagery],
+  // baseLayers: [marsImagery, marsReconnaissanceImagery, marsHiRiseImagery],
+  baseLayers: [marsImagery, marsHiRiseImagery],
 });
 
 const shadedReliefLayer = new TileLayer({
