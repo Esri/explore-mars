@@ -12,8 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import "@esri/calcite-components/dist/calcite/calcite.css";
-import "@esri/calcite-components/dist/components/calcite-loader";
+import "@esri/calcite-components/main.css";
+import "@esri/calcite-components/components/calcite-loader";
 import "./font-face/font-face.scss";
 import "./general.scss";
 import "./esri-widget-customizations.scss";
@@ -25,11 +25,11 @@ import {
   marsNamesLayer,
   missionLayer,
 } from "./utilities/layers";
-import SceneView from "@arcgis/core/views/SceneView";
 import Map from "@arcgis/core/Map";
 import { addFrameTask } from "@arcgis/core/core/scheduling";
 import * as reactiveUtils from "@arcgis/core/core/reactiveUtils";
 import AppState from "./application/AppState";
+import SceneView from "@arcgis/core/views/SceneView";
 
 const map = new Map({
   basemap: marsImageryBasemap,
@@ -79,13 +79,20 @@ const view = new SceneView({
   },
 });
 view.ui.remove("attribution");
-view.map.ground.layers.add(marsElevation);
-view.map.layers.addMany([marsNamesLayer, missionLayer]);
+
+if (view.map != null) {
+  view.map.ground.layers.add(marsElevation);
+  view.map.layers.addMany([marsNamesLayer, missionLayer]);
+}
 
 const spinGlobe = addFrameTask({
   update: () => {
     if (!view.interacting) {
       const camera = view?.camera.clone();
+      if (camera.position.longitude == null) {
+        return;
+      }
+
       camera.position.longitude -= 0.01;
       view.camera = camera;
     } else {

@@ -13,12 +13,14 @@
  * limitations under the License.
  */
 import Graphic from "@arcgis/core/Graphic";
-import type { Polygon } from "@arcgis/core/geometry";
-import { Point, SpatialReference } from "@arcgis/core/geometry";
-import * as geometryEngine from "@arcgis/core/geometry/geometryEngine";
-import * as projection from "@arcgis/core/geometry/projection";
+import Point from "@arcgis/core/geometry/Point";
+import type Polygon from "@arcgis/core/geometry/Polygon";
+import SpatialReference from "@arcgis/core/geometry/SpatialReference";
+import * as bufferOperator from "@arcgis/core/geometry/operators/bufferOperator";
+import * as projectOperator from "@arcgis/core/geometry/operators/projectOperator";
 import type FeatureLayer from "@arcgis/core/layers/FeatureLayer";
-import { FillSymbol3DLayer, PolygonSymbol3D } from "@arcgis/core/symbols";
+import FillSymbol3DLayer from "@arcgis/core/symbols/FillSymbol3DLayer";
+import PolygonSymbol3D from "@arcgis/core/symbols/PolygonSymbol3D";
 import type SceneView from "@arcgis/core/views/SceneView";
 import PolygonTransform from "./PolygonTransform";
 
@@ -26,7 +28,7 @@ export async function graphicFromCountry(
   selectedRegion: Graphic,
   view: SceneView,
 ) {
-  await projection.load();
+  await projectOperator.load();
 
   const layer = selectedRegion.layer as FeatureLayer;
 
@@ -53,8 +55,10 @@ export async function graphicFromCountry(
 
   const label = feature.getAttribute(displayField);
   let geometry = feature.geometry as Polygon;
-  geometry = geometryEngine.buffer(geometry, 1.887, "meters") as Polygon;
-  geometry = projection.project(geometry, viewSR) as Polygon;
+  geometry = bufferOperator.execute(geometry, 1.887, {
+    unit: "meters",
+  }) as Polygon;
+  geometry = projectOperator.execute(geometry, viewSR) as Polygon;
   geometry = spherical.moveTo(geometry, viewCenter);
 
   const current = spherical.scale(geometry, 1.887);
