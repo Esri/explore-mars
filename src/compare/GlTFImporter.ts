@@ -38,11 +38,13 @@ async function downloadAndExtractZip(url: string): Promise<zip.Entry[]> {
 }
 
 async function zipEntriesToBlob(entries: zip.Entry[]) {
-  entries = entries.filter((entry) => !entry.directory);
+  const fileEntries = entries.filter(
+    (entry): entry is zip.FileEntry => !entry.directory,
+  );
 
   // we want to aggregate all of the promises, so we do not want to await them
   // eslint-disable-next-line @typescript-eslint/promise-function-async
-  const promises = entries.map((entry) =>
+  const promises = fileEntries.map((entry) =>
     saveEntryToBlob(entry).then((blob) => {
       return blob;
     }),
@@ -54,10 +56,10 @@ async function zipEntriesToBlob(entries: zip.Entry[]) {
 }
 
 async function saveEntryToBlob(
-  entry: zip.Entry,
+  entry: zip.FileEntry,
 ): Promise<BlobZIPEntry | undefined> {
   const dataBlobWriter = new zip.BlobWriter("text/plain");
-  const data = await entry.getData?.(dataBlobWriter);
+  const data = await entry.getData(dataBlobWriter);
   if (data != null) {
     const url = URL.createObjectURL(data);
     return {

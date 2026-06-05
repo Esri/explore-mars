@@ -15,6 +15,7 @@
 import { subclass } from "@arcgis/core/core/accessorSupport/decorators";
 import Widget from "@arcgis/core/widgets/Widget";
 import { tsx } from "@arcgis/core/widgets/support/widget";
+import Camera from "@arcgis/core/Camera";
 import AppState from "../application/AppState";
 import styles from "./LocationPage.module.scss";
 import { Item, SubMenu } from "../utility-components/SubMenu";
@@ -88,7 +89,7 @@ export class LocationPage extends Widget {
   }
 
   private goTo(rover: keyof typeof cameras) {
-    const camera = cameras[rover];
+    const camera = new Camera(cameras[rover]);
     void AppState.view.goTo(camera);
   }
 }

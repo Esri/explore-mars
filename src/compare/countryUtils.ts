@@ -33,9 +33,13 @@ export async function graphicFromCountry(
   const layer = selectedRegion.layer as FeatureLayer;
 
   const displayField = layer.displayField;
+  const objectId = selectedRegion.getObjectId();
+  if (objectId == null || displayField == null) {
+    throw new Error("Selected region is missing required layer metadata");
+  }
 
   const query = layer.createQuery();
-  query.objectIds = [selectedRegion.getObjectId()];
+  query.objectIds = [objectId];
   query.returnGeometry = true;
   query.outFields = [displayField];
   query.outSpatialReference = SpatialReference.WebMercator;
