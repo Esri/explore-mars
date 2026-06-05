@@ -23,15 +23,27 @@ import type { Page } from "./AppState";
 import { LocationPage } from "../location/LocationPage";
 import { CreditsPage } from "../credits/CreditsPage";
 import { LandingPage } from "../home/HomePage";
+import { enableBasemapSwitcher } from "./BasemapSwitcher";
 import { CookieBanner } from "../utility-components/CookieBanner";
+import * as reactiveUtils from "@arcgis/core/core/reactiveUtils";
 import { Loading } from "../utility-components/Loading";
 import styles from "./app.module.scss";
 import { MenuBar } from "../utility-components/menu-bar/MenuBar";
 import { Page as PageWrapper } from "../utility-components/Page";
-import { BasemapSwitcher } from "./BasemapSwitcher";
 
 @subclass("ExploreMars.Application")
 class Application extends Widget {
+  initialize() {
+    this.addHandles([
+      reactiveUtils.when(
+        () => AppState.status !== "uninitialized",
+        () => {
+          enableBasemapSwitcher(AppState.view);
+        },
+      ),
+    ]);
+  }
+
   renderPage(page: string) {
     return match(page)
       .with("home", () => <div style="display:none;" />)
@@ -71,7 +83,6 @@ class Application extends Widget {
             this.goToPage("home");
           }}
         />
-        <BasemapSwitcher />
       </div>
     );
   }

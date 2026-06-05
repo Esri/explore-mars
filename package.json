@@ -20,9 +20,8 @@
     "lint:stylelint": "stylelint --cache --fix 'src/**/*.{css,scss}'"
   },
   "dependencies": {
-    "@arcgis/core": "^5.0.11",
-    "@arcgis/map-components": "^5.0.11",
-    "@esri/calcite-components": "^5.0.2",
+    "@arcgis/core": "^4.29.10",
+    "@esri/calcite-components": "^2.7.1",
     "@zip.js/zip.js": "^2.7.29",
     "classnames": "^2.5.1",
     "gl-matrix": "^3.4.3",

@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 import Basemap from "@arcgis/core/Basemap";
-import SpatialReference from "@arcgis/core/geometry/SpatialReference";
+import { SpatialReference } from "@arcgis/core/geometry";
 import ElevationLayer from "@arcgis/core/layers/ElevationLayer";
 import FeatureLayer from "@arcgis/core/layers/FeatureLayer";
 import GroupLayer from "@arcgis/core/layers/GroupLayer";
@@ -114,6 +114,7 @@ export const marsNamesLayer = new GroupLayer({
         },
       ],
       renderer: {
+        // @ts-expect-error type is a valid property
         type: "simple",
         symbol: {
           type: "simple-fill",
@@ -151,6 +152,7 @@ export const marsNamesLayer = new GroupLayer({
         },
       ],
       renderer: {
+        // @ts-expect-error type is a valid property
         type: "simple",
         symbol: {
           type: "simple-fill",
@@ -182,6 +184,7 @@ export const marsNamesLayer = new GroupLayer({
         },
       ],
       renderer: {
+        // @ts-expect-error type is a valid property
         type: "simple",
         symbol: {
           type: "simple-fill",
@@ -234,6 +237,7 @@ export const missionLayer = new FeatureLayer({
   ],
 
   renderer: {
+    // @ts-expect-error type is a valid property
     type: "simple",
     symbol: {
       type: "point-3d",

@@ -12,10 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import type Point from "@arcgis/core/geometry/Point";
-import Polygon from "@arcgis/core/geometry/Polygon";
-import type SpatialReference from "@arcgis/core/geometry/SpatialReference";
-import * as centroidOperator from "@arcgis/core/geometry/operators/centroidOperator";
+import type { Point, SpatialReference } from "@arcgis/core/geometry";
+import { Polygon } from "@arcgis/core/geometry";
 import type SceneView from "@arcgis/core/views/SceneView";
 import { mat4, vec3, type vec4 } from "gl-matrix";
 import * as webgl from "@arcgis/core/views/3d/webgl.js";
@@ -31,11 +29,10 @@ export default class PolygonTransform {
 
   public rotate(polygon: Polygon, angle: number) {
     const rot = vec3.create();
-    const centroid = this.centroid(polygon);
 
     webgl.toRenderCoordinates(
       this.view,
-      [centroid.x, centroid.y, 0],
+      [polygon.centroid.x, polygon.centroid.y, 0],
       0,
       polygon.spatialReference,
       rot,
@@ -49,7 +46,7 @@ export default class PolygonTransform {
   }
 
   public moveTo(polygon: Polygon, point: Point) {
-    const centroid = this.centroid(polygon);
+    const centroid = polygon.centroid;
     const mat = mat4.create();
 
     this.addZRotation(point, mat, false);
@@ -62,9 +59,8 @@ export default class PolygonTransform {
   }
 
   public scale(polygon: Polygon, factor: number) {
-    const centroid = this.centroid(polygon);
-    const cx = centroid.x;
-    const cy = centroid.y;
+    const cx = polygon.centroid.x;
+    const cy = polygon.centroid.y;
 
     const result = polygon.clone();
 
@@ -147,11 +143,10 @@ export default class PolygonTransform {
     const rings = [];
 
     const sr = polygon.spatialReference;
-    const centroid = this.centroid(polygon);
 
     const [cLon] = this.transformCoordinates(
-      centroid.x,
-      centroid.y,
+      polygon.centroid.x,
+      polygon.centroid.y,
       sr,
       mat,
     );
@@ -177,10 +172,6 @@ export default class PolygonTransform {
       rings,
       spatialReference: sr,
     });
-  }
-
-  private centroid(polygon: Polygon) {
-    return centroidOperator.execute(polygon);
   }
 
   private addZRotation(point: Point, mat: mat4, invert: boolean) {

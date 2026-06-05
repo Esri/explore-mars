@@ -16,9 +16,9 @@ import {
   property,
   subclass,
 } from "@arcgis/core/core/accessorSupport/decorators";
-import "@arcgis/map-components/components/arcgis-area-measurement-3d";
-import "@arcgis/map-components/components/arcgis-direct-line-measurement-3d";
-import "@arcgis/map-components/components/arcgis-elevation-profile";
+import AreaMeasurement3D from "@arcgis/core/widgets/AreaMeasurement3D";
+import DirectLineMeasurement3D from "@arcgis/core/widgets/DirectLineMeasurement3D";
+import ElevationProfile from "@arcgis/core/widgets/ElevationProfile";
 import Widget from "@arcgis/core/widgets/Widget";
 import { tsx } from "@arcgis/core/widgets/support/widget";
 import { match } from "ts-pattern";
@@ -29,11 +29,10 @@ import * as reactiveUtils from "@arcgis/core/core/reactiveUtils";
 import AppState, { Route } from "../application/AppState";
 
 import "./esri-measurement-widget-overwrites.scss";
-import Collection from "@arcgis/core/core/Collection";
 import GraphicsLayer from "@arcgis/core/layers/GraphicsLayer";
-import Mesh from "@arcgis/core/geometry/Mesh";
-import ElevationProfileLineGround from "@arcgis/core/analysis/ElevationProfile/ElevationProfileLineGround";
-import ElevationProfileLineScene from "@arcgis/core/analysis/ElevationProfile/ElevationProfileLineScene";
+import { Mesh } from "@arcgis/core/geometry";
+import ElevationProfileLineGround from "@arcgis/core/widgets/ElevationProfile/ElevationProfileLineGround";
+import ElevationProfileLineView from "@arcgis/core/widgets/ElevationProfile/ElevationProfileLineView";
 
 type Page = "menu" | "area" | "line" | "elevation";
 
@@ -42,6 +41,12 @@ export const MeasureRoute = new Route({
   path: "menu",
   paths: ["line", "area", "elevation"],
 });
+
+const groundProfile = new ElevationProfileLineGround({
+  color: 'green'
+})
+
+const viewProfile = new ElevationProfileLineView();
 
 @subclass("ExploreMars.page.Measure")
 export class MeasurePage extends Widget {
@@ -52,16 +57,10 @@ export class MeasurePage extends Widget {
   mesh?: Mesh;
 
   groundProfile = new ElevationProfileLineGround({
-    color: "green",
-  });
+    color: 'green'
+  })
 
-  viewProfile = new ElevationProfileLineScene();
-
-  elevationProfiles = new Collection<
-    ElevationProfileLineGround | ElevationProfileLineScene
-  >([this.groundProfile]);
-
-  startedMeasurements = new WeakSet<object>();
+  viewProfile = new ElevationProfileLineView();
 
   constructor() {
     super();
@@ -78,13 +77,7 @@ export class MeasurePage extends Widget {
 
     const watchModelGraphic = reactiveUtils.watch(
       () => {
-        const map = AppState.view.map;
-
-        if (map == null) {
-          return undefined;
-        }
-
-        const layer = map.layers.find(
+        const layer = AppState.view.map.layers.find(
           (layer) => layer.id === "add-object",
         ) as GraphicsLayer;
         const graphic = layer?.graphics.getItemAt(0);
@@ -92,14 +85,6 @@ export class MeasurePage extends Widget {
       },
       async (mesh) => {
         this.mesh = mesh;
-
-        if (mesh != null && !this.elevationProfiles.includes(this.viewProfile)) {
-          this.elevationProfiles.add(this.viewProfile);
-        }
-
-        if (mesh == null && this.elevationProfiles.includes(this.viewProfile)) {
-          this.elevationProfiles.remove(this.viewProfile);
-        }
       },
       { initial: true },
     );
@@ -120,26 +105,44 @@ export class MeasurePage extends Widget {
       );
     }
 
+    const profiles: Array<ElevationProfileLineGround | ElevationProfileLineView> = [this.groundProfile];
+
+    if (this.mesh) {
+      profiles.push(this.viewProfile);
+    }
+
     const tool = match(MeasureRoute.path)
       .with("area", () => (
-        <arcgis-area-measurement-3d
+        <AreaMeasurement3D
+          //@ts-ignore
+          afterCreate={(node) => {
+            node.viewModel.start();
+          }}
           view={AppState.view}
-          afterCreate={this.startMeasurement}
         />
       ))
       .with("elevation", () => (
-        <arcgis-elevation-profile
+        <ElevationProfile
+          //@ts-ignore
+          afterCreate={(node) => {
+            node.viewModel.start();
+          }}
           view={AppState.view}
-          hideLegend={true}
-          hideSelectButton={true}
-          profiles={this.elevationProfiles}
-          afterCreate={this.startMeasurement}
+          profiles={profiles}
+          visibleElements={{
+            legend: false,
+            selectButton: false,
+            sketchButton: true
+          }}
         />
       ))
       .with("line", () => (
-        <arcgis-direct-line-measurement-3d
+        <DirectLineMeasurement3D
+          //@ts-ignore
+          afterCreate={(node) => {
+            node.viewModel.start();
+          }}
           view={AppState.view}
-          afterCreate={this.startMeasurement}
         />
       ))
       .run();
@@ -162,15 +165,6 @@ export class MeasurePage extends Widget {
     MeasureRoute.reset();
     AppState.route.back();
   }
-
-  private startMeasurement = (element: any) => {
-    if (this.startedMeasurements.has(element)) {
-      return;
-    }
-
-    this.startedMeasurements.add(element);
-    void element.componentOnReady().then(() => element.start());
-  };
 }
 
 interface MeasureMenuProps {
