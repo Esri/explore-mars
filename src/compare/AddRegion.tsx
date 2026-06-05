@@ -15,7 +15,6 @@
 import Graphic from "@arcgis/core/Graphic";
 import WebScene from "@arcgis/core/WebScene";
 import {
-  aliasOf,
   property,
   subclass,
 } from "@arcgis/core/core/accessorSupport/decorators";
@@ -24,15 +23,21 @@ import SceneView from "@arcgis/core/views/SceneView";
 import Widget from "@arcgis/core/widgets/Widget";
 import { tsx } from "@arcgis/core/widgets/support/widget";
 import { graphicFromCountry } from "./countryUtils";
+import type { ResourceHandle } from "@arcgis/core/core/Handles";
 import type FeatureLayer from "@arcgis/core/layers/FeatureLayer";
-import { type Point, type Polygon } from "@arcgis/core/geometry";
-import {
-  PointSymbol3D,
-  ObjectSymbol3DLayer,
-  TextSymbol3DLayer,
-} from "@arcgis/core/symbols";
+import type Point from "@arcgis/core/geometry/Point";
+import type Polygon from "@arcgis/core/geometry/Polygon";
+import type { SceneViewProperties } from "@arcgis/core/views/SceneView";
+import * as centroidOperator from "@arcgis/core/geometry/operators/centroidOperator";
+import ObjectSymbol3DLayer from "@arcgis/core/symbols/ObjectSymbol3DLayer";
+import PointSymbol3D from "@arcgis/core/symbols/PointSymbol3D";
+import TextSymbol3DLayer from "@arcgis/core/symbols/TextSymbol3DLayer";
 import GraphicsLayer from "@arcgis/core/layers/GraphicsLayer";
 import SketchViewModel from "@arcgis/core/widgets/Sketch/SketchViewModel";
+import type {
+  RotateEventInfo,
+  UpdateEvent,
+} from "@arcgis/core/widgets/Sketch/types";
 import PolygonTransform from "./PolygonTransform";
 import { EditingInfo, compareRoute } from "./ComparePage";
 import AppState from "../application/AppState";
@@ -80,13 +85,19 @@ export class AddRegionPage extends Widget {
   selectedRegion: Promise<Graphic> | null = null;
 
   @property()
-  highlight?: IHandle;
+  highlight?: ResourceHandle;
 
   overlayGlobe?: SceneView | null;
 
   postInitialize(): void {
     const view = AppState.view;
-    view.map.layers.addMany([viewGraphics, editingGraphics]);
+    const map = view.map;
+
+    if (!map) {
+      return;
+    }
+
+    map.layers.addMany([viewGraphics, editingGraphics]);
 
     this.sketchViewModel.on("delete", () => {
       this.clear();
@@ -217,7 +228,7 @@ export class AddRegionPage extends Widget {
 
 function createGlobeConfig(
   container: HTMLDivElement,
-): __esri.SceneViewProperties {
+): SceneViewProperties {
   return {
     container,
     qualityProfile: "high",
@@ -245,16 +256,17 @@ function createGlobeConfig(
       components: [],
     },
     popupEnabled: false,
-    highlightOptions: {
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-expect-error
-      color: "rgba(207, 88, 25, 0.5)",
-    },
+    highlights: [
+      {
+        name: "default",
+        color: "rgba(207, 88, 25, 0.5)",
+      },
+    ],
   };
 }
 
 function createRegionCenter(country: Graphic): Region["center"] {
-  const centroid = (country.geometry as Polygon).centroid;
+  const centroid = centroidOperator.execute(country.geometry as Polygon);
 
   return new Graphic({
     geometry: centroid,
@@ -277,7 +289,7 @@ function createRegionCenter(country: Graphic): Region["center"] {
 }
 
 function createRegionLabel(country: Graphic): Region["label"] {
-  const centroid = (country.geometry as Polygon).centroid;
+  const centroid = centroidOperator.execute(country.geometry as Polygon);
 
   return new Graphic({
     geometry: centroid,
@@ -320,18 +332,19 @@ function watchRotation(region: Region) {
 
   const { country, center, label } = region;
   const spherical = new PolygonTransform(view);
-  return (ev: __esri.SketchViewModelUpdateEvent) => {
-    if (ev.state !== "active") {
+  return (ev: UpdateEvent) => {
+    if (ev.state !== "active" || !ev.toolEventInfo) {
       return;
     }
 
-    const toolType = ev.toolEventInfo.type;
+    const toolEventInfo = ev.toolEventInfo;
+    const toolType = toolEventInfo.type;
     const rotateStartStop =
       toolType === "rotate-stop" || toolType === "rotate-start";
     let current = country.geometry as Polygon;
 
     if (toolType === "rotate" || rotateStartStop) {
-      const currentAngle = (ev.toolEventInfo as __esri.RotateEventInfo).angle;
+      const currentAngle = (toolEventInfo as RotateEventInfo).angle;
       const angleDiff = (currentAngle - lastAngle) * (Math.PI / 180);
 
       current = spherical.rotate(current, angleDiff);

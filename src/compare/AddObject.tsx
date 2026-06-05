@@ -19,12 +19,10 @@ import {
 } from "@arcgis/core/core/accessorSupport/decorators";
 import Widget from "@arcgis/core/widgets/Widget";
 import { tsx } from "@arcgis/core/widgets/support/widget";
-import {
-  PointSymbol3D,
-  ObjectSymbol3DLayer,
-  MeshSymbol3D,
-  FillSymbol3DLayer,
-} from "@arcgis/core/symbols";
+import FillSymbol3DLayer from "@arcgis/core/symbols/FillSymbol3DLayer";
+import MeshSymbol3D from "@arcgis/core/symbols/MeshSymbol3D";
+import ObjectSymbol3DLayer from "@arcgis/core/symbols/ObjectSymbol3DLayer";
+import PointSymbol3D from "@arcgis/core/symbols/PointSymbol3D";
 import SketchViewModel from "@arcgis/core/widgets/Sketch/SketchViewModel";
 import { importModel } from "./GlTFImporter";
 import GraphicsLayer from "@arcgis/core/layers/GraphicsLayer";
