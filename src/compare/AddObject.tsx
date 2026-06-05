@@ -106,7 +106,7 @@ export class AddObjectPage extends Widget {
   postInitialize() {
     const view = AppState.view;
 
-    view.map.add(graphics);
+    view.map?.add(graphics);
     this.sketchViewModel.on("delete", () => {
       graphics.removeAll();
 

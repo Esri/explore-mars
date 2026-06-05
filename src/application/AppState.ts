@@ -117,7 +117,12 @@ export class Route<
   }
 
   back() {
-    const { path, state, children } = this.history.pop();
+    const previous = this.history.pop();
+    if (previous == null) {
+      return;
+    }
+
+    const { path, state, children } = previous;
 
     this._path = path;
     this._state = state;

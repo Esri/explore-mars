@@ -7,7 +7,7 @@
     "jsxFactory": "tsx",
     "lib": ["ES2020", "DOM"],
     "module": "ES2020",
-    "moduleResolution": "Node",
+    "moduleResolution": "bundler",
     "noImplicitAny": true,
     "preserveConstEnums": true,
     "resolveJsonModule": true,
