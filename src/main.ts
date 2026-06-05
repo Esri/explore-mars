@@ -35,7 +35,9 @@ const map = new Map({
   basemap: marsImageryBasemap,
   ground: {
     surfaceColor: [144, 106, 100],
+    layers: [marsElevation],
   },
+  layers: [marsNamesLayer, missionLayer],
 });
 
 const view = new SceneView({
@@ -79,11 +81,6 @@ const view = new SceneView({
   },
 });
 view.ui.remove("attribution");
-
-if (view.map != null) {
-  view.map.ground.layers.add(marsElevation);
-  view.map.layers.addMany([marsNamesLayer, missionLayer]);
-}
 
 const spinGlobe = addFrameTask({
   update: () => {
