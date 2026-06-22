@@ -4,7 +4,7 @@ An interactive 3D web application showing the planet Mars, using the [ArcGIS Map
 
 [![screenshot](./screenshot.jpg)](https://esri.github.io/explore-mars)
 
-The app uses multiple API features like [Elevation Profile](https://developers.arcgis.com/javascript/latest/api-reference/esri-widgets-ElevationProfile.html), [glTF import](https://developers.arcgis.com/javascript/latest/sample-code/import-gltf/index.html) and a [custom Spatial Reference](https://developers.arcgis.com/javascript/latest/api-reference/esri-geometry-SpatialReference.html).
+The app uses multiple API features like [Elevation Profile](https://developers.arcgis.com/javascript/latest/references/map-components/components/arcgis-elevation-profile/), [glTF import](https://developers.arcgis.com/javascript/latest/sample-code/import-gltf/index.html) and a [custom Spatial Reference](https://developers.arcgis.com/javascript/latest/api-reference/esri-geometry-SpatialReference.html).
 
 On the technical side the app is built using [TypeScript](https://www.typescriptlang.org/), [npm](https://www.npmjs.com/) and [Vite](https://vitejs.dev/).
 
