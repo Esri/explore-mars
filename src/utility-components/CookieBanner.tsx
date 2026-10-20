@@ -1,7 +1,6 @@
 import { useState } from "react";
 import "@esri/calcite-components/components/calcite-button";
-import "@esri/calcite-components/components/calcite-notice";
-import "./CookieBanner.css";
+import "@esri/calcite-components/components/calcite-alert";
 
 export function CookieBanner() {
   const [open, setOpen] = useState(
@@ -15,15 +14,24 @@ export function CookieBanner() {
     return null;
   }
   return (
-    <div className="cookie-notice">
-      <calcite-notice open closable oncalciteNoticeClose={dismiss} scale="s">
-        <span slot="message">
-          This app uses cookies to access data layers and enhance your experience.
-        </span>
-        <calcite-button slot="link" appearance="transparent" onClick={dismiss}>
-          Dismiss
-        </calcite-button>
-      </calcite-notice>
-    </div>
+    <calcite-alert
+      slot="alerts"
+      label="Cookies"
+      open
+      scale="s"
+      oncalciteAlertClose={(event) => {
+        // Queued alerts can be hidden without being dismissed.
+        if (!event.currentTarget.open) {
+          dismiss();
+        }
+      }}
+    >
+      <span slot="message">
+        This app uses cookies to access data layers and enhance your experience.
+      </span>
+      <calcite-button slot="link" appearance="transparent" onClick={dismiss}>
+        Dismiss
+      </calcite-button>
+    </calcite-alert>
   );
 }

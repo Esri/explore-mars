@@ -17,9 +17,11 @@ import "@esri/calcite-components/components/calcite-switch";
 export function BasemapSwitcher({
   view,
   onError,
+  active,
 }: {
   view: SceneView;
   onError: (error: unknown) => void;
+  active: boolean;
 }) {
   const [imagery, setImagery] = useState(view.map?.basemap === marsImageryBasemap);
   const [labels, setLabels] = useState(marsNamesLayer.visible);
@@ -60,8 +62,12 @@ export function BasemapSwitcher({
     };
   }, [view, onError, updateVisibility, reset]);
 
+  if (!active) {
+    return null;
+  }
+
   return (
-    <div className="panel-content">
+    <>
       <calcite-label>
         Basemap
         <calcite-segmented-control
@@ -104,6 +110,6 @@ export function BasemapSwitcher({
       <p className="muted">
         High-resolution HiRISE imagery appears automatically when you move close to the surface.
       </p>
-    </div>
+    </>
   );
 }

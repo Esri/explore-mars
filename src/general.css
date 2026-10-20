@@ -35,45 +35,9 @@ a {
   color: var(--calcite-color-brand);
 }
 
-.panel-content {
-  padding: var(--calcite-spacing-lg);
-}
-
-.panel-content > :first-child {
-  margin-top: 0;
-}
-
-.panel-content > :last-child {
-  margin-bottom: 0;
-}
-
-.panel-section {
-  border-top: 1px solid var(--calcite-color-border-3);
-  margin-top: var(--calcite-spacing-lg);
-  padding-top: var(--calcite-spacing-lg);
-}
-
-.panel-section h3,
-.panel-content h2 {
-  font-size: var(--calcite-font-size-relative-md);
-  font-weight: var(--calcite-font-weight-medium);
-  margin: 0 0 var(--calcite-spacing-sm);
-}
-
 .muted,
 .instructions {
   color: var(--calcite-color-text-2);
   font-size: var(--calcite-font-size-relative-base);
   line-height: var(--calcite-font-line-height-md);
-}
-
-.button-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--calcite-spacing-sm);
-  margin-top: var(--calcite-spacing-lg);
-}
-
-.button-row > calcite-button {
-  flex: 1;
 }

@@ -3,6 +3,7 @@ import { defineChart, lineY } from "@tanstack/charts";
 import { Chart } from "@tanstack/charts/react";
 import { scaleLinear } from "@tanstack/charts/scales/linear";
 import { tooltip } from "@tanstack/charts/tooltip";
+import { PanelSection } from "../utility-components/PanelSection";
 import {
   formatValue,
   formatUnit,
@@ -76,7 +77,7 @@ export function ElevationChart({
     );
   }
   return (
-    <section aria-label="Elevation profile" className="panel-section">
+    <PanelSection label="Elevation profile">
       <h3>Elevation profile</h3>
       <div className="profile-legend">
         {profiles.map((profile, index) => (
@@ -121,11 +122,15 @@ export function ElevationChart({
           }}
         />
       </calcite-label>
-      <div className="button-row">
-        <calcite-button appearance="outline" scale="s" onClick={() => setRange([0, 100])}>
-          Reset zoom
-        </calcite-button>
-      </div>
-    </section>
+      <calcite-button
+        className="profile-reset"
+        width="full"
+        appearance="outline"
+        scale="s"
+        onClick={() => setRange([0, 100])}
+      >
+        Reset zoom
+      </calcite-button>
+    </PanelSection>
   );
 }

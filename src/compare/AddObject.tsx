@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import Graphic from "@arcgis/core/Graphic";
-import Mesh from "@arcgis/core/geometry/Mesh";
 import type SceneView from "@arcgis/core/views/SceneView";
 import type GraphicsLayer from "@arcgis/core/layers/GraphicsLayer";
 import FillSymbol3DLayer from "@arcgis/core/symbols/FillSymbol3DLayer";
@@ -9,6 +8,7 @@ import MeshSymbol3D from "@arcgis/core/symbols/MeshSymbol3D";
 import SketchViewModel from "@arcgis/core/widgets/Sketch/SketchViewModel";
 import { importModel } from "./GlTFImporter";
 import { EditingInfo } from "./ComparePage";
+import { PanelSection } from "../utility-components/PanelSection";
 import { errorMessage, isAbortError } from "../utilities/errors";
 import zurich from "./gltf/zurich.zip";
 import manhattan from "./gltf/manhattan.zip";
@@ -20,7 +20,7 @@ import "@esri/calcite-components/components/calcite-button";
 import "@esri/calcite-components/components/calcite-loader";
 import "@esri/calcite-components/components/calcite-notice";
 import "./AddObject.css";
-
+import { createFromGLTF } from "@arcgis/core/geometry/support/meshUtils.js";
 const objects = [
   { name: "Zurich", url: zurich },
   { name: "Manhattan", url: manhattan },
@@ -43,7 +43,7 @@ export function AddObjectPage({ view, layer }: { view: SceneView; layer: Graphic
       try {
         const center = view.center.clone();
         center.z = 0;
-        const mesh = await Mesh.createFromGLTF(center, resource.url);
+        const mesh = await createFromGLTF(center, resource.url);
         return new Graphic({
           geometry: mesh,
           attributes: { name: object.name },
@@ -124,7 +124,7 @@ export function AddObjectPage({ view, layer }: { view: SceneView; layer: Graphic
         </calcite-notice>
       )}
       {name && (
-        <section className="panel-section">
+        <PanelSection>
           <h3>{name}</h3>
           <EditingInfo />
           <calcite-button
@@ -139,7 +139,7 @@ export function AddObjectPage({ view, layer }: { view: SceneView; layer: Graphic
           >
             Remove model
           </calcite-button>
-        </section>
+        </PanelSection>
       )}
     </>
   );

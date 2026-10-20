@@ -303,7 +303,7 @@ export function MeasurePage({ view }: { view: SceneView }) {
   }
 
   return (
-    <div className="panel-content">
+    <>
       <calcite-segmented-control
         label="Measurement tool"
         width="full"
@@ -383,7 +383,7 @@ export function MeasurePage({ view }: { view: SceneView }) {
           onIndicatorChange={setIndicator}
         />
       )}
-      <div className="button-row">
+      <div className="measurement-actions">
         <calcite-button
           iconStart="plus"
           disabled={initializing}
@@ -401,6 +401,6 @@ export function MeasurePage({ view }: { view: SceneView }) {
         Measurements use Mars’ planetary spatial reference. Terrain detail is limited by the source
         elevation data.
       </p>
-    </div>
+    </>
   );
 }

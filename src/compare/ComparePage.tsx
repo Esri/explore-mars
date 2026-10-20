@@ -16,8 +16,12 @@ export function ComparePage({
   active: boolean;
 }) {
   const [mode, setMode] = useState<"models" | "regions">("models");
+  if (!active) {
+    return null;
+  }
+
   return (
-    <div className="panel-content">
+    <>
       <calcite-segmented-control
         label="Comparison type"
         width="full"
@@ -35,11 +39,11 @@ export function ComparePage({
           Earth regions
         </calcite-segmented-control-item>
       </calcite-segmented-control>
-      {active && mode === "models" && <AddObjectPage view={view} layer={resources.models} />}
-      {active && mode === "regions" && (
+      {mode === "models" && <AddObjectPage view={view} layer={resources.models} />}
+      {mode === "regions" && (
         <AddRegionPage view={view} regions={resources.regions} editing={resources.regionHandles} />
       )}
-    </div>
+    </>
   );
 }
 

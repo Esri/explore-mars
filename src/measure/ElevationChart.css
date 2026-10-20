@@ -38,3 +38,7 @@
   min-height: 40px;
   font-variant-numeric: tabular-nums;
 }
+
+.profile-reset {
+  margin-top: var(--calcite-spacing-lg);
+}

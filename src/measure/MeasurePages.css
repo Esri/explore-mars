@@ -20,3 +20,14 @@
     overflow-wrap: anywhere;
   }
 }
+
+.measurement-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--calcite-spacing-sm);
+  margin-top: var(--calcite-spacing-lg);
+
+  & > calcite-button {
+    flex: 1;
+  }
+}

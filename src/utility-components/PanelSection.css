@@ -1,0 +1,5 @@
+.panel-section {
+  border-top: 1px solid var(--calcite-color-border-3);
+  margin-top: var(--calcite-spacing-lg);
+  padding-top: var(--calcite-spacing-lg);
+}

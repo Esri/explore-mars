@@ -1,7 +1,0 @@
-.cookie-notice {
-  position: absolute;
-  z-index: 2;
-  bottom: var(--calcite-spacing-xxl);
-  left: var(--calcite-spacing-xxl);
-  width: min(360px, calc(100% - 48px));
-}

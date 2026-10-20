@@ -2,10 +2,10 @@ import { useState } from "react";
 import Camera from "@arcgis/core/Camera";
 import type SceneView from "@arcgis/core/views/SceneView";
 import { isAbortError } from "../utilities/errors";
+import { PanelSection } from "../utility-components/PanelSection";
 import "@esri/calcite-components/components/calcite-button";
 import "@esri/calcite-components/components/calcite-list";
 import "@esri/calcite-components/components/calcite-list-item";
-import "./LocationPage.css";
 
 const locations = [
   {
@@ -65,7 +65,7 @@ export function LocationPage({
   const [selected, setSelected] = useState(locations[0]);
   return (
     <>
-      <p className="eyebrow">Rover landing sites</p>
+      <p>Rover landing sites</p>
       <calcite-list
         label="Rover landing sites"
         selectionMode="single-persist"
@@ -86,24 +86,22 @@ export function LocationPage({
           />
         ))}
       </calcite-list>
-      <div className="panel-content">
-        <section className="panel-section">
-          <h2>{selected.name}</h2>
-          <p className="muted">{selected.place} · NASA</p>
-        </section>
-        <calcite-button
-          width="full"
-          onClick={() => {
-            void view.goTo(selected.camera).catch((error: unknown) => {
-              if (!isAbortError(error)) {
-                onError(error);
-              }
-            });
-          }}
-        >
-          Go to location
-        </calcite-button>
-      </div>
+      <PanelSection>
+        <h2>{selected.name}</h2>
+        <p className="muted">{selected.place} · NASA</p>
+      </PanelSection>
+      <calcite-button
+        width="full"
+        onClick={() => {
+          void view.goTo(selected.camera).catch((error: unknown) => {
+            if (!isAbortError(error)) {
+              onError(error);
+            }
+          });
+        }}
+      >
+        Go to location
+      </calcite-button>
     </>
   );
 }

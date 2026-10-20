@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type SceneView from "@arcgis/core/views/SceneView";
 import Camera from "@arcgis/core/Camera";
 import type { ArcgisScene } from "@arcgis/map-components/components/arcgis-scene";
@@ -16,8 +16,8 @@ import { errorMessage, isAbortError } from "../utilities/errors";
 import "@arcgis/map-components/components/arcgis-scene";
 import "@esri/calcite-components/components/calcite-action";
 import "@esri/calcite-components/components/calcite-action-bar";
+import "@esri/calcite-components/components/calcite-alert";
 import "@esri/calcite-components/components/calcite-loader";
-import "@esri/calcite-components/components/calcite-notice";
 import "@esri/calcite-components/components/calcite-panel";
 import "@esri/calcite-components/components/calcite-shell";
 import "./Application.css";
@@ -41,24 +41,18 @@ export default function Application() {
   const panelElement = useRef<HTMLCalcitePanelElement>(null);
   const [heading, setHeading] = useState(0);
 
-  const reportError = useCallback((cause: unknown) => {
+  const reportError = (cause: unknown) => {
     console.error(cause);
     setError(errorMessage(cause));
-  }, []);
+  };
 
-  const navigate = useCallback(
-    (target: Parameters<SceneView["goTo"]>[0]) => {
-      if (!view) {
-        return;
+  const navigate = (target: Parameters<SceneView["goTo"]>[0]) => {
+    void view?.goTo(target).catch((cause: unknown) => {
+      if (!isAbortError(cause)) {
+        reportError(cause);
       }
-      void view.goTo(target).catch((cause: unknown) => {
-        if (!isAbortError(cause)) {
-          reportError(cause);
-        }
-      });
-    },
-    [view, reportError],
-  );
+    });
+  };
 
   useEffect(() => {
     if (!view) {
@@ -139,7 +133,6 @@ export default function Application() {
         camera={initialCamera}
         environment={resources.environment}
         theme={resources.theme}
-        qualityProfile="high"
         popupDisabled
         onarcgisViewReadyChange={(event) => {
           if (event.currentTarget.ready) {
@@ -149,16 +142,22 @@ export default function Application() {
         onarcgisViewReadyError={(event) => reportError(event.detail)}
         onarcgisLoadError={(event) => reportError(event.detail)}
         aria-label="Interactive 3D globe of Mars"
-      ></arcgis-scene>
+      >
+        {!view && !error && (
+          <calcite-loader
+            className="scene-loading"
+            aria-live="polite"
+            label="Loading Mars"
+            text="Loading Mars"
+          />
+        )}
 
-      {!view && !error && (
-        <div className="scene-loading" role="status">
-          <calcite-loader label="Loading Mars" text="Loading Mars" />
-        </div>
-      )}
-
-      <nav className="map-navigation" aria-label="Scene navigation">
-        <calcite-action-bar expandDisabled>
+        <calcite-action-bar
+          slot="top-left"
+          aria-label="Scene navigation"
+          floating
+          expandToggleDisabled
+        >
           <calcite-action
             text="Zoom in"
             icon="plus"
@@ -205,10 +204,15 @@ export default function Application() {
             }
           />
         </calcite-action-bar>
-      </nav>
 
-      <nav className="main-toolbar" aria-label="Explore Mars tools">
-        <calcite-action-bar layout="horizontal" expandDisabled selectionAppearance="highlight">
+        <calcite-action-bar
+          slot="bottom-center"
+          aria-label="Explore Mars tools"
+          layout="horizontal"
+          floating
+          expandToggleDisabled
+          selectionAppearance="highlight"
+        >
           {tools.map((tool) => (
             <calcite-action
               key={tool.id}
@@ -222,17 +226,13 @@ export default function Application() {
             />
           ))}
         </calcite-action-bar>
-      </nav>
 
-      {view && (
-        <aside
-          className={`tool-panel ${panel === "measure" ? "measurement-panel" : ""}`}
-          hidden={!panel}
-          aria-label={tools.find((tool) => tool.id === panel)?.label}
-        >
+        {view && (
           <calcite-panel
             ref={panelElement}
             id="tool-panel"
+            slot="top-right"
+            className="tool-panel"
             heading={tools.find((tool) => tool.id === panel)?.label ?? ""}
             closable
             closed={!panel}
@@ -240,24 +240,28 @@ export default function Application() {
           >
             {panel === "locations" && <LocationPage view={view} onError={reportError} />}
             {panel === "measure" && <MeasurePage view={view} />}
-            <div hidden={panel !== "compare"}>
-              <ComparePage view={view} resources={resources} active={panel === "compare"} />
-            </div>
-            <div hidden={panel !== "layers"}>
-              <BasemapSwitcher view={view} onError={reportError} />
-            </div>
+            <ComparePage view={view} resources={resources} active={panel === "compare"} />
+            <BasemapSwitcher view={view} onError={reportError} active={panel === "layers"} />
             {panel === "about" && <CreditsPage />}
           </calcite-panel>
-        </aside>
-      )}
-
+        )}
+      </arcgis-scene>
       {error && (
-        <div className="app-error">
-          <calcite-notice open kind="danger" closable oncalciteNoticeClose={() => setError(null)}>
-            <span slot="title">Something went wrong</span>
-            <span slot="message">{error}</span>
-          </calcite-notice>
-        </div>
+        <calcite-alert
+          slot="alerts"
+          open
+          kind="danger"
+          label="Application error"
+          queue="immediate"
+          oncalciteAlertClose={(event) => {
+            if (!event.currentTarget.open) {
+              setError(null);
+            }
+          }}
+        >
+          <span slot="title">Something went wrong</span>
+          <span slot="message">{error}</span>
+        </calcite-alert>
       )}
       <LandingPage open={welcome} ready={view != null} onStart={startExploring} />
       <CookieBanner />

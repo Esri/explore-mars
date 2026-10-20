@@ -16,6 +16,7 @@ import TextSymbol3DLayer from "@arcgis/core/symbols/TextSymbol3DLayer";
 import { graphicFromCountry } from "./countryUtils";
 import PolygonTransform from "./PolygonTransform";
 import { EditingInfo } from "./ComparePage";
+import { PanelSection } from "../utility-components/PanelSection";
 import { errorMessage, isAbortError } from "../utilities/errors";
 import "@arcgis/map-components/components/arcgis-scene";
 import "@esri/calcite-components/components/calcite-button";
@@ -273,7 +274,7 @@ export function AddRegionPage({ view, regions, editing }: Props) {
           </calcite-button>
         </>
       ) : (
-        <section className="panel-section">
+        <PanelSection>
           <h3>{String(placed.getAttribute("label"))}</h3>
           <EditingInfo />
           <calcite-button
@@ -290,7 +291,7 @@ export function AddRegionPage({ view, regions, editing }: Props) {
           >
             Remove region
           </calcite-button>
-        </section>
+        </PanelSection>
       )}
       {message && (
         <calcite-notice open kind="danger">
