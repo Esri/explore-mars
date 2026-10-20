@@ -1,191 +1,146 @@
-/* Copyright 2023 Esri
- *
- * Licensed under the Apache License Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+import { useEffect, useRef, useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 import Graphic from "@arcgis/core/Graphic";
-import {
-  property,
-  subclass,
-} from "@arcgis/core/core/accessorSupport/decorators";
-import Widget from "@arcgis/core/widgets/Widget";
-import { tsx } from "@arcgis/core/widgets/support/widget";
+import Mesh from "@arcgis/core/geometry/Mesh";
+import type SceneView from "@arcgis/core/views/SceneView";
+import type GraphicsLayer from "@arcgis/core/layers/GraphicsLayer";
 import FillSymbol3DLayer from "@arcgis/core/symbols/FillSymbol3DLayer";
 import MeshSymbol3D from "@arcgis/core/symbols/MeshSymbol3D";
-import ObjectSymbol3DLayer from "@arcgis/core/symbols/ObjectSymbol3DLayer";
-import PointSymbol3D from "@arcgis/core/symbols/PointSymbol3D";
 import SketchViewModel from "@arcgis/core/widgets/Sketch/SketchViewModel";
 import { importModel } from "./GlTFImporter";
-import GraphicsLayer from "@arcgis/core/layers/GraphicsLayer";
-import AppState from "../application/AppState";
-import { EditingInfo, compareRoute } from "./ComparePage";
-import { Item, SubMenu } from "../utility-components/SubMenu";
-import styles from "./AddObject.module.scss";
+import { EditingInfo } from "./ComparePage";
+import { errorMessage, isAbortError } from "../utilities/errors";
 import zurich from "./gltf/zurich.zip";
 import manhattan from "./gltf/manhattan.zip";
-import killimanjaro from "./gltf/killimanjaro.zip";
+import kilimanjaro from "./gltf/killimanjaro.zip";
 import grandCanyon from "./gltf/grand-canyon.zip";
 import dubai from "./gltf/dubai.zip";
 import everest from "./gltf/everest.zip";
-import Mesh from "@arcgis/core/geometry/Mesh";
-import * as reactiveUtils from "@arcgis/core/core/reactiveUtils";
+import "@esri/calcite-components/components/calcite-button";
+import "@esri/calcite-components/components/calcite-loader";
+import "@esri/calcite-components/components/calcite-notice";
+import "./AddObject.css";
 
-interface GltfObject {
-  id: string;
-  name: string;
-  gltf: string;
-}
-
-const objects: GltfObject[] = [
-  {
-    id: "zurich",
-    gltf: zurich,
-    name: "Zurich",
-  },
-  {
-    id: "manhattan",
-    gltf: manhattan,
-    name: "Manhattan",
-  },
-  {
-    id: "killimanjaro",
-    gltf: killimanjaro,
-    name: "Killimanjaro",
-  },
-  {
-    id: "grand-canyon",
-    gltf: grandCanyon,
-    name: "Grand Canyon",
-  },
-  {
-    id: "dubai",
-    gltf: dubai,
-    name: "Dubai",
-  },
-  {
-    id: "everest",
-    gltf: everest,
-    name: "Everest",
-  },
+const objects = [
+  { name: "Zurich", url: zurich },
+  { name: "Manhattan", url: manhattan },
+  { name: "Kilimanjaro", url: kilimanjaro },
+  { name: "Grand Canyon", url: grandCanyon },
+  { name: "Dubai", url: dubai },
+  { name: "Everest", url: everest },
 ];
 
-const graphics = new GraphicsLayer({
-  id: "add-object",
-  title: "SVM layer for comparison",
-  listMode: "hide",
-  elevationInfo: {
-    mode: 'relative-to-ground',
-  },
-});
-
-@subclass("ExploreMars.page.AddObjectPage")
-export class AddObjectPage extends Widget {
-  @property()
-  sketchViewModel = new SketchViewModel({
-    view: AppState.view,
-    layer: graphics,
-    defaultUpdateOptions: {
-      toggleToolOnClick: false,
-      enableScaling: false,
-      enableZ: true,
+export function AddObjectPage({ view, layer }: { view: SceneView; layer: GraphicsLayer }) {
+  const sketch = useRef<SketchViewModel | null>(null);
+  const [name, setName] = useState<string | null>(() => {
+    const graphic = layer.graphics.getItemAt(0);
+    return graphic ? String(graphic.getAttribute("name")) : null;
+  });
+  const [error, setError] = useState<string | null>(null);
+  const loadModel = useMutation({
+    mutationFn: async (object: (typeof objects)[number]) => {
+      const resource = await importModel(object.url);
+      try {
+        const center = view.center.clone();
+        center.z = 0;
+        const mesh = await Mesh.createFromGLTF(center, resource.url);
+        return new Graphic({
+          geometry: mesh,
+          attributes: { name: object.name },
+          symbol: new MeshSymbol3D({ symbolLayers: [new FillSymbol3DLayer()] }),
+        });
+      } finally {
+        resource.dispose();
+      }
     },
   });
 
-  @property()
-  state: "selecting" | "editing" = "selecting";
-
-  postInitialize() {
-    const view = AppState.view;
-
-    view.map?.add(graphics);
-    this.sketchViewModel.on("delete", () => {
-      graphics.removeAll();
-
-      if (
-        AppState.route.match(compareRoute) &&
-        compareRoute.path === "models"
-      ) {
-        compareRoute.back();
-      }
-    });
+  function reportError(cause: unknown) {
+    if (!isAbortError(cause)) {
+      console.error(cause);
+      setError(errorMessage(cause));
+    }
   }
 
-  render() {
-    const items = objects.map((o) => (
-      <Object
-        gltf={o}
-        onClick={(el) => {
-          graphics.removeAll();
-          void AppState.load(this.addGltf(el.gltf));
-        }}
-      />
-    ));
-
-    return (
-      <div style="display:contents">
-        {AppState.route.match(compareRoute, "editing") ? (
-          <EditingInfo />
-        ) : (
-          <SubMenu class={styles.container} items={items} />
-        )}
-      </div>
-    );
-  }
-
-  private async addGltf(url: string) {
-    const href = await importModel(url);
-
-    const view = AppState.view;
-
-    const center = view.center.clone();
-    center.z = 0;
-
-    const mesh = await Mesh.createFromGLTF(center, href);
-
-
-    const graphic = new Graphic({
-      geometry: mesh,
-      symbol: new MeshSymbol3D({
-        symbolLayers: [new FillSymbol3DLayer()],
-      }),
+  useEffect(() => {
+    const model = new SketchViewModel({
+      view,
+      layer,
+      defaultUpdateOptions: {
+        toggleToolOnClick: false,
+        enableScaling: false,
+        enableZ: true,
+      },
     });
+    sketch.current = model;
+    const handle = model.on("delete", () => setName(null));
+    return () => {
+      handle.remove();
+      model.destroy();
+      sketch.current = null;
+    };
+  }, [view, layer]);
 
-    graphics.add(graphic);
-
-    compareRoute.state = "editing";
-
-    void AppState.view.goTo({
-      target: graphic,
-      scale: 250_000,
-      tilt: 70,
+  const addModel = (object: (typeof objects)[number]) => {
+    setError(null);
+    loadModel.mutate(object, {
+      onSuccess: (graphic) => {
+        sketch.current?.cancel();
+        layer.removeAll();
+        layer.add(graphic);
+        setName(object.name);
+        void view.goTo({ target: graphic, scale: 250000, tilt: 70 }).catch(reportError);
+        void sketch.current?.update(graphic, { enableScaling: false }).catch(reportError);
+      },
     });
-    void this.sketchViewModel.update(graphic, {
-      enableScaling: false,
-    });
-  }
-}
+  };
 
-interface ObjectProps {
-  gltf: GltfObject;
-  onClick: (gltf: GltfObject) => void;
-}
-function Object({ gltf, onClick }: ObjectProps) {
+  const message = error ?? (loadModel.error ? errorMessage(loadModel.error) : null);
+
   return (
-    <Item
-      itemClass={styles[gltf.id]}
-      onClick={() => {
-        onClick(gltf);
-      }}
-      text={gltf.name}
-    />
+    <>
+      <p className="instructions">
+        Place a familiar landmark on Mars to compare its size with the terrain.
+      </p>
+      <div className="model-grid">
+        {objects.map((object) => (
+          <calcite-button
+            key={object.name}
+            appearance={name === object.name ? "solid" : "outline"}
+            disabled={loadModel.isPending}
+            onClick={() => addModel(object)}
+          >
+            {object.name}
+          </calcite-button>
+        ))}
+      </div>
+      {loadModel.isPending && (
+        <calcite-loader label="Loading 3D model" text="Loading 3D model" scale="s" />
+      )}
+      {message && (
+        <calcite-notice open kind="danger">
+          <span slot="title">Could not place model</span>
+          <span slot="message">{message}</span>
+        </calcite-notice>
+      )}
+      {name && (
+        <section className="panel-section">
+          <h3>{name}</h3>
+          <EditingInfo />
+          <calcite-button
+            appearance="outline"
+            iconStart="trash"
+            onClick={() => {
+              loadModel.reset();
+              sketch.current?.cancel();
+              layer.removeAll();
+              setName(null);
+            }}
+          >
+            Remove model
+          </calcite-button>
+        </section>
+      )}
+    </>
   );
 }

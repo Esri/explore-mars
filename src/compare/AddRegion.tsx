@@ -1,359 +1,303 @@
-/* Copyright 2023 Esri
- *
- * Licensed under the Apache License Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+import { useEffect, useRef, useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 import Graphic from "@arcgis/core/Graphic";
-import WebScene from "@arcgis/core/WebScene";
-import {
-  property,
-  subclass,
-} from "@arcgis/core/core/accessorSupport/decorators";
-import * as promiseUtils from "@arcgis/core/core/promiseUtils";
-import SceneView from "@arcgis/core/views/SceneView";
-import Widget from "@arcgis/core/widgets/Widget";
-import { tsx } from "@arcgis/core/widgets/support/widget";
-import { graphicFromCountry } from "./countryUtils";
-import type { ResourceHandle } from "@arcgis/core/core/Handles";
-import type FeatureLayer from "@arcgis/core/layers/FeatureLayer";
+import Environment from "@arcgis/core/views/3d/environment/Environment";
+import type SceneView from "@arcgis/core/views/SceneView";
+import type GraphicsLayer from "@arcgis/core/layers/GraphicsLayer";
+import FeatureLayer from "@arcgis/core/layers/FeatureLayer";
 import type Point from "@arcgis/core/geometry/Point";
-import type Polygon from "@arcgis/core/geometry/Polygon";
-import type { SceneViewProperties } from "@arcgis/core/views/SceneView";
+import Polygon from "@arcgis/core/geometry/Polygon";
+import SketchViewModel from "@arcgis/core/widgets/Sketch/SketchViewModel";
+import type { UpdateEvent } from "@arcgis/core/widgets/Sketch/types";
 import * as centroidOperator from "@arcgis/core/geometry/operators/centroidOperator";
 import ObjectSymbol3DLayer from "@arcgis/core/symbols/ObjectSymbol3DLayer";
 import PointSymbol3D from "@arcgis/core/symbols/PointSymbol3D";
 import TextSymbol3DLayer from "@arcgis/core/symbols/TextSymbol3DLayer";
-import GraphicsLayer from "@arcgis/core/layers/GraphicsLayer";
-import SketchViewModel from "@arcgis/core/widgets/Sketch/SketchViewModel";
-import type {
-  RotateEventInfo,
-  UpdateEvent,
-} from "@arcgis/core/widgets/Sketch/types";
+import { graphicFromCountry } from "./countryUtils";
 import PolygonTransform from "./PolygonTransform";
-import { EditingInfo, compareRoute } from "./ComparePage";
-import AppState from "../application/AppState";
-import styles from "./AddRegion.module.scss";
+import { EditingInfo } from "./ComparePage";
+import { errorMessage, isAbortError } from "../utilities/errors";
+import "@arcgis/map-components/components/arcgis-scene";
+import "@esri/calcite-components/components/calcite-button";
+import "@esri/calcite-components/components/calcite-notice";
+import "./AddRegion.css";
 
-interface Region {
-  label: Graphic;
-  center: Graphic;
-  country: Graphic;
+interface Props {
+  view: SceneView;
+  regions: GraphicsLayer;
+  editing: GraphicsLayer;
 }
 
-const viewGraphics = new GraphicsLayer({
-  title: "Country comparison",
-  listMode: "hide",
-  elevationInfo: {
-    mode: "on-the-ground",
-  },
+const earthEnvironment = new Environment({
+  atmosphereEnabled: false,
+  starsEnabled: false,
+  background: { type: "color", color: [0, 0, 0, 0] },
 });
 
-const editingGraphics = new GraphicsLayer({
-  title: "SVM layer for comparison",
-  listMode: "hide",
-  elevationInfo: {
-    mode: "on-the-ground",
-  },
-});
-
-@subclass("ExploreMars.page.AddRegionPage")
-export class AddRegionPage extends Widget {
-  @property()
-  state: "selecting" | "editing" = "selecting";
-
-  @property()
-  sketchViewModel = new SketchViewModel({
-    view: AppState.view,
-    layer: editingGraphics,
-    defaultUpdateOptions: {
-      toggleToolOnClick: false,
-      enableScaling: false,
-      enableZ: true,
+export function AddRegionPage({ view, regions, editing }: Props) {
+  const [placed, setPlaced] = useState<Graphic | null>(() => regions.graphics.getItemAt(0) ?? null);
+  const [error, setError] = useState<string | null>(null);
+  const sketch = useRef<SketchViewModel | null>(null);
+  const lastAngle = useRef(0);
+  const transform = useRef(new PolygonTransform(view));
+  const selection = useMutation({
+    mutationFn: async ({
+      earthView,
+      point,
+    }: {
+      earthView: SceneView;
+      point: { x: number; y: number };
+    }) => {
+      const result = await earthView.hitTest(point);
+      const hit = result.results.find(
+        (result) => result.type === "graphic" && result.graphic.layer instanceof FeatureLayer,
+      );
+      if (!hit || hit.type !== "graphic" || !(hit.graphic.layer instanceof FeatureLayer)) {
+        throw new Error("Select a country on the Earth globe.");
+      }
+      const layerView = await earthView.whenLayerView(hit.graphic.layer);
+      return { graphic: hit.graphic, layerView };
+    },
+    networkMode: "always",
+  });
+  const placement = useMutation({
+    mutationFn: async (selected: Graphic) => {
+      const country = await graphicFromCountry(selected, view);
+      if (!(country.geometry instanceof Polygon)) {
+        throw new Error("The selected country has no polygon geometry.");
+      }
+      const centerPoint = centroidOperator.execute(country.geometry);
+      return { country, centerPoint };
     },
   });
+  const selected = selection.data?.graphic;
+  const { reset: resetSelection } = selection;
 
-  @property()
-  selectedRegion: Promise<Graphic> | null = null;
-
-  @property()
-  highlight?: ResourceHandle;
-
-  overlayGlobe?: SceneView | null;
-
-  postInitialize(): void {
-    const view = AppState.view;
-    const map = view.map;
-
-    if (!map) {
-      return;
-    }
-
-    map.layers.addMany([viewGraphics, editingGraphics]);
-
-    this.sketchViewModel.on("delete", () => {
-      this.clear();
-      if (
-        AppState.route.children?.match(compareRoute) &&
-        compareRoute.path === "regions"
-      ) {
-        AppState.route.children.back();
-      }
+  useEffect(() => {
+    editing.visible = true;
+    const model = new SketchViewModel({
+      view,
+      layer: editing,
+      defaultUpdateOptions: {
+        toggleToolOnClick: false,
+        enableScaling: false,
+        enableZ: false,
+      },
     });
-  }
-
-  render() {
-    if (compareRoute.state !== "selecting") {
-      return (
-        <div>
-          <EditingInfo />
-        </div>
-      );
-    }
-
-    return (
-      <div class={styles.container}>
-        <p>Select a region on the globe</p>
-        <div
-          class={styles.globeView}
-          afterCreate={(element: HTMLDivElement) => {
-            this.createView(element);
-          }}
-        ></div>
-        <button
-          class="esri-button esri-button--primary"
-          disabled={this.selectedRegion == null}
-          onclick={async () => {
-            const country = await this.selectedRegion;
-            if (country) {
-              await this.clear();
-              void AppState.load(this.addCountry(country));
-            }
-          }}
-        >
-          Place it on Mars
-        </button>
-      </div>
-    );
-  }
-
-  private createView(element: HTMLDivElement) {
-    const overlayGlobe = new SceneView(createGlobeConfig(element));
-
-    const handle = overlayGlobe.on(
-      "click",
-      promiseUtils.debounce(async (e) => {
-        this.highlight?.remove();
-
-        let resolveSelectedRegion: (
-          value: Graphic | PromiseLike<Graphic>,
-        ) => void;
-        const promise = new Promise<Graphic>((resolve) => {
-          resolveSelectedRegion = resolve;
-        });
-        this.selectedRegion = promise;
-
-        const hitTest = await overlayGlobe.hitTest(e);
-
-        if (hitTest.results.length > 0) {
-          const result = hitTest.results[hitTest.results.length - 1];
-          if (result.type === "graphic") {
-            const layerView = await overlayGlobe.whenLayerView(
-              result.graphic.layer as FeatureLayer,
-            );
-            this.highlight = layerView.highlight(result.graphic);
-            const country = await graphicFromCountry(
-              result.graphic,
-              AppState.view,
-            );
-            resolveSelectedRegion!(country);
-          }
+    sketch.current = model;
+    const handles = [
+      model.on("delete", () => {
+        regions.removeAll();
+        editing.removeAll();
+        setPlaced(null);
+        resetSelection();
+      }),
+      model.on("update", (event: UpdateEvent) => {
+        const country = regions.graphics.getItemAt(0);
+        const label = regions.graphics.getItemAt(1);
+        const center = editing.graphics.getItemAt(0);
+        if (!(country?.geometry instanceof Polygon) || !center || !label) {
+          return;
+        }
+        if (event.state === "start") {
+          lastAngle.current = 0;
+        }
+        if (!event.toolEventInfo) {
+          return;
+        }
+        const info = event.toolEventInfo;
+        if (info.type === "rotate" || info.type === "rotate-start" || info.type === "rotate-stop") {
+          country.geometry = transform.current.rotate(
+            country.geometry,
+            ((info.angle - lastAngle.current) * Math.PI) / 180,
+          );
+          lastAngle.current = info.type === "rotate-stop" ? 0 : info.angle;
+        } else {
+          country.geometry = transform.current.moveTo(country.geometry, center.geometry as Point);
+          label.geometry = center.geometry;
         }
       }),
-    );
-
-    this.addHandles(handle);
-
-    this.overlayGlobe = overlayGlobe;
-  }
-
-  private async addCountry(country: Graphic) {
-    compareRoute.state = "editing";
-
-    const center = createRegionCenter(country);
-    const label = createRegionLabel(country);
-
-    this.clear();
-
-    viewGraphics.addMany([country, label]);
-    editingGraphics.add(center);
-    country.addHandles([
-      this.sketchViewModel.on(
-        "update",
-        watchRotation({ country, center, label }),
-      ),
-      AppState.view.on("click", async (event) => {
-        const hitTest = await AppState.view.hitTest(event);
-        const isHit = hitTest.results.some((result) => {
-          return result.type === "graphic" && result.graphic === country;
-        });
-
-        if (isHit)
-          void this.sketchViewModel.update(center, {
-            enableScaling: false,
-          });
+      view.on("click", (event) => {
+        void view
+          .hitTest(event, { include: [regions] })
+          .then((result) => {
+            if (sketch.current !== model || !result.results.some((hit) => hit.type === "graphic")) {
+              return;
+            }
+            const center = editing.graphics.getItemAt(0);
+            if (center) {
+              void model.update(center, { enableScaling: false }).catch(reportError);
+            }
+          })
+          .catch(reportError);
       }),
-    ]);
+    ];
+    function reportError(cause: unknown) {
+      if (!isAbortError(cause)) {
+        console.error(cause);
+        setError(errorMessage(cause));
+      }
+    }
+    return () => {
+      handles.forEach((handle) => handle.remove());
+      model.destroy();
+      editing.visible = false;
+      sketch.current = null;
+    };
+  }, [view, regions, editing, resetSelection]);
 
-    void AppState.view.goTo(country);
-    void this.sketchViewModel.update(center, {
-      enableScaling: false,
-    });
-  }
-
-  clear() {
-    viewGraphics.removeAll();
-    editingGraphics.removeAll();
-    this.selectedRegion = null;
-  }
-}
-
-function createGlobeConfig(
-  container: HTMLDivElement,
-): SceneViewProperties {
-  return {
-    container,
-    qualityProfile: "high",
-    map: new WebScene({
-      portalItem: {
-        id: "df5009a0ea79444e92f48f50fe171bf1",
-      },
-    }),
-    alphaCompositingEnabled: true,
-    environment: {
-      atmosphereEnabled: false,
-      starsEnabled: false,
-      background: {
-        type: "color",
-        color: [255, 255, 255, 0],
-      },
-    },
-    constraints: {
-      altitude: {
-        min: 0,
-        max: 25512548 * 4,
-      },
-    },
-    ui: {
-      components: [],
-    },
-    popupEnabled: false,
-    highlights: [
-      {
-        name: "default",
-        color: "rgba(207, 88, 25, 0.5)",
-      },
-    ],
-  };
-}
-
-function createRegionCenter(country: Graphic): Region["center"] {
-  const centroid = centroidOperator.execute(country.geometry as Polygon);
-
-  return new Graphic({
-    geometry: centroid,
-    symbol: new PointSymbol3D({
-      symbolLayers: [
-        new ObjectSymbol3DLayer({
-          material: {
-            color: "white",
-          },
-          width: 5_000,
-          height: 5_000,
-          depth: 5_000,
-          resource: {
-            primitive: "diamond",
-          },
-        }),
-      ],
-    }),
-  });
-}
-
-function createRegionLabel(country: Graphic): Region["label"] {
-  const centroid = centroidOperator.execute(country.geometry as Polygon);
-
-  return new Graphic({
-    geometry: centroid,
-    symbol: new PointSymbol3D({
-      symbolLayers: [
-        new TextSymbol3DLayer({
-          text: country.getAttribute("label"),
-          material: {
-            color: [0, 0, 0, 0.9],
-          },
-          halo: {
-            size: 2,
-            color: [255, 255, 255, 0.7],
-          },
-          font: {
-            size: 10,
-          },
-        }),
-      ],
-      verticalOffset: {
-        screenLength: 40,
-        maxWorldLength: 500000,
-        minWorldLength: 0,
-      },
-      callout: {
-        type: "line",
-        size: 0.5,
-        color: [255, 255, 255, 0.9],
-        border: {
-          color: [0, 0, 0, 0.3],
-        },
-      },
-    }),
-  });
-}
-
-function watchRotation(region: Region) {
-  let lastAngle = 0;
-  const view = AppState.view;
-
-  const { country, center, label } = region;
-  const spherical = new PolygonTransform(view);
-  return (ev: UpdateEvent) => {
-    if (ev.state !== "active" || !ev.toolEventInfo) {
+  useEffect(() => {
+    if (!selection.data || placed) {
       return;
     }
+    const { graphic, layerView } = selection.data;
+    const highlight = layerView.highlight(graphic);
+    return () => highlight.remove();
+  }, [selection.data, placed]);
 
-    const toolEventInfo = ev.toolEventInfo;
-    const toolType = toolEventInfo.type;
-    const rotateStartStop =
-      toolType === "rotate-stop" || toolType === "rotate-start";
-    let current = country.geometry as Polygon;
-
-    if (toolType === "rotate" || rotateStartStop) {
-      const currentAngle = (toolEventInfo as RotateEventInfo).angle;
-      const angleDiff = (currentAngle - lastAngle) * (Math.PI / 180);
-
-      current = spherical.rotate(current, angleDiff);
-      lastAngle = rotateStartStop ? 0 : currentAngle;
-    } else {
-      const newCenter = center.geometry as Point;
-      current = spherical.moveTo(current, newCenter);
-      label.geometry = newCenter;
-    }
-    country.geometry = current;
+  const selectCountry = (earthView: SceneView, point: { x: number; y: number }) => {
+    setError(null);
+    placement.reset();
+    selection.mutate({ earthView, point });
   };
+
+  const placeCountry = () => {
+    if (!selected) {
+      return;
+    }
+    setError(null);
+    placement.mutate(selected, {
+      onSuccess: ({ country, centerPoint }) => {
+        const center = new Graphic({
+          geometry: centerPoint,
+          symbol: new PointSymbol3D({
+            symbolLayers: [
+              new ObjectSymbol3DLayer({
+                material: { color: "#f6a17b" },
+                width: 5000,
+                height: 5000,
+                depth: 5000,
+                resource: { primitive: "diamond" },
+              }),
+            ],
+          }),
+        });
+        const label = new Graphic({
+          geometry: centerPoint.clone(),
+          symbol: new PointSymbol3D({
+            symbolLayers: [
+              new TextSymbol3DLayer({
+                text: String(country.getAttribute("label")),
+                material: { color: "white" },
+                halo: { size: 1, color: "#151515" },
+                font: { size: 10 },
+              }),
+            ],
+            verticalOffset: {
+              screenLength: 40,
+              maxWorldLength: 500000,
+              minWorldLength: 0,
+            },
+            callout: { type: "line", size: 0.5, color: "white" },
+          }),
+        });
+        sketch.current?.cancel();
+        regions.removeAll();
+        editing.removeAll();
+        regions.addMany([country, label]);
+        editing.add(center);
+        lastAngle.current = 0;
+        setPlaced(country);
+        void view.goTo(country).catch((cause: unknown) => {
+          if (!isAbortError(cause)) {
+            console.error(cause);
+            setError(errorMessage(cause));
+          }
+        });
+        void sketch.current?.update(center, { enableScaling: false }).catch((cause: unknown) => {
+          if (!isAbortError(cause)) {
+            console.error(cause);
+            setError(errorMessage(cause));
+          }
+        });
+      },
+    });
+  };
+
+  const busy = selection.isPending || placement.isPending;
+  const mutationError = selection.error ?? placement.error;
+  const message = error ?? (mutationError ? errorMessage(mutationError) : null);
+
+  return (
+    <>
+      {!placed ? (
+        <>
+          <p className="instructions">
+            Select a region on Earth, then place its real-world footprint on Mars.
+          </p>
+          <arcgis-scene
+            className="earth-scene"
+            itemId="df5009a0ea79444e92f48f50fe171bf1"
+            environment={earthEnvironment}
+            alphaCompositingEnabled
+            popupDisabled
+            onarcgisViewClick={(event) => selectCountry(event.currentTarget.view, event.detail)}
+            onarcgisLoadError={(event) => {
+              console.error(event.detail);
+              setError(errorMessage(event.detail));
+            }}
+            onarcgisViewReadyError={(event) => {
+              console.error(event.detail);
+              setError(errorMessage(event.detail));
+            }}
+            aria-label="Select a country on Earth"
+          />
+          <p className="muted" role="status">
+            {selected
+              ? String(
+                  selected.getAttribute(
+                    selected.layer instanceof FeatureLayer
+                      ? (selected.layer.displayField ?? "name")
+                      : "name",
+                  ) ?? "Region selected",
+                )
+              : "No region selected"}
+          </p>
+          <calcite-button
+            width="full"
+            disabled={!selected || busy}
+            loading={busy}
+            onClick={placeCountry}
+          >
+            Place it on Mars
+          </calcite-button>
+        </>
+      ) : (
+        <section className="panel-section">
+          <h3>{String(placed.getAttribute("label"))}</h3>
+          <EditingInfo />
+          <calcite-button
+            appearance="outline"
+            iconStart="trash"
+            onClick={() => {
+              sketch.current?.cancel();
+              regions.removeAll();
+              editing.removeAll();
+              setPlaced(null);
+              selection.reset();
+              placement.reset();
+            }}
+          >
+            Remove region
+          </calcite-button>
+        </section>
+      )}
+      {message && (
+        <calcite-notice open kind="danger">
+          <span slot="title">Region comparison unavailable</span>
+          <span slot="message">{message}</span>
+        </calcite-notice>
+      )}
+    </>
+  );
 }

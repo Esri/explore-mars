@@ -1,0 +1,95 @@
+.mars-scene {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.main-toolbar,
+.map-navigation,
+.tool-panel,
+.app-error {
+  position: absolute;
+  z-index: 2;
+}
+
+.main-toolbar {
+  bottom: max(48px, env(safe-area-inset-bottom));
+  left: 50%;
+  transform: translateX(-50%);
+  box-shadow: var(--calcite-shadow-md);
+}
+
+.map-navigation {
+  top: var(--calcite-spacing-xxl);
+  left: var(--calcite-spacing-xxl);
+  box-shadow: var(--calcite-shadow-md);
+}
+
+.tool-panel {
+  top: var(--calcite-spacing-xxl);
+  right: var(--calcite-spacing-xxl);
+  width: 360px;
+  max-width: calc(100% - 112px);
+  max-height: calc(100% - 136px);
+  box-shadow: var(--calcite-shadow-md);
+  display: flex;
+
+  &[hidden] {
+    display: none;
+  }
+
+  & > calcite-panel {
+    width: 100%;
+    max-height: inherit;
+  }
+}
+
+.measurement-panel {
+  width: 460px;
+}
+
+.scene-loading {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+
+.app-error {
+  bottom: 112px;
+  left: var(--calcite-spacing-xxl);
+  width: min(440px, calc(100% - 48px));
+}
+
+@media (width <= 600px) {
+  .map-navigation {
+    top: var(--calcite-spacing-md);
+    left: var(--calcite-spacing-md);
+  }
+
+  .tool-panel {
+    top: var(--calcite-spacing-md);
+    right: var(--calcite-spacing-md);
+    width: calc(100% - 88px);
+    max-width: none;
+    max-height: calc(100dvh - 140px);
+  }
+
+  .measurement-panel {
+    top: auto;
+    bottom: 104px;
+    width: calc(100% - 24px);
+    max-height: 62dvh;
+  }
+
+  .main-toolbar {
+    bottom: max(40px, env(safe-area-inset-bottom));
+  }
+
+  .app-error {
+    left: var(--calcite-spacing-md);
+    bottom: 100px;
+  }
+}

@@ -1,84 +1,266 @@
-/* Copyright 2023 Esri
- *
- * Licensed under the Apache License Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-import { subclass } from "@arcgis/core/core/accessorSupport/decorators";
-import Widget from "@arcgis/core/widgets/Widget";
-import { tsx } from "@arcgis/core/widgets/support/widget";
-import AppState from "./AppState";
-import { ComparePage } from "../compare/ComparePage";
-import { MeasurePage } from "../measure/MeasurePages";
-import { match } from "ts-pattern";
-import type { Page } from "./AppState";
+import { useCallback, useEffect, useRef, useState } from "react";
+import type SceneView from "@arcgis/core/views/SceneView";
+import Camera from "@arcgis/core/Camera";
+import type { ArcgisScene } from "@arcgis/map-components/components/arcgis-scene";
+import * as reactiveUtils from "@arcgis/core/core/reactiveUtils";
+import { addFrameTask } from "@arcgis/core/core/scheduling";
 import { LocationPage } from "../location/LocationPage";
+import { MeasurePage } from "../measure/MeasurePages";
+import { ComparePage } from "../compare/ComparePage";
 import { CreditsPage } from "../credits/CreditsPage";
 import { LandingPage } from "../home/HomePage";
 import { CookieBanner } from "../utility-components/CookieBanner";
-import { Loading } from "../utility-components/Loading";
-import styles from "./app.module.scss";
-import { MenuBar } from "../utility-components/menu-bar/MenuBar";
-import { Page as PageWrapper } from "../utility-components/Page";
 import { BasemapSwitcher } from "./BasemapSwitcher";
+import { createSceneResources, initialCamera } from "./scene";
+import { errorMessage, isAbortError } from "../utilities/errors";
+import "@arcgis/map-components/components/arcgis-scene";
+import "@esri/calcite-components/components/calcite-action";
+import "@esri/calcite-components/components/calcite-action-bar";
+import "@esri/calcite-components/components/calcite-loader";
+import "@esri/calcite-components/components/calcite-notice";
+import "@esri/calcite-components/components/calcite-panel";
+import "@esri/calcite-components/components/calcite-shell";
+import "./Application.css";
 
-@subclass("ExploreMars.Application")
-class Application extends Widget {
-  renderPage(page: string) {
-    return match(page)
-      .with("home", () => <div style="display:none;" />)
-      .with("landing", () => <div style="display:none;" />)
-      .with("measure", () => <MeasurePage />)
-      .with("compare", () => <ComparePage />)
-      .with("credits", () => <CreditsPage />)
-      .with("locations", () => <LocationPage />)
-      .run()!;
-  }
+type Panel = "locations" | "measure" | "compare" | "layers" | "about";
+const tools = [
+  { id: "locations", label: "Locations", icon: "map-pin" },
+  { id: "measure", label: "Measure", icon: "measure" },
+  { id: "compare", label: "Compare", icon: "compare" },
+  { id: "layers", label: "Layers", icon: "layers" },
+  { id: "about", label: "About Explore Mars", icon: "information" },
+] as const;
 
-  render() {
-    const path = AppState.route.path;
+export default function Application() {
+  const [resources] = useState(createSceneResources);
+  const [view, setView] = useState<SceneView | null>(null);
+  const [panel, setPanel] = useState<Panel | null>("locations");
+  const [welcome, setWelcome] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const scene = useRef<ArcgisScene>(null);
+  const panelElement = useRef<HTMLCalcitePanelElement>(null);
+  const [heading, setHeading] = useState(0);
 
-    const content = match(AppState.status)
-      .with("loading", () => <Loading />)
-      .otherwise(() => this.renderPage(path));
+  const reportError = useCallback((cause: unknown) => {
+    console.error(cause);
+    setError(errorMessage(cause));
+  }, []);
 
-    return (
-      <div class={styles.wrapper}>
-        <MenuBar
-          onItemClick={(item) => {
-            this.goToPage(item);
-          }}
-        />
-        <CookieBanner />
-        <PageWrapper
-          hidden={
-            AppState.route.match("home") || AppState.route.match("landing")
-          }
-          children={content}
-          class={AppState.status === "editing" ? styles.obscureMenu : ""}
-        />
-        <LandingPage
-          hidden={!AppState.route.match("landing")}
-          onStart={() => {
-            this.goToPage("home");
-          }}
-        />
-        <BasemapSwitcher />
-      </div>
+  const navigate = useCallback(
+    (target: Parameters<SceneView["goTo"]>[0]) => {
+      if (!view) {
+        return;
+      }
+      void view.goTo(target).catch((cause: unknown) => {
+        if (!isAbortError(cause)) {
+          reportError(cause);
+        }
+      });
+    },
+    [view, reportError],
+  );
+
+  useEffect(() => {
+    if (!view) {
+      return;
+    }
+    const handle = reactiveUtils.watch(() => view.camera.heading, setHeading, {
+      initial: true,
+    });
+    return () => handle.remove();
+  }, [view]);
+
+  useEffect(() => {
+    const element = scene.current;
+    if (!element) {
+      return;
+    }
+    const handle = reactiveUtils.watch(
+      () => element.fatalError,
+      (cause) => {
+        if (cause) {
+          reportError(cause);
+        }
+      },
+      { initial: true },
     );
-  }
+    return () => handle.remove();
+  }, [reportError]);
 
-  private goToPage(page: Page) {
-    AppState.route.push(page);
-  }
+  useEffect(() => {
+    if (!view || !welcome || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      return;
+    }
+    const spin = addFrameTask({
+      update: () => {
+        if (view.interacting) {
+          spin.remove();
+          return;
+        }
+        const camera = view.camera.clone();
+        if (camera.position.longitude != null) {
+          camera.position.longitude -= 0.01;
+          view.camera = camera;
+        }
+      },
+    });
+    return () => spin.remove();
+  }, [view, welcome]);
+
+  useEffect(() => {
+    if (panel) {
+      void panelElement.current?.setFocus();
+    }
+  }, [panel]);
+
+  const startExploring = () => {
+    setWelcome(false);
+    navigate(
+      new Camera({
+        position: {
+          x: initialCamera.position.x,
+          y: initialCamera.position.y,
+          z: 8382276.030513974,
+          spatialReference: { wkid: 104971 },
+        },
+        heading: initialCamera.heading,
+        tilt: 0.15,
+      }),
+    );
+  };
+
+  return (
+    <calcite-shell contentBehind>
+      <arcgis-scene
+        ref={scene}
+        className="mars-scene"
+        map={resources.map}
+        spatialReference={resources.spatialReference}
+        camera={initialCamera}
+        environment={resources.environment}
+        theme={resources.theme}
+        qualityProfile="high"
+        popupDisabled
+        onarcgisViewReadyChange={(event) => {
+          if (event.currentTarget.ready) {
+            setView(event.currentTarget.view);
+          }
+        }}
+        onarcgisViewReadyError={(event) => reportError(event.detail)}
+        onarcgisLoadError={(event) => reportError(event.detail)}
+        aria-label="Interactive 3D globe of Mars"
+      ></arcgis-scene>
+
+      {!view && !error && (
+        <div className="scene-loading" role="status">
+          <calcite-loader label="Loading Mars" text="Loading Mars" />
+        </div>
+      )}
+
+      <nav className="map-navigation" aria-label="Scene navigation">
+        <calcite-action-bar expandDisabled>
+          <calcite-action
+            text="Zoom in"
+            icon="plus"
+            disabled={!view}
+            onClick={() => navigate({ zoom: (view?.zoom ?? 0) + 1 })}
+          />
+          <calcite-action
+            text="Zoom out"
+            icon="minus"
+            disabled={!view}
+            onClick={() => navigate({ zoom: (view?.zoom ?? 0) - 1 })}
+          />
+          <calcite-action
+            text="Reset north"
+            icon="compass"
+            disabled={!view}
+            onClick={() => {
+              if (!view) {
+                return;
+              }
+              const camera = view.camera.clone();
+              camera.heading = 0;
+              navigate(camera);
+            }}
+            style={{ "--calcite-action-icon-rotation": `${-heading}deg` }}
+          />
+          <calcite-action
+            text="Home view"
+            icon="home"
+            disabled={!view}
+            onClick={() =>
+              navigate(
+                new Camera({
+                  position: {
+                    x: -57.1,
+                    y: -24.4,
+                    z: 8382276,
+                    spatialReference: { wkid: 104971 },
+                  },
+                  heading: 0,
+                  tilt: 0,
+                }),
+              )
+            }
+          />
+        </calcite-action-bar>
+      </nav>
+
+      <nav className="main-toolbar" aria-label="Explore Mars tools">
+        <calcite-action-bar layout="horizontal" expandDisabled selectionAppearance="highlight">
+          {tools.map((tool) => (
+            <calcite-action
+              key={tool.id}
+              text={tool.label}
+              icon={tool.icon}
+              active={panel === tool.id}
+              aria-pressed={panel === tool.id}
+              aria-controls="tool-panel"
+              disabled={!view}
+              onClick={() => setPanel((current) => (current === tool.id ? null : tool.id))}
+            />
+          ))}
+        </calcite-action-bar>
+      </nav>
+
+      {view && (
+        <aside
+          className={`tool-panel ${panel === "measure" ? "measurement-panel" : ""}`}
+          hidden={!panel}
+          aria-label={tools.find((tool) => tool.id === panel)?.label}
+        >
+          <calcite-panel
+            ref={panelElement}
+            id="tool-panel"
+            heading={tools.find((tool) => tool.id === panel)?.label ?? ""}
+            closable
+            closed={!panel}
+            oncalcitePanelClose={() => setPanel(null)}
+          >
+            {panel === "locations" && <LocationPage view={view} onError={reportError} />}
+            {panel === "measure" && <MeasurePage view={view} />}
+            <div hidden={panel !== "compare"}>
+              <ComparePage view={view} resources={resources} active={panel === "compare"} />
+            </div>
+            <div hidden={panel !== "layers"}>
+              <BasemapSwitcher view={view} onError={reportError} />
+            </div>
+            {panel === "about" && <CreditsPage />}
+          </calcite-panel>
+        </aside>
+      )}
+
+      {error && (
+        <div className="app-error">
+          <calcite-notice open kind="danger" closable oncalciteNoticeClose={() => setError(null)}>
+            <span slot="title">Something went wrong</span>
+            <span slot="message">{error}</span>
+          </calcite-notice>
+        </div>
+      )}
+      <LandingPage open={welcome} ready={view != null} onStart={startExploring} />
+      <CookieBanner />
+    </calcite-shell>
+  );
 }
-
-export default Application;

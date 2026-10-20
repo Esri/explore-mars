@@ -1,0 +1,8 @@
+.welcome-content {
+  max-width: 480px;
+  line-height: var(--calcite-font-line-height-lg);
+
+  & h1 {
+    font-weight: var(--calcite-font-weight-medium);
+  }
+}

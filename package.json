@@ -2,43 +2,53 @@
   "name": "explore-mars",
   "version": "1.0.0",
   "description": "Interactively discover the red planet using the ArcGIS Maps SDK for JavaScript",
+  "author": "Gunnar Ingi Stefansson",
   "repository": {
     "type": "git",
     "url": "https://github.com/Esri/explore-mars"
   },
   "type": "module",
-  "author": "Gunnar Ingi Stefansson",
   "scripts": {
-    "start": "vite",
+    "start": "npm run dev",
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "tsc --noEmit && vite build",
     "serve": "vite preview",
-    "lint": "concurrently --group --prefix none \"npm:lint:*\"",
-    "lint:typecheck": "tsc --noEmit",
-    "lint:eslint": "npx eslint",
-    "lint:prettier": "prettier --write 'src/**/*.{js,jsx,ts,tsx,css,scss}'",
-    "lint:stylelint": "stylelint --cache --fix 'src/**/*.{css,scss}'"
+    "lint": "oxlint --type-aware",
+    "lint:css": "stylelint 'src/**/*.css'",
+    "typecheck": "tsc --noEmit",
+    "format": "oxfmt 'src/**/*.{ts,tsx,css}' '*.ts' '*.json' index.html",
+    "format:check": "npm run format -- --check",
+    "fix": "oxlint --type-aware --fix && stylelint --fix 'src/**/*.css' && npm run format"
   },
   "dependencies": {
-    "@arcgis/core": "^5.0.11",
-    "@arcgis/map-components": "^5.0.11",
-    "@esri/calcite-components": "^5.0.2",
+    "@arcgis/core": "6.0.0-next.13",
+    "@arcgis/map-components": "6.0.0-next.13",
+    "@esri/calcite-components": "5.2.0-next.105",
+    "@tanstack/charts": "^1.1.0",
+    "@tanstack/react-query": "^5.104.5",
     "@zip.js/zip.js": "^2.7.29",
-    "classnames": "^2.5.1",
     "gl-matrix": "^3.4.3",
-    "ts-pattern": "^5.1.0",
-    "typescript": "^5.4.3",
-    "vite": "^5.2.8"
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.4"
   },
   "devDependencies": {
-    "concurrently": "^8.2.2",
-    "eslint": "^8.57.0",
-    "eslint-config-prettier": "^9.1.0",
-    "eslint-config-standard-with-typescript": "^43.0.1",
-    "prettier": "^3.2.5",
-    "sass": "^1.74.1",
+    "@types/node": "^24.0.0",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.2",
+    "oxc-transform-react": "^0.152.0",
+    "oxfmt": "^0.74.0",
+    "oxlint": "^1.89.0",
+    "oxlint-tsgolint": "^7.0.2004",
     "stylelint": "^16.3.1",
-    "stylelint-config-standard-scss": "^13.1.0",
-    "typescript-eslint": "^7.5.0"
+    "stylelint-config-standard": "^36.0.0"
+  },
+  "stylelint": {
+    "extends": "stylelint-config-standard"
+  },
+  "engines": {
+    "node": ">=22.12.0"
   }
 }

@@ -13,14 +13,9 @@
  * limitations under the License.
  */
 import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
 
 export default defineConfig({
-  server: {
-    port: 3000,
-  },
-  base: "/",
-  build: {
-    target: "es2020",
-  },
+  plugins: [react({ compiler: true })],
   assetsInclude: ["**/*.zip", "**/*.gltf"],
 });

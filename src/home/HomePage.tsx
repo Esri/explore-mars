@@ -1,60 +1,43 @@
-/* Copyright 2023 Esri
- *
- * Licensed under the Apache License Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-// import { CSS } from "./constants";
-import { tsx } from "@arcgis/core/widgets/support/widget";
-import styles from "./HomePage.module.scss";
-import cx from "classnames";
+import "@esri/calcite-components/components/calcite-button";
+import "@esri/calcite-components/components/calcite-dialog";
+import "./HomePage.css";
 
 interface LandingPageProps {
-  hidden: boolean;
+  open: boolean;
+  ready: boolean;
   onStart: () => void;
 }
-export function LandingPage({ onStart, hidden }: LandingPageProps) {
+
+export function LandingPage({ open, ready, onStart }: LandingPageProps) {
   return (
-    <div class={cx(styles.landingPage, { [styles.hidden]: hidden })}>
-      <div class={styles.content}>
-        <h1 class={styles.heading}>Explore Mars!</h1>
+    <calcite-dialog
+      slot="dialogs"
+      open={open}
+      heading="Explore Mars"
+      modal
+      closeDisabled
+      outsideCloseDisabled
+      escapeDisabled
+      widthScale="s"
+    >
+      <div className="welcome-content">
+        <h1>The red planet, closer than ever.</h1>
         <p>
-          Have you always dreamt of being an astronaut? Come close by exploring
-          Mars, its canyons, mountains and craters along with the location of
-          previous missions!
+          Explore Mars, its canyons, mountains and craters, and the landing sites of previous
+          missions.
         </p>
-        <button
-          class={styles.button}
-          onclick={() => {
-            onStart();
-          }}
-        >
-          Start now!
-        </button>
-        <p class={cx(styles.small)}>
-          Tip: to navigate use the left and right mouse buttons, or with your
-          keyboard using W,A,S,D + arrow keys.
+        <p>
+          Measure the terrain or place Earth-sized regions and 3D models on the surface to see Mars
+          in perspective.
+        </p>
+        <p className="muted">
+          Drag to explore. Use the right mouse button to tilt, the scroll wheel to zoom, or navigate
+          with W, A, S, D and the arrow keys.
         </p>
       </div>
-      <div class={styles.graphics}>
-        <div class={cx(styles.graphic, styles.right)}></div>
-        <div class={cx(styles.graphic, styles.right)}></div>
-        <div class={cx(styles.graphic, styles.middle)}></div>
-        <div class={cx(styles.graphic, styles.right)}></div>
-        <div class={cx(styles.graphic, styles.right)}></div>
-        <div class={cx(styles.graphic, styles.left)}></div>
-        <div class={cx(styles.graphic, styles.middle)}></div>
-        <div class={cx(styles.graphic, styles.left)}></div>
-        <div class={cx(styles.graphic, styles.left)}></div>
-      </div>
-    </div>
+      <calcite-button slot="footer-end" disabled={!ready} loading={!ready} onClick={onStart}>
+        Start exploring
+      </calcite-button>
+    </calcite-dialog>
   );
 }

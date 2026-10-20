@@ -18,19 +18,19 @@ import type Polygon from "@arcgis/core/geometry/Polygon";
 import SpatialReference from "@arcgis/core/geometry/SpatialReference";
 import * as bufferOperator from "@arcgis/core/geometry/operators/bufferOperator";
 import * as projectOperator from "@arcgis/core/geometry/operators/projectOperator";
-import type FeatureLayer from "@arcgis/core/layers/FeatureLayer";
+import FeatureLayer from "@arcgis/core/layers/FeatureLayer";
 import FillSymbol3DLayer from "@arcgis/core/symbols/FillSymbol3DLayer";
 import PolygonSymbol3D from "@arcgis/core/symbols/PolygonSymbol3D";
 import type SceneView from "@arcgis/core/views/SceneView";
 import PolygonTransform from "./PolygonTransform";
 
-export async function graphicFromCountry(
-  selectedRegion: Graphic,
-  view: SceneView,
-) {
+export async function graphicFromCountry(selectedRegion: Graphic, view: SceneView) {
   await projectOperator.load();
 
-  const layer = selectedRegion.layer as FeatureLayer;
+  const layer = selectedRegion.layer;
+  if (!(layer instanceof FeatureLayer)) {
+    throw new Error("Select a country from a feature layer.");
+  }
 
   const displayField = layer.displayField;
   const objectId = selectedRegion.getObjectId();
@@ -48,6 +48,9 @@ export async function graphicFromCountry(
 
   const result = await layer.queryFeatures(query);
   const feature = result.features[0];
+  if (!feature || feature.geometry?.type !== "polygon") {
+    throw new Error("The selected region does not have a polygon footprint.");
+  }
 
   const viewCenter = new Point({
     x: view.center.x,
@@ -59,10 +62,17 @@ export async function graphicFromCountry(
 
   const label = feature.getAttribute(displayField);
   let geometry = feature.geometry as Polygon;
-  geometry = bufferOperator.execute(geometry, 1.887, {
+  const buffered = bufferOperator.execute(geometry, 1.887, {
     unit: "meters",
-  }) as Polygon;
-  geometry = projectOperator.execute(geometry, viewSR) as Polygon;
+  });
+  if (!buffered) {
+    throw new Error("Could not prepare the region footprint.");
+  }
+  const projected = projectOperator.execute(buffered, viewSR);
+  if (!projected || Array.isArray(projected) || projected.type !== "polygon") {
+    throw new Error("Could not project the selected region onto Mars.");
+  }
+  geometry = projected as Polygon;
   geometry = spherical.moveTo(geometry, viewCenter);
 
   const current = spherical.scale(geometry, 1.887);

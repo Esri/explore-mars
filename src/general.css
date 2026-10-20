@@ -1,0 +1,79 @@
+:root {
+  color-scheme: dark;
+
+  --calcite-color-brand: #f6a17b;
+  --calcite-color-brand-hover: #ffc3a6;
+  --calcite-color-brand-press: #db8964;
+  --calcite-color-surface-highlight: #4b3227;
+  --calcite-color-text-highlight: #f6a17b;
+  --calcite-color-text-inverse: #151515;
+  --ts-chart-color: var(--calcite-color-text-2);
+
+  font-family: var(--calcite-font-family);
+  font-size: var(--calcite-font-size-md);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#application {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+body {
+  background: var(--calcite-color-background);
+  color: var(--calcite-color-text-1);
+}
+
+a {
+  color: var(--calcite-color-brand);
+}
+
+.panel-content {
+  padding: var(--calcite-spacing-lg);
+}
+
+.panel-content > :first-child {
+  margin-top: 0;
+}
+
+.panel-content > :last-child {
+  margin-bottom: 0;
+}
+
+.panel-section {
+  border-top: 1px solid var(--calcite-color-border-3);
+  margin-top: var(--calcite-spacing-lg);
+  padding-top: var(--calcite-spacing-lg);
+}
+
+.panel-section h3,
+.panel-content h2 {
+  font-size: var(--calcite-font-size-relative-md);
+  font-weight: var(--calcite-font-weight-medium);
+  margin: 0 0 var(--calcite-spacing-sm);
+}
+
+.muted,
+.instructions {
+  color: var(--calcite-color-text-2);
+  font-size: var(--calcite-font-size-relative-base);
+  line-height: var(--calcite-font-line-height-md);
+}
+
+.button-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--calcite-spacing-sm);
+  margin-top: var(--calcite-spacing-lg);
+}
+
+.button-row > calcite-button {
+  flex: 1;
+}

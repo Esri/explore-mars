@@ -25,8 +25,7 @@ export const marsElevation = new ElevationLayer({
   id: "marsElevation",
   title: "marsElevation",
   url: "https://astro.arcgis.com/arcgis/rest/services/OnMars/MDEM200M/ImageServer",
-  copyright:
-    "NASA, ESA, HRSC, Goddard Space Flight Center, USGS Astrogeology Science Center, Esri",
+  copyright: "NASA, ESA, HRSC, Goddard Space Flight Center, USGS Astrogeology Science Center, Esri",
 });
 
 export const marsHiRiseImagery = new TileLayer({
@@ -213,7 +212,7 @@ export const missionLayer = new FeatureLayer({
               color: "white",
             },
             size: 12,
-          } as any,
+          },
         ],
         callout: {
           type: "line",

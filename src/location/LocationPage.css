@@ -1,0 +1,6 @@
+.eyebrow {
+  color: var(--calcite-color-text-2);
+  font-size: var(--calcite-font-size-relative-sm);
+  padding: var(--calcite-spacing-md) var(--calcite-spacing-lg);
+  margin: 0;
+}
