@@ -3,7 +3,7 @@ import { useMutation } from "@tanstack/react-query";
 import Graphic from "@arcgis/core/Graphic";
 import Environment from "@arcgis/core/views/3d/environment/Environment";
 import type SceneView from "@arcgis/core/views/SceneView";
-import type GraphicsLayer from "@arcgis/core/layers/GraphicsLayer";
+import { useScene } from "../application/SceneContext";
 import FeatureLayer from "@arcgis/core/layers/FeatureLayer";
 import type Point from "@arcgis/core/geometry/Point";
 import Polygon from "@arcgis/core/geometry/Polygon";
@@ -23,19 +23,16 @@ import "@esri/calcite-components/components/calcite-button";
 import "@esri/calcite-components/components/calcite-notice";
 import "./AddRegion.css";
 
-interface Props {
-  view: SceneView;
-  regions: GraphicsLayer;
-  editing: GraphicsLayer;
-}
-
 const earthEnvironment = new Environment({
   atmosphereEnabled: false,
   starsEnabled: false,
   background: { type: "color", color: [0, 0, 0, 0] },
 });
 
-export function AddRegionPage({ view, regions, editing }: Props) {
+export function AddRegionPage() {
+  const { view, resources } = useScene();
+  const regions = resources.regions;
+  const editing = resources.regionHandles;
   const [placed, setPlaced] = useState<Graphic | null>(() => regions.graphics.getItemAt(0) ?? null);
   const [error, setError] = useState<string | null>(null);
   const sketch = useRef<SketchViewModel | null>(null);
@@ -233,9 +230,6 @@ export function AddRegionPage({ view, regions, editing }: Props) {
     <>
       {!placed ? (
         <>
-          <p className="instructions">
-            Select a region on Earth, then place its real-world footprint on Mars.
-          </p>
           <arcgis-scene
             className="earth-scene"
             itemId="df5009a0ea79444e92f48f50fe171bf1"

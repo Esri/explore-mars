@@ -14,8 +14,34 @@
  */
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import { comparisonModes, measurementTools, panels } from "./src/application/panels";
 
 export default defineConfig({
-  plugins: [react({ compiler: true })],
+  plugins: [
+    react({ compiler: true }),
+    {
+      name: "panel-entry-points",
+      enforce: "post",
+      generateBundle(_, bundle) {
+        const index = bundle["index.html"];
+        if (!index || index.type !== "asset") {
+          this.error("The application entry page was not generated.");
+        }
+        const entries = [
+          ...Object.values(panels),
+          ...Object.values(measurementTools),
+          ...Object.values(comparisonModes),
+        ];
+        for (const { to } of entries) {
+          this.emitFile({
+            type: "asset",
+            fileName: `${to.slice(1)}/index.html`,
+            source: index.source,
+          });
+        }
+        this.emitFile({ type: "asset", fileName: "404.html", source: index.source });
+      },
+    },
+  ],
   assetsInclude: ["**/*.zip", "**/*.gltf"],
 });

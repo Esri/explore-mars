@@ -1,5 +1,4 @@
 import { useState } from "react";
-import "@esri/calcite-components/components/calcite-button";
 import "@esri/calcite-components/components/calcite-alert";
 
 export function CookieBanner() {
@@ -29,9 +28,6 @@ export function CookieBanner() {
       <span slot="message">
         This app uses cookies to access data layers and enhance your experience.
       </span>
-      <calcite-button slot="link" appearance="transparent" onClick={dismiss}>
-        Dismiss
-      </calcite-button>
     </calcite-alert>
   );
 }

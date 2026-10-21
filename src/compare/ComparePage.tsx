@@ -1,24 +1,13 @@
-import { useState } from "react";
-import type SceneView from "@arcgis/core/views/SceneView";
-import type { SceneResources } from "../application/scene";
-import { AddObjectPage } from "./AddObject";
-import { AddRegionPage } from "./AddRegion";
+import { Outlet, useMatches, useNavigate } from "@tanstack/react-router";
+import { useScene } from "../application/SceneContext";
+import { comparisonModes } from "../application/panels";
 import "@esri/calcite-components/components/calcite-segmented-control";
 import "@esri/calcite-components/components/calcite-segmented-control-item";
 
-export function ComparePage({
-  view,
-  resources,
-  active,
-}: {
-  view: SceneView;
-  resources: SceneResources;
-  active: boolean;
-}) {
-  const [mode, setMode] = useState<"models" | "regions">("models");
-  if (!active) {
-    return null;
-  }
+export function ComparePage() {
+  const { reportError } = useScene();
+  const activePath = useMatches({ select: (matches) => matches.at(-1)?.fullPath });
+  const navigate = useNavigate();
 
   return (
     <>
@@ -28,21 +17,17 @@ export function ComparePage({
         oncalciteSegmentedControlChange={(event) => {
           const value = event.currentTarget.value;
           if (value === "models" || value === "regions") {
-            setMode(value);
+            void navigate({ to: comparisonModes[value].to }).catch(reportError);
           }
         }}
       >
-        <calcite-segmented-control-item value="models" checked={mode === "models"}>
-          3D models
-        </calcite-segmented-control-item>
-        <calcite-segmented-control-item value="regions" checked={mode === "regions"}>
-          Earth regions
-        </calcite-segmented-control-item>
+        {Object.entries(comparisonModes).map(([mode, { to, label }]) => (
+          <calcite-segmented-control-item key={mode} value={mode} checked={activePath === to}>
+            {label}
+          </calcite-segmented-control-item>
+        ))}
       </calcite-segmented-control>
-      {mode === "models" && <AddObjectPage view={view} layer={resources.models} />}
-      {mode === "regions" && (
-        <AddRegionPage view={view} regions={resources.regions} editing={resources.regionHandles} />
-      )}
+      <Outlet />
     </>
   );
 }

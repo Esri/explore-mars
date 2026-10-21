@@ -3,11 +3,6 @@ import { PanelSection } from "../utility-components/PanelSection";
 export function CreditsPage() {
   return (
     <>
-      <h2>Explore Mars in 3D</h2>
-      <p className="instructions">
-        Explore the surface with imagery and detailed terrain. Place Earth-sized regions and 3D
-        models to better understand distances and elevation on Mars.
-      </p>
       <p className="instructions">
         Built with{" "}
         <a href="https://developers.arcgis.com/javascript/">ArcGIS Maps SDK for JavaScript</a>,{" "}

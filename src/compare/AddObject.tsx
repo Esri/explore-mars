@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import Graphic from "@arcgis/core/Graphic";
-import type SceneView from "@arcgis/core/views/SceneView";
-import type GraphicsLayer from "@arcgis/core/layers/GraphicsLayer";
+import { useScene } from "../application/SceneContext";
 import FillSymbol3DLayer from "@arcgis/core/symbols/FillSymbol3DLayer";
 import MeshSymbol3D from "@arcgis/core/symbols/MeshSymbol3D";
 import SketchViewModel from "@arcgis/core/widgets/Sketch/SketchViewModel";
@@ -30,7 +29,9 @@ const objects = [
   { name: "Everest", url: everest },
 ];
 
-export function AddObjectPage({ view, layer }: { view: SceneView; layer: GraphicsLayer }) {
+export function AddObjectPage() {
+  const { view, resources } = useScene();
+  const layer = resources.models;
   const sketch = useRef<SketchViewModel | null>(null);
   const [name, setName] = useState<string | null>(() => {
     const graphic = layer.graphics.getItemAt(0);
@@ -99,9 +100,6 @@ export function AddObjectPage({ view, layer }: { view: SceneView; layer: Graphic
 
   return (
     <>
-      <p className="instructions">
-        Place a familiar landmark on Mars to compare its size with the terrain.
-      </p>
       <div className="model-grid">
         {objects.map((object) => (
           <calcite-button

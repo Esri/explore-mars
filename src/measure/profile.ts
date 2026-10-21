@@ -1,3 +1,5 @@
+import type { Area, Length } from "@arcgis/core/core/quantity";
+
 export interface ProfileSample {
   distance: number;
   elevation: number | null;
@@ -6,6 +8,10 @@ export interface ProfileSeries {
   id: string;
   title: string;
   samples: ProfileSample[];
+}
+
+export function formatQuantity(value: Length | Area | null | undefined) {
+  return value ? formatValue(value.value, value.unit) : "Not available";
 }
 
 export function formatValue(value: number | null | undefined, unit: string) {

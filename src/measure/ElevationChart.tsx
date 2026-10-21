@@ -38,6 +38,13 @@ export function ElevationChart({
   const hasSamples = profiles.some((profile) =>
     profile.samples.some((sample) => sample.elevation != null && Number.isFinite(sample.elevation)),
   );
+  useEffect(() => {
+    if (!hasSamples) {
+      setRange([0, 100]);
+      setFocused(null);
+      clearIndicator();
+    }
+  }, [hasSamples]);
   const definition = defineChart({
     marks: profiles.map((profile, index) =>
       lineY(profile.samples, {

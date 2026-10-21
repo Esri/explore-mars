@@ -1,0 +1,158 @@
+import {
+  createRootRoute,
+  createRoute,
+  createRouter,
+  lazyRouteComponent,
+  redirect,
+} from "@tanstack/react-router";
+import Application from "./application/Application";
+import { NotFoundPanel, PanelError, PanelLoading, ToolPanel } from "./application/ToolPanel";
+import { comparisonModes, measurementTools, panels } from "./application/panels";
+
+const rootRoute = createRootRoute({ component: Application });
+const indexRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/",
+  component: () => null,
+});
+const panelRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  id: "_panel",
+  component: ToolPanel,
+});
+const locationsRoute = createRoute({
+  getParentRoute: () => panelRoute,
+  path: panels.locations.to,
+  staticData: {
+    panelTitle: panels.locations.label,
+    panelDescription: "Rover landing sites",
+  },
+  component: lazyRouteComponent(() => import("./location/LocationPage"), "LocationPage"),
+});
+const measureRoute = createRoute({
+  getParentRoute: () => panelRoute,
+  path: panels.measure.to,
+  staticData: {
+    panelTitle: panels.measure.label,
+    panelDescription: "Measure distance, area, and elevation on Mars.",
+  },
+  component: lazyRouteComponent(() => import("./measure/MeasurePage"), "MeasurePage"),
+});
+const measureIndexRoute = createRoute({
+  getParentRoute: () => measureRoute,
+  path: "/",
+  beforeLoad: () => {
+    throw redirect({ to: measurementTools.line.to, replace: true });
+  },
+});
+const lineRoute = createRoute({
+  getParentRoute: () => measureRoute,
+  path: "line",
+  component: lazyRouteComponent(
+    () => import("./measure/LineMeasurementPage"),
+    "LineMeasurementPage",
+  ),
+});
+const areaRoute = createRoute({
+  getParentRoute: () => measureRoute,
+  path: "area",
+  component: lazyRouteComponent(
+    () => import("./measure/AreaMeasurementPage"),
+    "AreaMeasurementPage",
+  ),
+});
+const elevationRoute = createRoute({
+  getParentRoute: () => measureRoute,
+  path: "elevation",
+  component: lazyRouteComponent(
+    () => import("./measure/ElevationProfilePage"),
+    "ElevationProfilePage",
+  ),
+});
+const compareRoute = createRoute({
+  getParentRoute: () => panelRoute,
+  path: panels.compare.to,
+  staticData: {
+    panelTitle: panels.compare.label,
+    panelDescription: "Compare Earth landmarks and regions with the Martian terrain.",
+  },
+  component: lazyRouteComponent(() => import("./compare/ComparePage"), "ComparePage"),
+});
+const compareIndexRoute = createRoute({
+  getParentRoute: () => compareRoute,
+  path: "/",
+  beforeLoad: () => {
+    throw redirect({ to: comparisonModes.models.to, replace: true });
+  },
+});
+const modelsRoute = createRoute({
+  getParentRoute: () => compareRoute,
+  path: "models",
+  staticData: {
+    panelDescription: "Place a familiar landmark on Mars to compare its size with the terrain.",
+  },
+  component: lazyRouteComponent(() => import("./compare/AddObject"), "AddObjectPage"),
+});
+const regionsRoute = createRoute({
+  getParentRoute: () => compareRoute,
+  path: "regions",
+  staticData: {
+    panelDescription: "Select a region on Earth, then place its real-world footprint on Mars.",
+  },
+  component: lazyRouteComponent(() => import("./compare/AddRegion"), "AddRegionPage"),
+});
+const layersRoute = createRoute({
+  getParentRoute: () => panelRoute,
+  path: panels.layers.to,
+  staticData: {
+    panelTitle: panels.layers.label,
+    panelDescription:
+      "High-resolution HiRISE imagery appears automatically when you move close to the surface.",
+  },
+  component: lazyRouteComponent(() => import("./application/BasemapSwitcher"), "BasemapSwitcher"),
+});
+const aboutRoute = createRoute({
+  getParentRoute: () => panelRoute,
+  path: panels.about.to,
+  staticData: {
+    panelTitle: panels.about.label,
+    panelDescription: "Discover Mars with interactive maps, measurements, and comparisons.",
+  },
+  component: lazyRouteComponent(() => import("./credits/CreditsPage"), "CreditsPage"),
+});
+const notFoundRoute = createRoute({
+  getParentRoute: () => panelRoute,
+  path: "$",
+  staticData: { panelTitle: "Page not found" },
+  component: NotFoundPanel,
+});
+
+export const routeTree = rootRoute.addChildren([
+  indexRoute,
+  panelRoute.addChildren([
+    locationsRoute,
+    measureRoute.addChildren([measureIndexRoute, lineRoute, areaRoute, elevationRoute]),
+    compareRoute.addChildren([compareIndexRoute, modelsRoute, regionsRoute]),
+    layersRoute,
+    aboutRoute,
+    notFoundRoute,
+  ]),
+]);
+
+export const router = createRouter({
+  routeTree,
+  basepath: import.meta.env.BASE_URL,
+  defaultPendingComponent: PanelLoading,
+  defaultErrorComponent: PanelError,
+  trailingSlash: "never",
+});
+
+declare module "@tanstack/react-router" {
+  interface Register {
+    router: typeof router;
+  }
+  interface StaticDataRouteOption {
+    panelTitle?: string;
+    panelDescription?: string;
+  }
+}

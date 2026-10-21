@@ -1,9 +1,10 @@
 import { createRoot } from "react-dom/client";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { RouterProvider } from "@tanstack/react-router";
 import "@esri/calcite-components/main.css";
 import "@arcgis/map-components/main.css";
 import "./general.css";
-import Application from "./application/Application";
+import { router } from "./router";
 
 const container = document.getElementById("application");
 if (!container) {
@@ -14,6 +15,6 @@ const queryClient = new QueryClient();
 
 createRoot(container).render(
   <QueryClientProvider client={queryClient}>
-    <Application />
+    <RouterProvider router={router} />
   </QueryClientProvider>,
 );
