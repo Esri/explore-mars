@@ -1,0 +1,7 @@
+arcgis-direct-line-measurement-3d,
+arcgis-area-measurement-3d,
+arcgis-elevation-profile {
+  width: 100%;
+
+  --calcite-color-foreground-1: var(--calcite-color-background);
+}

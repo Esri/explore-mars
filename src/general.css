@@ -7,7 +7,6 @@
   --calcite-color-surface-highlight: #4b3227;
   --calcite-color-text-highlight: #f6a17b;
   --calcite-color-text-inverse: #151515;
-  --ts-chart-color: var(--calcite-color-text-2);
 
   font-family: var(--calcite-font-family);
   font-size: var(--calcite-font-size-md);

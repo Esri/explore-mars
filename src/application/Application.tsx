@@ -61,6 +61,7 @@ export default function Application() {
       <calcite-shell contentBehind>
         <arcgis-scene
           ref={scene}
+          id="mars-scene"
           className="mars-scene"
           map={resources.map}
           spatialReference={resources.spatialReference}

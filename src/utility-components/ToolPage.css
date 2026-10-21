@@ -1,0 +1,6 @@
+.tool-page {
+  padding: var(--calcite-spacing-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--calcite-spacing-sm);
+}

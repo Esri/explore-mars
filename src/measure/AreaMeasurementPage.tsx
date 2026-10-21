@@ -1,42 +1,16 @@
-import { useEffect } from "react";
-import AreaMeasurementAnalysis from "@arcgis/core/analysis/AreaMeasurementAnalysis";
-import type AreaMeasurementAnalysisView3D from "@arcgis/core/views/3d/analysis/AreaMeasurementAnalysisView3D";
-import { useMeasurementSettings } from "./MeasurePage";
-import { MeasurementMetrics, MeasurementPanel } from "./MeasurementPanel";
-import { useMeasurement } from "./useMeasurement";
-import { formatQuantity } from "./profile";
-
-function readResults(analysisView: AreaMeasurementAnalysisView3D) {
-  const result = analysisView.result;
-  return result
-    ? [
-        { label: "Area", value: formatQuantity(result.area) },
-        { label: "Perimeter", value: formatQuantity(result.perimeter) },
-      ]
-    : [];
-}
+import { useScene } from "../application/SceneContext";
+import "@arcgis/map-components/components/arcgis-area-measurement-3d";
 
 export function AreaMeasurementPage() {
-  const { units } = useMeasurementSettings();
-  const measurement = useMeasurement(
-    () => new AreaMeasurementAnalysis({ unit: units }),
-    readResults,
-    [],
-  );
-  const { analysisView, results } = measurement;
-
-  useEffect(() => {
-    if (analysisView) {
-      analysisView.analysis.unit = units;
-    }
-  }, [analysisView, units]);
+  const { reportError } = useScene();
 
   return (
-    <MeasurementPanel
-      measurement={measurement}
-      instructions="Click to add points on Mars. Double-click the final point. Press Escape or Stop drawing to finish."
-    >
-      <MeasurementMetrics metrics={results} />
-    </MeasurementPanel>
+    <arcgis-area-measurement-3d
+      referenceElement="mars-scene"
+      unit="metric"
+      onarcgisReady={(event) => {
+        void event.currentTarget.start().catch(reportError);
+      }}
+    />
   );
 }

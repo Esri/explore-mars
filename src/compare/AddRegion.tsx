@@ -271,20 +271,6 @@ export function AddRegionPage() {
         <PanelSection>
           <h3>{String(placed.getAttribute("label"))}</h3>
           <EditingInfo />
-          <calcite-button
-            appearance="outline"
-            iconStart="trash"
-            onClick={() => {
-              sketch.current?.cancel();
-              regions.removeAll();
-              editing.removeAll();
-              setPlaced(null);
-              selection.reset();
-              placement.reset();
-            }}
-          >
-            Remove region
-          </calcite-button>
         </PanelSection>
       )}
       {message && (

@@ -24,7 +24,6 @@
     "@arcgis/core": "6.0.0-next.13",
     "@arcgis/map-components": "6.0.0-next.13",
     "@esri/calcite-components": "5.2.0-next.105",
-    "@tanstack/charts": "^1.1.0",
     "@tanstack/react-query": "^5.104.5",
     "@tanstack/react-router": "^1.170.45",
     "@zip.js/zip.js": "^2.7.29",

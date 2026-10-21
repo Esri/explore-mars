@@ -125,18 +125,6 @@ export function AddObjectPage() {
         <PanelSection>
           <h3>{name}</h3>
           <EditingInfo />
-          <calcite-button
-            appearance="outline"
-            iconStart="trash"
-            onClick={() => {
-              loadModel.reset();
-              sketch.current?.cancel();
-              layer.removeAll();
-              setName(null);
-            }}
-          >
-            Remove model
-          </calcite-button>
         </PanelSection>
       )}
     </>

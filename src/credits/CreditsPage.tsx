@@ -6,8 +6,8 @@ export function CreditsPage() {
       <p className="instructions">
         Built with{" "}
         <a href="https://developers.arcgis.com/javascript/">ArcGIS Maps SDK for JavaScript</a>,{" "}
-        <a href="https://developers.arcgis.com/calcite-design-system/">Calcite Design System</a>,
-        React and TanStack Charts.
+        <a href="https://developers.arcgis.com/calcite-design-system/">Calcite Design System</a> and
+        React.
       </p>
       <PanelSection>
         <h3>Data credits</h3>
