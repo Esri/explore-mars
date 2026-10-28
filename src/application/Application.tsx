@@ -10,7 +10,7 @@ import { SceneNavigation } from "./SceneNavigation";
 import { ToolToolbar } from "./ToolToolbar";
 import { createSceneResources, initialCamera } from "./scene";
 import { panels } from "./panels";
-import { errorMessage } from "../utilities/errors";
+import { errorMessage, isAbortError } from "../utilities/errors";
 import "@arcgis/map-components/components/arcgis-scene";
 import "@esri/calcite-components/components/calcite-alert";
 import "@esri/calcite-components/components/calcite-button";
@@ -30,6 +30,9 @@ export default function Application() {
   const scene = useRef<ArcgisScene>(null);
 
   const reportError = (cause: unknown) => {
+    if (isAbortError(cause)) {
+      return;
+    }
     console.error(cause);
     setError(errorMessage(cause));
   };
@@ -69,6 +72,7 @@ export default function Application() {
           environment={resources.environment}
           theme={resources.theme}
           popupDisabled
+          qualityProfile="high"
           onarcgisViewReadyChange={(event) => {
             if (event.currentTarget.ready) {
               ready.resolve({ view: event.currentTarget.view, resources, reportError });

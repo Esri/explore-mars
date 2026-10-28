@@ -3,7 +3,6 @@ import Camera from "@arcgis/core/Camera";
 import type SceneView from "@arcgis/core/views/SceneView";
 import * as reactiveUtils from "@arcgis/core/core/reactiveUtils";
 import { useScene } from "./SceneContext";
-import { isAbortError } from "../utilities/errors";
 import "@esri/calcite-components/components/calcite-action";
 import "@esri/calcite-components/components/calcite-action-bar";
 
@@ -19,11 +18,7 @@ export function SceneNavigation() {
   }, [view]);
 
   const navigate = (target: Parameters<SceneView["goTo"]>[0]) => {
-    void view.goTo(target).catch((error: unknown) => {
-      if (!isAbortError(error)) {
-        reportError(error);
-      }
-    });
+    void view.goTo(target).catch(reportError);
   };
 
   return (

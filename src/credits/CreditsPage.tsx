@@ -15,10 +15,6 @@ export function CreditsPage() {
           NASA, ESA, HRSC, Goddard Space Flight Center, USGS Astrogeology Science Center, Esri and
           JPL.
         </p>
-        <p className="muted">
-          Layer-specific credits are shown along the bottom of the scene. Elevation measurements
-          reflect the resolution of the available terrain, not a survey.
-        </p>
       </PanelSection>
     </>
   );

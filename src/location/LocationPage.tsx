@@ -2,7 +2,6 @@ import { useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "@tanstack/react-router";
 import Camera from "@arcgis/core/Camera";
 import { useScene } from "../application/SceneContext";
-import { isAbortError } from "../utilities/errors";
 import "@esri/calcite-components/components/calcite-list";
 import "@esri/calcite-components/components/calcite-list-item";
 
@@ -62,11 +61,7 @@ export function LocationPage() {
   const animatedLocation = useRef<string | null>(null);
 
   const goToLocation = (camera: Camera) => {
-    void view.goTo(camera).catch((error: unknown) => {
-      if (!isAbortError(error)) {
-        reportError(error);
-      }
-    });
+    void view.goTo(camera).catch(reportError);
   };
 
   useEffect(() => {

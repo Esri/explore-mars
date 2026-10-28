@@ -1,10 +1,11 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import Graphic from "@arcgis/core/Graphic";
 import { useScene } from "../application/SceneContext";
 import FillSymbol3DLayer from "@arcgis/core/symbols/FillSymbol3DLayer";
 import MeshSymbol3D from "@arcgis/core/symbols/MeshSymbol3D";
 import SketchViewModel from "@arcgis/core/widgets/Sketch/SketchViewModel";
+import { createFromGLTF } from "@arcgis/core/geometry/support/meshUtils.js";
 import { importModel } from "./GlTFImporter";
 import { EditingInfo } from "./ComparePage";
 import { PanelSection } from "../utility-components/PanelSection";
@@ -19,7 +20,7 @@ import "@esri/calcite-components/components/calcite-button";
 import "@esri/calcite-components/components/calcite-loader";
 import "@esri/calcite-components/components/calcite-notice";
 import "./AddObject.css";
-import { createFromGLTF } from "@arcgis/core/geometry/support/meshUtils.js";
+
 const objects = [
   { name: "Zurich", url: zurich },
   { name: "Manhattan", url: manhattan },
@@ -30,14 +31,20 @@ const objects = [
 ];
 
 export function AddObjectPage() {
-  const { view, resources } = useScene();
+  const { view, resources, reportError } = useScene();
   const layer = resources.models;
-  const sketch = useRef<SketchViewModel | null>(null);
-  const [name, setName] = useState<string | null>(() => {
-    const graphic = layer.graphics.getItemAt(0);
-    return graphic ? String(graphic.getAttribute("name")) : null;
-  });
-  const [error, setError] = useState<string | null>(null);
+  const [sketch] = useState(
+    () =>
+      new SketchViewModel({
+        view,
+        layer,
+        defaultUpdateOptions: {
+          toggleToolOnClick: false,
+          enableScaling: false,
+          enableZ: true,
+        },
+      }),
+  );
   const loadModel = useMutation({
     mutationFn: async (object: (typeof objects)[number]) => {
       const resource = await importModel(object.url);
@@ -55,48 +62,29 @@ export function AddObjectPage() {
       }
     },
   });
-
-  function reportError(cause: unknown) {
-    if (!isAbortError(cause)) {
-      console.error(cause);
-      setError(errorMessage(cause));
-    }
-  }
+  const placed = loadModel.data ?? layer.graphics.getItemAt(0);
+  const name = placed ? String(placed.getAttribute("name")) : null;
+  const { reset } = loadModel;
 
   useEffect(() => {
-    const model = new SketchViewModel({
-      view,
-      layer,
-      defaultUpdateOptions: {
-        toggleToolOnClick: false,
-        enableScaling: false,
-        enableZ: true,
-      },
-    });
-    sketch.current = model;
-    const handle = model.on("delete", () => setName(null));
-    return () => {
-      handle.remove();
-      model.destroy();
-      sketch.current = null;
-    };
-  }, [view, layer]);
+    sketch.addHandles(sketch.on("delete", () => reset()));
+    return () => sketch.destroy();
+  }, [sketch, reset]);
 
   const addModel = (object: (typeof objects)[number]) => {
-    setError(null);
     loadModel.mutate(object, {
       onSuccess: (graphic) => {
-        sketch.current?.cancel();
+        sketch.cancel();
         layer.removeAll();
         layer.add(graphic);
-        setName(object.name);
         void view.goTo({ target: graphic, scale: 250000, tilt: 70 }).catch(reportError);
-        void sketch.current?.update(graphic, { enableScaling: false }).catch(reportError);
+        void sketch.update(graphic, { enableScaling: false }).catch(reportError);
       },
     });
   };
 
-  const message = error ?? (loadModel.error ? errorMessage(loadModel.error) : null);
+  const message =
+    loadModel.error && !isAbortError(loadModel.error) ? errorMessage(loadModel.error) : null;
 
   return (
     <>

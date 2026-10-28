@@ -15,7 +15,6 @@
 import type Point from "@arcgis/core/geometry/Point";
 import Polygon from "@arcgis/core/geometry/Polygon";
 import type SpatialReference from "@arcgis/core/geometry/SpatialReference";
-import * as centroidOperator from "@arcgis/core/geometry/operators/centroidOperator";
 import type SceneView from "@arcgis/core/views/SceneView";
 import { mat4, vec3, type vec4 } from "gl-matrix";
 import * as webgl from "@arcgis/core/views/3d/webgl.js";
@@ -29,15 +28,14 @@ const MAX_LON = 180;
 export default class PolygonTransform {
   constructor(public view: SceneView) {}
 
-  public rotate(polygon: Polygon, angle: number) {
+  public rotationMatrix(center: Point, angle: number) {
     const rot = vec3.create();
-    const centroid = this.centroid(polygon);
 
     webgl.toRenderCoordinates(
       this.view,
-      [centroid.x, centroid.y, 0],
+      [center.x, center.y, 0],
       0,
-      polygon.spatialReference,
+      center.spatialReference,
       rot,
       0,
       1,
@@ -45,24 +43,22 @@ export default class PolygonTransform {
 
     const mat = mat4.create();
     mat4.rotate(mat, mat, angle, rot);
-    return this.transformPolygon(polygon, mat);
+    return mat;
   }
 
-  public moveTo(polygon: Polygon, point: Point) {
-    const centroid = this.centroid(polygon);
+  public moveMatrix(from: Point, point: Point) {
     const mat = mat4.create();
 
     this.addZRotation(point, mat, false);
     this.addYRotation(point, mat, false);
 
-    this.addYRotation(centroid, mat, true);
-    this.addZRotation(centroid, mat, true);
+    this.addYRotation(from, mat, true);
+    this.addZRotation(from, mat, true);
 
-    return this.transformPolygon(polygon, mat);
+    return mat;
   }
 
-  public scale(polygon: Polygon, factor: number) {
-    const centroid = this.centroid(polygon);
+  public scale(polygon: Polygon, factor: number, centroid: Point) {
     const cx = centroid.x;
     const cy = centroid.y;
 
@@ -93,7 +89,6 @@ export default class PolygonTransform {
   private angle(vector: vec3, other: vec3) {
     const cosAngle = vec3.dot(vector, other) / (vec3.length(vector) * vec3.length(other));
     return -Math.acos(this.clamp(cosAngle, -1, 1));
-    // return -acosClamped(cosAngle);
   }
 
   private axisAngleFromPoints(fromPoint: vec3, toPoint: vec3, outAxisAngle = [0, 0, 1, 0] as vec4) {
@@ -122,15 +117,12 @@ export default class PolygonTransform {
     return [newCoordSR[0], newCoordSR[1]];
   }
 
-  private transformPolygon(polygon: Polygon, mat: mat4) {
+  public transform(polygon: Polygon, mat: mat4, centroid: Point) {
     const rings = [];
 
     const sr = polygon.spatialReference;
-    const centroid = this.centroid(polygon);
 
     const [cLon] = this.transformCoordinates(centroid.x, centroid.y, sr, mat);
-
-    // const result = polygon.clone();
 
     for (const ring of polygon.rings) {
       const newCoords = [];
@@ -152,10 +144,6 @@ export default class PolygonTransform {
       rings,
       spatialReference: sr,
     });
-  }
-
-  private centroid(polygon: Polygon) {
-    return centroidOperator.execute(polygon);
   }
 
   private addZRotation(point: Point, mat: mat4, invert: boolean) {

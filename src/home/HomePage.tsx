@@ -4,7 +4,7 @@ import type { ErrorComponentProps } from "@tanstack/react-router";
 import Camera from "@arcgis/core/Camera";
 import { useScene } from "../application/SceneContext";
 import { initialCamera } from "../application/scene";
-import { errorMessage, isAbortError } from "../utilities/errors";
+import { errorMessage } from "../utilities/errors";
 import "@esri/calcite-components/components/calcite-button";
 import "@esri/calcite-components/components/calcite-dialog";
 import "@esri/calcite-components/components/calcite-notice";
@@ -77,11 +77,7 @@ function StartExploring({ onStart }: { onStart: () => void }) {
               tilt: 0.15,
             }),
           )
-          .catch((error: unknown) => {
-            if (!isAbortError(error)) {
-              reportError(error);
-            }
-          });
+          .catch(reportError);
       }}
     >
       Start exploring
