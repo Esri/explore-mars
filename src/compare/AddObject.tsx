@@ -61,6 +61,7 @@ export function AddObjectPage() {
         resource.dispose();
       }
     },
+    gcTime: 0,
   });
   const placed = loadModel.data ?? layer.graphics.getItemAt(0);
   const name = placed ? String(placed.getAttribute("name")) : null;

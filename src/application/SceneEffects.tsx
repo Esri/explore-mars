@@ -6,9 +6,10 @@ import { marsHiRiseImagery, marsImageryBasemap } from "../utilities/layers";
 import { useScene } from "./SceneContext";
 
 export function SceneEffects({ welcome }: { welcome: boolean }) {
-  const { view, reportError } = useScene();
+  const { view, resources, reportError } = useScene();
   const { mutate: updateVisibility, reset } = useMutation({
-    mutationFn: () => view.hitTest({ x: view.width / 2, y: view.height / 2 }),
+    mutationFn: () =>
+      view.hitTest({ x: view.width / 2, y: view.height / 2 }, { include: [resources.map.ground] }),
     networkMode: "always",
   });
 
