@@ -95,14 +95,6 @@ const regionsRoute = createRoute({
   },
   component: lazyRouteComponent(() => import("./compare/AddRegion"), "AddRegionPage"),
 });
-const layersRoute = createRoute({
-  getParentRoute: () => panelRoute,
-  path: panels.layers.to,
-  staticData: {
-    panelTitle: panels.layers.label,
-  },
-  component: lazyRouteComponent(() => import("./application/BasemapSwitcher"), "BasemapSwitcher"),
-});
 const aboutRoute = createRoute({
   getParentRoute: () => panelRoute,
   path: panels.about.to,
@@ -124,7 +116,6 @@ export const routeTree = rootRoute.addChildren([
     locationsRoute,
     measureRoute.addChildren([measureIndexRoute, lineRoute, areaRoute, elevationRoute]),
     compareRoute.addChildren([compareIndexRoute, modelsRoute, regionsRoute]),
-    layersRoute,
     aboutRoute,
     notFoundRoute,
   ]),

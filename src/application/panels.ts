@@ -14,11 +14,6 @@ export const panels = {
     label: "Compare",
     icon: "compare",
   },
-  layers: {
-    to: "/layers",
-    label: "Layers",
-    icon: "layers",
-  },
   about: {
     to: "/about",
     label: "Credits",

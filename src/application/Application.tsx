@@ -7,6 +7,7 @@ import { CookieBanner } from "../utility-components/CookieBanner";
 import { SceneContext, type SceneContextValue } from "./SceneContext";
 import { SceneEffects } from "./SceneEffects";
 import { SceneNavigation } from "./SceneNavigation";
+import { BasemapSwitcher } from "./BasemapSwitcher";
 import { ToolToolbar } from "./ToolToolbar";
 import { createSceneResources, initialCamera } from "./scene";
 import { panels } from "./panels";
@@ -99,6 +100,7 @@ export default function Application() {
             >
               <SceneEffects welcome={welcome} />
               <SceneNavigation />
+              <BasemapSwitcher />
               <ToolToolbar />
             </Suspense>
           </CatchBoundary>
