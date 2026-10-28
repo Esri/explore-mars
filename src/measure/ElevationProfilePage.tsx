@@ -11,8 +11,8 @@ export function ElevationProfilePage() {
   const [profiles] = useState(
     () =>
       new Collection<ElevationProfileLineUnion>([
-        new ElevationProfileLineGround({ title: "Terrain", color: "#f6a17b" }),
-        new ElevationProfileLineScene({ title: "Scene / models", color: "#9bc7df" }),
+        new ElevationProfileLineGround({ color: "#f6a17b" }),
+        new ElevationProfileLineScene({ color: "#9bc7df" }),
       ]),
   );
 

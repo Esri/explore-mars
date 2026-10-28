@@ -21,7 +21,7 @@ export const panels = {
   },
   about: {
     to: "/about",
-    label: "About Explore Mars",
+    label: "Credits",
     icon: "information",
   },
 } as const;
@@ -33,6 +33,6 @@ export const measurementTools = {
 } as const;
 
 export const comparisonModes = {
-  models: { to: "/compare/models", label: "3D models" },
-  regions: { to: "/compare/regions", label: "Earth regions" },
+  models: { to: "/compare/models", label: "Models" },
+  regions: { to: "/compare/regions", label: "Regions" },
 } as const;

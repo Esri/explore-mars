@@ -8,8 +8,7 @@ import "@esri/calcite-components/components/calcite-list-item";
 const locations = [
   {
     id: "perseverance",
-    name: "Perseverance",
-    place: "Jezero crater",
+    name: "Perseverance Rover",
     camera: new Camera({
       position: {
         x: 77.31831,
@@ -23,8 +22,7 @@ const locations = [
   },
   {
     id: "curiosity",
-    name: "Curiosity",
-    place: "Gale crater",
+    name: "Curiosity Rover",
     camera: new Camera({
       position: {
         x: 136.90526,
@@ -38,8 +36,7 @@ const locations = [
   },
   {
     id: "opportunity",
-    name: "Opportunity",
-    place: "Meridiani Planum",
+    name: "Opportunity Rover",
     camera: new Camera({
       position: {
         x: -5.7945,
@@ -83,7 +80,6 @@ export function LocationPage() {
           key={location.id}
           value={location.id}
           label={location.name}
-          description={location.place}
           selected={selected?.id === location.id}
           oncalciteListItemSelect={(event) => {
             if (event.currentTarget.selected) {

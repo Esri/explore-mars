@@ -24,7 +24,7 @@ import "./AddObject.css";
 const objects = [
   { name: "Zurich", url: zurich },
   { name: "Manhattan", url: manhattan },
-  { name: "Kilimanjaro", url: kilimanjaro },
+  { name: "Killimanjaro", url: kilimanjaro },
   { name: "Grand Canyon", url: grandCanyon },
   { name: "Dubai", url: dubai },
   { name: "Everest", url: everest },

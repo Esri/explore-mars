@@ -26,7 +26,8 @@ export function CookieBanner() {
       }}
     >
       <span slot="message">
-        This app uses cookies to access data layers and enhance your experience.
+        By using this app, you agree to the storing of cookies on your device to access data layers,
+        enhance user experience and analyze site usage.
       </span>
     </calcite-alert>
   );

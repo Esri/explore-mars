@@ -21,31 +21,26 @@ export function LandingPage({ open, onStart }: LandingPageProps) {
       className="welcome-content"
       slot="dialogs"
       open={open}
-      heading="Explore Mars"
+      heading="Explore Mars!"
       modal
       closeDisabled
       outsideCloseDisabled
       escapeDisabled
       width="s"
     >
-      <h1>The red planet, closer than ever.</h1>
       <p>
-        Explore Mars, its canyons, mountains and craters, and the landing sites of previous
-        missions.
-      </p>
-      <p>
-        Measure the terrain or place Earth-sized regions and 3D models on the surface to see Mars in
-        perspective.
+        Have you always dreamt of being an astronaut? Come close by exploring Mars, its canyons,
+        mountains and craters along with the location of previous missions!
       </p>
       <p className="muted">
-        Drag to explore. Use the right mouse button to tilt, the scroll wheel to zoom, or navigate
-        with W, A, S, D and the arrow keys.
+        Tip: to navigate use the left and right mouse buttons, or with your keyboard using W,A,S,D +
+        arrow keys.
       </p>
       <CatchBoundary getResetKey={() => open} errorComponent={StartError}>
         <Suspense
           fallback={
             <calcite-button slot="footer-end" disabled loading>
-              Start exploring
+              Start now!
             </calcite-button>
           }
         >
@@ -80,7 +75,7 @@ function StartExploring({ onStart }: { onStart: () => void }) {
           .catch(reportError);
       }}
     >
-      Start exploring
+      Start now!
     </calcite-button>
   );
 }

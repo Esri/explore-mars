@@ -61,7 +61,7 @@ export function AddRegionPage() {
         (result) => result.type === "graphic" && result.graphic.layer instanceof FeatureLayer,
       );
       if (!hit || hit.type !== "graphic" || !(hit.graphic.layer instanceof FeatureLayer)) {
-        throw new Error("Select a country on the Earth globe.");
+        throw new Error("Select a region on the globe");
       }
       const layerView = await earthView.whenLayerView(hit.graphic.layer);
       return { graphic: hit.graphic, layerView };
@@ -243,7 +243,7 @@ export function AddRegionPage() {
             onarcgisViewClick={(event) => selectCountry(event.currentTarget.view, event.detail)}
             onarcgisLoadError={(event) => reportError(event.detail)}
             onarcgisViewReadyError={(event) => reportError(event.detail)}
-            aria-label="Select a country on Earth"
+            aria-label="Select a region on the globe"
           />
           <p className="muted" role="status">
             {selected ? "Region selected" : "No region selected"}

@@ -8,8 +8,7 @@ export function ComparePage() {
 export function EditingInfo() {
   return (
     <p className="instructions">
-      Drag the handles in the scene to move or rotate the comparison. Its real-world size is
-      preserved. Select it again to continue editing. Press Delete to clear it.
+      Move the object in the view using the handles. Press "delete" to remove the object.
     </p>
   );
 }
