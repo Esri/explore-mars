@@ -11,39 +11,39 @@
   "scripts": {
     "start": "npm run dev",
     "dev": "vite",
-    "build": "tsc --noEmit && vite build",
+    "build": "tsc && vite build",
     "serve": "vite preview",
     "lint": "oxlint --type-aware",
     "lint:css": "stylelint 'src/**/*.css'",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc",
     "format": "oxfmt 'src/**/*.{ts,tsx,css}' '*.ts' '*.json' index.html",
     "format:check": "npm run format -- --check",
     "fix": "oxlint --type-aware --fix && stylelint --fix 'src/**/*.css' && npm run format"
   },
   "dependencies": {
-    "@arcgis/core": "6.0.0-next.13",
-    "@arcgis/map-components": "6.0.0-next.13",
-    "@esri/calcite-components": "5.2.0-next.105",
-    "@tanstack/react-query": "^5.104.5",
-    "@tanstack/react-router": "^1.170.45",
-    "@zip.js/zip.js": "^2.7.29",
-    "gl-matrix": "^3.4.3",
+    "@arcgis/core": "6.0.0-next.21",
+    "@arcgis/map-components": "6.0.0-next.21",
+    "@esri/calcite-components": "5.2.0",
+    "@tanstack/react-query": "^5.105.0",
+    "@tanstack/react-router": "^1.170.46",
+    "@zip.js/zip.js": "^2.24.0",
+    "gl-matrix": "^3.4.4",
     "react": "^19.3.1",
-    "react-dom": "^19.3.1",
-    "typescript": "^7.0.2",
-    "vite": "^8.3.4"
+    "react-dom": "^19.3.1"
   },
   "devDependencies": {
-    "@types/node": "^24.0.0",
+    "@types/node": "^24.19.2",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.1.2",
     "oxc-transform-react": "^0.152.0",
-    "oxfmt": "^0.74.0",
-    "oxlint": "^1.89.0",
-    "oxlint-tsgolint": "^7.0.2004",
-    "stylelint": "^16.3.1",
-    "stylelint-config-standard": "^36.0.0"
+    "oxfmt": "^0.75.0",
+    "oxlint": "^1.90.0",
+    "oxlint-tsgolint": "^7.0.2005",
+    "stylelint": "^17.16.0",
+    "stylelint-config-standard": "^40.0.0",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.5"
   },
   "stylelint": {
     "extends": "stylelint-config-standard"

@@ -1,11 +1,13 @@
 {
   "compilerOptions": {
+    "allowImportingTsExtensions": true,
     "esModuleInterop": true,
     "importHelpers": true,
     "jsx": "react-jsx",
     "lib": ["ES2024", "DOM"],
     "module": "ESNext",
     "moduleResolution": "bundler",
+    "noEmit": true,
     "noImplicitAny": true,
     "preserveConstEnums": true,
     "resolveJsonModule": true,

@@ -14,7 +14,7 @@
  */
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
-import { comparisonModes, measurementTools, panels } from "./src/application/panels";
+import { comparisonModes, measurementTools, panels } from "./src/application/panels.ts";
 
 export default defineConfig({
   plugins: [
