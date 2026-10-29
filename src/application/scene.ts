@@ -3,13 +3,7 @@ import Camera from "@arcgis/core/Camera";
 import Environment from "@arcgis/core/views/3d/environment/Environment";
 import GraphicsLayer from "@arcgis/core/layers/GraphicsLayer";
 import Theme from "@arcgis/core/views/Theme";
-import {
-  marsImageryBasemap,
-  marsSR,
-  marsElevation,
-  marsNamesLayer,
-  missionLayer,
-} from "../utilities/layers";
+import { createMarsLayers } from "../utilities/layers";
 
 export const initialCamera = new Camera({
   position: {
@@ -23,6 +17,15 @@ export const initialCamera = new Camera({
 });
 
 export function createSceneResources() {
+  const {
+    spatialReference,
+    imageryBasemap,
+    reliefBasemap,
+    hiRiseImagery,
+    elevation,
+    names,
+    missions,
+  } = createMarsLayers();
   const models = new GraphicsLayer({
     id: "add-object",
     title: "Earth models",
@@ -39,15 +42,18 @@ export function createSceneResources() {
     elevationInfo: { mode: "on-the-ground" },
   });
   return {
-    spatialReference: marsSR,
+    spatialReference,
+    imageryBasemap,
+    reliefBasemap,
+    hiRiseImagery,
     theme: new Theme({ accentColor: "#f6a17b" }),
     environment: new Environment({
       lighting: { type: "virtual", directShadowsEnabled: true },
     }),
     map: new Map({
-      basemap: marsImageryBasemap,
-      ground: { surfaceColor: [144, 106, 100], layers: [marsElevation] },
-      layers: [marsNamesLayer, missionLayer, regions, regionHandles, models],
+      basemap: imageryBasemap,
+      ground: { surfaceColor: [144, 106, 100], layers: [elevation] },
+      layers: [names, missions, regions, regionHandles, models],
     }),
     models,
     regions,
