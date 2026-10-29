@@ -2,9 +2,15 @@ import type Graphic from "@arcgis/core/Graphic";
 import Point from "@arcgis/core/geometry/Point";
 import Polygon from "@arcgis/core/geometry/Polygon";
 import type SceneView from "@arcgis/core/views/SceneView";
-import type { UpdateEvent } from "@arcgis/core/widgets/Sketch/types";
+import type { RedoEvent, UndoEvent, UpdateEvent } from "@arcgis/core/widgets/Sketch/types";
 import type { mat4 } from "gl-matrix";
 import PolygonTransform from "./PolygonTransform";
+
+type RegionSnapshot = {
+  polygon: Polygon;
+  preview: Polygon;
+  position: Point;
+};
 
 type EditingRegion = {
   country: Graphic;
@@ -14,12 +20,14 @@ type EditingRegion = {
   anchor: Point;
   position: Point;
   matrix?: mat4;
-  before?: { polygon: Polygon; preview: Polygon; position: Point };
+  before?: RegionSnapshot;
 };
 
 export default class RegionEditor {
   private transform: PolygonTransform;
   private region: EditingRegion | null = null;
+  private history: RegionSnapshot[] = [];
+  private historyIndex = 0;
 
   constructor(view: SceneView) {
     this.transform = new PolygonTransform(view);
@@ -33,6 +41,7 @@ export default class RegionEditor {
     if (!(country.geometry instanceof Polygon) || !(center.geometry instanceof Point)) {
       throw new Error("The region is missing its footprint or editing handle.");
     }
+    this.clear();
     this.region = {
       country,
       center,
@@ -45,11 +54,22 @@ export default class RegionEditor {
 
   clear() {
     this.region = null;
+    this.history = [];
+    this.historyIndex = 0;
   }
 
-  update(event: UpdateEvent) {
+  update(event: UpdateEvent | UndoEvent | RedoEvent) {
     const region = this.region;
     if (!region) {
+      return;
+    }
+    if (event.type === "undo" || event.type === "redo") {
+      const index = this.historyIndex + (event.type === "undo" ? -1 : 1);
+      const snapshot = this.history[index];
+      if (snapshot) {
+        this.restore(region, snapshot);
+        this.historyIndex = index;
+      }
       return;
     }
     if (event.aborted) {
@@ -58,16 +78,16 @@ export default class RegionEditor {
     }
     if (event.state === "start") {
       this.commit(region);
-      region.before = {
-        polygon: region.polygon,
-        preview: region.preview,
-        position: region.position.clone(),
-      };
+      region.before = this.snapshot(region);
+      this.history = [region.before];
+      this.historyIndex = 0;
       return;
     }
     if (event.state === "complete") {
       this.commit(region);
       region.before = undefined;
+      this.history = [];
+      this.historyIndex = 0;
       return;
     }
     const info = event.toolEventInfo;
@@ -93,6 +113,9 @@ export default class RegionEditor {
 
     if (info.type === "move-stop" || info.type === "rotate-stop") {
       this.commit(region);
+      this.history.splice(this.historyIndex + 1);
+      this.history.push(this.snapshot(region));
+      this.historyIndex += 1;
     } else {
       region.country.geometry = this.transform.transform(
         region.preview,
@@ -112,16 +135,33 @@ export default class RegionEditor {
     region.country.geometry = region.polygon;
   }
 
+  private snapshot(region: EditingRegion): RegionSnapshot {
+    return {
+      polygon: region.polygon,
+      preview: region.preview,
+      position: region.position.clone(),
+    };
+  }
+
+  private restore(region: EditingRegion, snapshot: RegionSnapshot) {
+    region.polygon = snapshot.polygon;
+    region.preview = snapshot.preview;
+    region.position = snapshot.position.clone();
+    region.anchor = region.position.clone();
+    region.matrix = undefined;
+    region.country.geometry = region.polygon;
+    region.center.geometry = region.position.clone();
+  }
+
   private cancel(region: EditingRegion) {
     if (region.before) {
-      region.polygon = region.before.polygon;
-      region.preview = region.before.preview;
-      region.position = region.before.position.clone();
-      region.anchor = region.position.clone();
+      this.restore(region, region.before);
     }
     region.matrix = undefined;
     region.before = undefined;
     region.country.geometry = region.polygon;
     region.center.geometry = region.position.clone();
+    this.history = [];
+    this.historyIndex = 0;
   }
 }

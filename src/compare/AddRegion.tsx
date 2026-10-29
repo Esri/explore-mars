@@ -7,7 +7,7 @@ import { useScene } from "../application/SceneContext";
 import FeatureLayer from "@arcgis/core/layers/FeatureLayer";
 import Polygon from "@arcgis/core/geometry/Polygon";
 import SketchViewModel from "@arcgis/core/widgets/Sketch/SketchViewModel";
-import type { UpdateEvent } from "@arcgis/core/widgets/Sketch/types";
+import type { RedoEvent, UndoEvent, UpdateEvent } from "@arcgis/core/widgets/Sketch/types";
 import * as centroidOperator from "@arcgis/core/geometry/operators/centroidOperator";
 import ObjectSymbol3DLayer from "@arcgis/core/symbols/ObjectSymbol3DLayer";
 import PointSymbol3D from "@arcgis/core/symbols/PointSymbol3D";
@@ -135,6 +135,13 @@ export function AddRegionPage() {
 
   useEffect(() => {
     editing.visible = true;
+    const updateRegion = (event: UpdateEvent | UndoEvent | RedoEvent) => {
+      try {
+        editor.update(event);
+      } catch (cause) {
+        reportError(cause);
+      }
+    };
     sketch.addHandles([
       sketch.on("delete", () => {
         editor.clear();
@@ -144,13 +151,9 @@ export function AddRegionPage() {
         resetPlacement();
         resetEditing();
       }),
-      sketch.on("update", (event: UpdateEvent) => {
-        try {
-          editor.update(event);
-        } catch (cause) {
-          reportError(cause);
-        }
-      }),
+      sketch.on("update", updateRegion),
+      sketch.on("undo", updateRegion),
+      sketch.on("redo", updateRegion),
       view.on("click", (event) => {
         const country = regions.graphics.getItemAt(0);
         if (country) {
