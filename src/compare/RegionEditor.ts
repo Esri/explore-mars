@@ -9,18 +9,19 @@ import PolygonTransform from "./PolygonTransform";
 type RegionSnapshot = {
   polygon: Polygon;
   preview: Polygon;
-  position: Point;
+  handlePosition: Point;
 };
 
 type EditingRegion = {
   country: Graphic;
-  center: Graphic;
+  handle: Graphic;
+  // Commit full-resolution polygons; render simplified previews during gestures.
   polygon: Polygon;
   preview: Polygon;
-  anchor: Point;
-  position: Point;
-  matrix?: mat4;
-  before?: RegionSnapshot;
+  transformOrigin: Point;
+  handlePosition: Point;
+  pendingTransform?: mat4;
+  sessionSnapshot?: RegionSnapshot;
 };
 
 export default class RegionEditor {
@@ -37,18 +38,18 @@ export default class RegionEditor {
     return this.region?.country;
   }
 
-  setRegion(country: Graphic, center: Graphic, preview: Polygon) {
-    if (!(country.geometry instanceof Polygon) || !(center.geometry instanceof Point)) {
+  setRegion(country: Graphic, handle: Graphic, preview: Polygon) {
+    if (!(country.geometry instanceof Polygon) || !(handle.geometry instanceof Point)) {
       throw new Error("The region is missing its footprint or editing handle.");
     }
     this.clear();
     this.region = {
       country,
-      center,
+      handle,
       polygon: country.geometry,
       preview,
-      anchor: center.geometry.clone(),
-      position: center.geometry.clone(),
+      transformOrigin: handle.geometry.clone(),
+      handlePosition: handle.geometry.clone(),
     };
   }
 
@@ -78,14 +79,14 @@ export default class RegionEditor {
     }
     if (event.state === "start") {
       this.commit(region);
-      region.before = this.snapshot(region);
-      this.history = [region.before];
+      region.sessionSnapshot = this.snapshot(region);
+      this.history = [region.sessionSnapshot];
       this.historyIndex = 0;
       return;
     }
     if (event.state === "complete") {
       this.commit(region);
-      region.before = undefined;
+      region.sessionSnapshot = undefined;
       this.history = [];
       this.historyIndex = 0;
       return;
@@ -99,14 +100,17 @@ export default class RegionEditor {
       this.commit(region);
     }
     if (info.type === "rotate" || info.type === "rotate-start" || info.type === "rotate-stop") {
-      region.matrix = this.transform.rotationMatrix(region.anchor, (info.angle * Math.PI) / 180);
+      region.pendingTransform = this.transform.rotationMatrix(
+        region.transformOrigin,
+        (info.angle * Math.PI) / 180,
+      );
     } else if (info.type === "move" || info.type === "move-start" || info.type === "move-stop") {
-      if (!(region.center.geometry instanceof Point)) {
+      if (!(region.handle.geometry instanceof Point)) {
         throw new Error("The region editing handle has no position.");
       }
-      const target = region.center.geometry.clone();
-      region.matrix = this.transform.moveMatrix(region.anchor, target);
-      region.position = target;
+      const target = region.handle.geometry.clone();
+      region.pendingTransform = this.transform.moveMatrix(region.transformOrigin, target);
+      region.handlePosition = target;
     } else {
       return;
     }
@@ -119,18 +123,26 @@ export default class RegionEditor {
     } else {
       region.country.geometry = this.transform.transform(
         region.preview,
-        region.matrix,
-        region.anchor,
+        region.pendingTransform,
+        region.transformOrigin,
       );
     }
   }
 
   private commit(region: EditingRegion) {
-    if (region.matrix) {
-      region.polygon = this.transform.transform(region.polygon, region.matrix, region.anchor);
-      region.preview = this.transform.transform(region.preview, region.matrix, region.anchor);
-      region.anchor = region.position.clone();
-      region.matrix = undefined;
+    if (region.pendingTransform) {
+      region.polygon = this.transform.transform(
+        region.polygon,
+        region.pendingTransform,
+        region.transformOrigin,
+      );
+      region.preview = this.transform.transform(
+        region.preview,
+        region.pendingTransform,
+        region.transformOrigin,
+      );
+      region.transformOrigin = region.handlePosition.clone();
+      region.pendingTransform = undefined;
     }
     region.country.geometry = region.polygon;
   }
@@ -139,28 +151,28 @@ export default class RegionEditor {
     return {
       polygon: region.polygon,
       preview: region.preview,
-      position: region.position.clone(),
+      handlePosition: region.handlePosition.clone(),
     };
   }
 
   private restore(region: EditingRegion, snapshot: RegionSnapshot) {
     region.polygon = snapshot.polygon;
     region.preview = snapshot.preview;
-    region.position = snapshot.position.clone();
-    region.anchor = region.position.clone();
-    region.matrix = undefined;
+    region.handlePosition = snapshot.handlePosition.clone();
+    region.transformOrigin = region.handlePosition.clone();
+    region.pendingTransform = undefined;
     region.country.geometry = region.polygon;
-    region.center.geometry = region.position.clone();
+    region.handle.geometry = region.handlePosition.clone();
   }
 
   private cancel(region: EditingRegion) {
-    if (region.before) {
-      this.restore(region, region.before);
+    if (region.sessionSnapshot) {
+      this.restore(region, region.sessionSnapshot);
     }
-    region.matrix = undefined;
-    region.before = undefined;
+    region.pendingTransform = undefined;
+    region.sessionSnapshot = undefined;
     region.country.geometry = region.polygon;
-    region.center.geometry = region.position.clone();
+    region.handle.geometry = region.handlePosition.clone();
     this.history = [];
     this.historyIndex = 0;
   }
