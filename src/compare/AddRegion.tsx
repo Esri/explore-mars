@@ -7,6 +7,7 @@ import { useScene } from "../application/SceneContext";
 import FeatureLayer from "@arcgis/core/layers/FeatureLayer";
 import Polygon from "@arcgis/core/geometry/Polygon";
 import SketchViewModel from "@arcgis/core/widgets/Sketch/SketchViewModel";
+import * as reactiveUtils from "@arcgis/core/core/reactiveUtils";
 import type { RedoEvent, UndoEvent, UpdateEvent } from "@arcgis/core/widgets/Sketch/types";
 import * as centroidOperator from "@arcgis/core/geometry/operators/centroidOperator";
 import ObjectSymbol3DLayer from "@arcgis/core/symbols/ObjectSymbol3DLayer";
@@ -32,6 +33,7 @@ export function AddRegionPage() {
   const { view, resources, reportError } = useScene();
   const regions = resources.regions;
   const editing = resources.regionHandles;
+  const [hasRegion, setHasRegion] = useState(() => regions.graphics.length > 0);
   const [sketch] = useState(
     () =>
       new SketchViewModel({
@@ -127,7 +129,6 @@ export function AddRegionPage() {
       return { country, preview, centerPoint };
     },
   });
-  const placed = placement.data?.country ?? regions.graphics.getItemAt(0);
   const selected = selection.data?.graphic;
   const { reset: resetSelection } = selection;
   const { reset: resetPlacement } = placement;
@@ -143,6 +144,7 @@ export function AddRegionPage() {
       }
     };
     sketch.addHandles([
+      reactiveUtils.watch(() => regions.graphics.length > 0, setHasRegion, { initial: true }),
       sketch.on("delete", () => {
         editor.clear();
         regions.removeAll();
@@ -235,7 +237,7 @@ export function AddRegionPage() {
 
   return (
     <>
-      {!placed ? (
+      {!hasRegion ? (
         <>
           <arcgis-scene
             className="earth-scene"

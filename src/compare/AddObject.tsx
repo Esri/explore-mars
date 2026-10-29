@@ -5,6 +5,7 @@ import { useScene } from "../application/SceneContext";
 import FillSymbol3DLayer from "@arcgis/core/symbols/FillSymbol3DLayer";
 import MeshSymbol3D from "@arcgis/core/symbols/MeshSymbol3D";
 import SketchViewModel from "@arcgis/core/widgets/Sketch/SketchViewModel";
+import * as reactiveUtils from "@arcgis/core/core/reactiveUtils";
 import { createFromGLTF } from "@arcgis/core/geometry/support/meshUtils.js";
 import { importModel } from "./GlTFImporter";
 import { EditingInfo } from "./ComparePage";
@@ -33,6 +34,7 @@ const objects = [
 export function AddObjectPage() {
   const { view, resources, reportError } = useScene();
   const layer = resources.models;
+  const [placed, setPlaced] = useState(() => layer.graphics.getItemAt(0));
   const [sketch] = useState(
     () =>
       new SketchViewModel({
@@ -63,14 +65,16 @@ export function AddObjectPage() {
     },
     gcTime: 0,
   });
-  const placed = loadModel.data ?? layer.graphics.getItemAt(0);
   const name = placed ? String(placed.getAttribute("name")) : null;
   const { reset } = loadModel;
 
   useEffect(() => {
-    sketch.addHandles(sketch.on("delete", () => reset()));
+    sketch.addHandles([
+      reactiveUtils.watch(() => layer.graphics.getItemAt(0), setPlaced, { initial: true }),
+      sketch.on("delete", () => reset()),
+    ]);
     return () => sketch.destroy();
-  }, [sketch, reset]);
+  }, [layer, sketch, reset]);
 
   const addModel = (object: (typeof objects)[number]) => {
     loadModel.mutate(object, {
