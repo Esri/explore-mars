@@ -5,6 +5,8 @@ import { generalizeExecute } from "@arcgis/core/geometry/operators/generalizeOpe
 import { projectExecute, projectLoad } from "@arcgis/core/geometry/operators/projectOperator";
 import type { RegionWorkerRequest, RegionWorkerResponse } from "./regionWorker";
 
+// This original preprocessing distance is independent of the Earth-to-Mars scale factor.
+const FOOTPRINT_BUFFER_METERS = 1.887;
 const projectionReady = projectLoad();
 
 self.onmessage = async (event: MessageEvent<RegionWorkerRequest>) => {
@@ -15,7 +17,7 @@ self.onmessage = async (event: MessageEvent<RegionWorkerRequest>) => {
     const request = event.data;
     let polygon = new Polygon(request.polygon);
     if (request.type === "prepare") {
-      const buffered = bufferExecute(polygon, 1.887, { unit: "meters" });
+      const buffered = bufferExecute(polygon, FOOTPRINT_BUFFER_METERS, { unit: "meters" });
 
       if (!(buffered instanceof Polygon)) {
         throw new Error("Could not prepare the region footprint.");

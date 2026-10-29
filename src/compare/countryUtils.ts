@@ -24,6 +24,9 @@ import type SceneView from "@arcgis/core/views/SceneView";
 import PolygonTransform from "./PolygonTransform";
 import { prepareRegion } from "./regionWorker";
 
+// Retain the original app's comparison factor so existing footprint sizes do not change.
+const EARTH_TO_MARS_SCALE = 1.887;
+
 export async function graphicFromCountry(
   selectedRegion: Graphic,
   view: SceneView,
@@ -65,7 +68,7 @@ export async function graphicFromCountry(
   const geometry = spherical.transform(polygon, move, anchor);
   const movedPreview = spherical.transform(preview, move, anchor);
   const center = centroidOperator.execute(geometry);
-  const current = spherical.scale(geometry, 1.887, center);
+  const current = spherical.scale(geometry, EARTH_TO_MARS_SCALE, center);
 
   const country = new Graphic({
     geometry: current,
@@ -84,5 +87,5 @@ export async function graphicFromCountry(
     }),
   });
 
-  return { country, preview: spherical.scale(movedPreview, 1.887, center) };
+  return { country, preview: spherical.scale(movedPreview, EARTH_TO_MARS_SCALE, center) };
 }
