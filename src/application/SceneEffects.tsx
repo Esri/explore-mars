@@ -9,15 +9,7 @@ export function SceneEffects({ welcome }: { welcome: boolean }) {
   const { view, resources, reportError } = useScene();
   useEffect(() => {
     const controller = new AbortController();
-    const updateVisibility = promiseUtils.debounce(async () => {
-      const result = await view.hitTest(
-        { x: view.width / 2, y: view.height / 2 },
-        { include: [resources.map.ground] },
-      );
-      controller.signal.throwIfAborted();
-      marsHiRiseImagery.visible =
-        result.ground?.mapPoint != null && (result.ground.distance ?? Infinity) < 10000;
-    });
+    const hitTest = promiseUtils.debounce(view.hitTest.bind(view));
     const handles = [
       reactiveUtils.watch(
         () => view.map?.basemap,
@@ -27,10 +19,21 @@ export function SceneEffects({ welcome }: { welcome: boolean }) {
         { initial: true },
       ),
       reactiveUtils.watch(
-        () => view.stationary,
-        (stationary) => {
-          if (stationary) {
-            void updateVisibility().catch(reportError);
+        () => [view.stationary, view.width, view.height] as const,
+        async ([stationary, width, height]) => {
+          if (!stationary) {
+            return;
+          }
+          try {
+            const result = await hitTest(
+              { x: width / 2, y: height / 2 },
+              { include: [resources.map.ground] },
+            );
+            controller.signal.throwIfAborted();
+            marsHiRiseImagery.visible =
+              result.ground?.mapPoint != null && (result.ground.distance ?? Infinity) < 10000;
+          } catch (cause) {
+            reportError(cause);
           }
         },
         { initial: true },
