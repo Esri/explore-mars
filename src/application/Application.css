@@ -4,11 +4,13 @@
 
 .tool-panel {
   --calcite-panel-space: var(--calcite-spacing-lg);
+  --scene-side-controls-clearance: 112px;
+  --scene-bottom-controls-clearance: 136px;
 
   box-shadow: var(--calcite-shadow-md);
   width: 360px;
-  max-width: calc(100cqw - 112px);
-  max-height: calc(100cqh - 136px);
+  max-width: calc(100cqw - var(--scene-side-controls-clearance));
+  max-height: calc(100cqh - var(--scene-bottom-controls-clearance));
 }
 
 .scene-loading {
@@ -19,7 +21,7 @@
 
 @media (width <= 600px) {
   .tool-panel {
-    max-width: calc(100cqw - 88px);
-    max-height: calc(100cqh - 140px);
+    --scene-side-controls-clearance: 88px;
+    --scene-bottom-controls-clearance: 140px;
   }
 }
