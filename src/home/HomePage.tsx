@@ -10,12 +10,12 @@ import "@esri/calcite-components/components/calcite-dialog";
 import "@esri/calcite-components/components/calcite-notice";
 import "./HomePage.css";
 
-interface LandingPageProps {
+interface HomePageProps {
   open: boolean;
   onStart: () => void;
 }
 
-export function LandingPage({ open, onStart }: LandingPageProps) {
+export function HomePage({ open, onStart }: HomePageProps) {
   return (
     <calcite-dialog
       className="welcome-content"

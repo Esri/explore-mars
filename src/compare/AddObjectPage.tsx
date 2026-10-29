@@ -20,7 +20,7 @@ import everest from "./gltf/everest.zip";
 import "@esri/calcite-components/components/calcite-button";
 import "@esri/calcite-components/components/calcite-loader";
 import "@esri/calcite-components/components/calcite-notice";
-import "./AddObject.css";
+import "./AddObjectPage.css";
 
 const objects = [
   { name: "Zurich", url: zurich },

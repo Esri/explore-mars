@@ -21,7 +21,7 @@ import { errorMessage, isAbortError } from "../utilities/errors";
 import "@arcgis/map-components/components/arcgis-scene";
 import "@esri/calcite-components/components/calcite-button";
 import "@esri/calcite-components/components/calcite-notice";
-import "./AddRegion.css";
+import "./AddRegionPage.css";
 
 const earthEnvironment = new Environment({
   atmosphereEnabled: false,

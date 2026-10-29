@@ -2,7 +2,7 @@ import { Suspense, useEffect, useRef, useState } from "react";
 import { CatchBoundary, Outlet, useRouterState } from "@tanstack/react-router";
 import type { ArcgisScene } from "@arcgis/map-components/components/arcgis-scene";
 import * as reactiveUtils from "@arcgis/core/core/reactiveUtils";
-import { LandingPage } from "../home/HomePage";
+import { HomePage } from "../home/HomePage";
 import { CookieBanner } from "../utility-components/CookieBanner";
 import { SceneContext, type SceneContextValue } from "./SceneContext";
 import { SceneEffects } from "./SceneEffects";
@@ -130,7 +130,7 @@ export default function Application() {
             </calcite-button>
           </calcite-alert>
         )}
-        <LandingPage open={welcome} onStart={() => setWelcome(false)} />
+        <HomePage open={welcome} onStart={() => setWelcome(false)} />
         <CookieBanner />
       </calcite-shell>
     </SceneContext>

@@ -85,7 +85,7 @@ const compareIndexRoute = createRoute({
 const modelsRoute = createRoute({
   getParentRoute: () => compareRoute,
   path: "models",
-  component: lazyRouteComponent(() => import("./compare/AddObject"), "AddObjectPage"),
+  component: lazyRouteComponent(() => import("./compare/AddObjectPage"), "AddObjectPage"),
 });
 const regionsRoute = createRoute({
   getParentRoute: () => compareRoute,
@@ -93,7 +93,7 @@ const regionsRoute = createRoute({
   staticData: {
     panelDescription: "Select a region on the globe",
   },
-  component: lazyRouteComponent(() => import("./compare/AddRegion"), "AddRegionPage"),
+  component: lazyRouteComponent(() => import("./compare/AddRegionPage"), "AddRegionPage"),
 });
 const aboutRoute = createRoute({
   getParentRoute: () => panelRoute,
