@@ -2,12 +2,12 @@
 
 ## Prerequisites
 
-- Node.js 16.0+
+- Node.js 22.12.0 or newer
 
-The project uses Prettier for formatting, as well as ESLint and Stylelint for linting. You can have a look at their respective editor integration documentation to see how to use them with your development environment:
+The project uses Oxfmt for formatting, Oxlint for type-aware JavaScript/TypeScript linting, and Stylelint for CSS linting:
 
-- [Prettier](https://prettier.io/docs/en/editors)
-- [ESLint](https://eslint.org/docs/latest/use/integrations#editors)
+- [Oxfmt](https://oxc.rs/docs/guide/usage/formatter.html)
+- [Oxlint](https://oxc.rs/docs/guide/usage/linter.html)
 - [Stylelint](https://github.com/stylelint/awesome-stylelint#editor-integrations)
 
 ## Run project locally
@@ -15,20 +15,31 @@ The project uses Prettier for formatting, as well as ESLint and Stylelint for li
 To start:
 
 ```
-npm install
+npm ci
 npm start
 ```
 
-Then open your browser at http://localhost:3000/
+Open the local URL printed by Vite, normally http://localhost:5173/.
 
-## Create productive build
+## Check the source
+
+```
+npm run typecheck
+npm run lint
+npm run lint:css
+npm run format:check
+```
+
+Use `npm run format` to format the source, or `npm run fix` to apply automatic lint and formatting fixes.
+
+## Create a production build
 
 ```
 npm run build
 npm run serve
 ```
 
-The `build` command will output all the files needed for serving the web application to the `dist` folder.
+The `build` command type-checks the source and outputs all the files needed for serving the web application to the `dist` folder. The `serve` command previews that build at the URL printed by Vite.
 
 ## Deploy to [GitHub Pages](https://pages.github.com/)
 
