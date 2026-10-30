@@ -209,7 +209,7 @@ export function AddRegionPage() {
           symbol: new PointSymbol3D({
             symbolLayers: [
               new ObjectSymbol3DLayer({
-                material: { color: "#f6a17b" },
+                material: { color: resources.theme.accentColor },
                 width: 5000,
                 height: 5000,
                 depth: 5000,

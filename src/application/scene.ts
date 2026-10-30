@@ -47,7 +47,7 @@ export function createSceneResources() {
     imageryBasemap,
     reliefBasemap,
     hiRiseImagery,
-    theme: new Theme({ accentColor: "#f6a17b" }),
+    theme: new Theme({ accentColor: "rgb(0,255,0)" }),
     options: new ViewOptions({
       displayUnits: { length: "metric", verticalLength: "metric", area: "metric" },
     }),
