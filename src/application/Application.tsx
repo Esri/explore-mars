@@ -72,12 +72,17 @@ export default function Application() {
           camera={initialCamera}
           environment={resources.environment}
           theme={resources.theme}
-          options={resources.options}
           popupDisabled
           qualityProfile="high"
           onarcgisViewReadyChange={(event) => {
             if (event.currentTarget.ready) {
-              ready.resolve({ view: event.currentTarget.view, resources, reportError });
+              const view = event.currentTarget.view;
+              view.options.displayUnits = {
+                length: "metric",
+                verticalLength: "metric",
+                area: "metric",
+              };
+              ready.resolve({ view, resources, reportError });
             }
           }}
           onarcgisViewReadyError={(event) => failView(event.detail)}

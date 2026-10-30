@@ -3,7 +3,6 @@ import Camera from "@arcgis/core/Camera";
 import Environment from "@arcgis/core/views/3d/environment/Environment";
 import GraphicsLayer from "@arcgis/core/layers/GraphicsLayer";
 import Theme from "@arcgis/core/views/Theme";
-import ViewOptions from "@arcgis/core/views/interactive/options/ViewOptions";
 import { createMarsLayers } from "../utilities/layers";
 
 export const initialCamera = new Camera({
@@ -48,9 +47,6 @@ export function createSceneResources() {
     reliefBasemap,
     hiRiseImagery,
     theme: new Theme({ accentColor: "rgb(0,255,0)" }),
-    options: new ViewOptions({
-      displayUnits: { length: "metric", verticalLength: "metric", area: "metric" },
-    }),
     environment: new Environment({
       lighting: { type: "virtual", directShadowsEnabled: true },
     }),
