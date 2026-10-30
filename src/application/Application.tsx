@@ -72,6 +72,7 @@ export default function Application() {
           camera={initialCamera}
           environment={resources.environment}
           theme={resources.theme}
+          options={resources.options}
           popupDisabled
           qualityProfile="high"
           onarcgisViewReadyChange={(event) => {

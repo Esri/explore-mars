@@ -7,7 +7,6 @@ export function AreaMeasurementPage() {
   return (
     <arcgis-area-measurement-3d
       referenceElement="mars-scene"
-      unit="metric"
       onarcgisReady={(event) => {
         void event.currentTarget.start().catch(reportError);
       }}
