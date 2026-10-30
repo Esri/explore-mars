@@ -43,6 +43,8 @@ export default defineConfig({
       },
     },
   ],
+  // Discover lazy worker dependencies before the first placement can trigger a full reload.
+  optimizeDeps: { entries: ["index.html", "src/compare/region.worker.ts"] },
   worker: { format: "es" },
   assetsInclude: ["**/*.zip", "**/*.gltf"],
 });
