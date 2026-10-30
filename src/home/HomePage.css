@@ -1,0 +1,7 @@
+.welcome-content {
+  line-height: var(--calcite-font-line-height-lg);
+
+  & h1 {
+    font-weight: var(--calcite-font-weight-medium);
+  }
+}

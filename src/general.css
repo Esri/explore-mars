@@ -1,0 +1,42 @@
+:root {
+  color-scheme: dark;
+
+  --calcite-color-brand: #f6a17b;
+  --calcite-color-brand-hover: #ffc3a6;
+  --calcite-color-brand-press: #db8964;
+  --calcite-color-surface-highlight: #4b3227;
+  --calcite-color-text-highlight: #f6a17b;
+  --calcite-color-text-inverse: #151515;
+
+  font-family: var(--calcite-font-family);
+  font-size: var(--calcite-font-size-md);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#application {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+body {
+  background: var(--calcite-color-background);
+  color: var(--calcite-color-text-1);
+}
+
+a {
+  color: var(--calcite-color-brand);
+}
+
+.muted,
+.instructions {
+  color: var(--calcite-color-text-2);
+  font-size: var(--calcite-font-size-relative-base);
+  line-height: var(--calcite-font-line-height-md);
+}

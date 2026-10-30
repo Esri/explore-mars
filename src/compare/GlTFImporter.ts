@@ -1,121 +1,78 @@
-/* Copyright 2023 Esri
- *
- * Licensed under the Apache License Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-import * as zip from "@zip.js/zip.js";
+import { BlobWriter, HttpReader, ZipReader } from "@zip.js/zip.js";
 
-interface BlobZIPEntry {
-  name: string;
-  url: string;
-  blob: Blob;
+interface GltfResource {
+  uri?: string;
+}
+interface GltfDocument {
+  buffers?: GltfResource[];
+  images?: GltfResource[];
 }
 
-export async function importModel(url: string): Promise<string> {
-  const entries = await downloadAndExtractZip(url);
-  const blobEntries = await zipEntriesToBlob(entries);
-  const gltfBlob = await combineToSingleBlob(blobEntries);
+export async function importModel(url: string) {
+  const files = await readArchive(url);
+  const root = [...files.entries()].find(([name]) => name.endsWith(".gltf"));
+  if (!root) {
+    throw new Error("The model archive does not contain a .gltf file.");
+  }
 
-  return gltfBlob.url;
-}
+  const [filename, file] = root;
+  const document = JSON.parse(await file.text()) as GltfDocument;
+  const directory = filename.slice(0, filename.lastIndexOf("/") + 1);
+  const assetUrls: string[] = [];
+  const dispose = () => {
+    for (const url of assetUrls) {
+      URL.revokeObjectURL(url);
+    }
+  };
 
-async function downloadAndExtractZip(url: string): Promise<zip.Entry[]> {
-  const zipReader = new zip.ZipReader(
-    new zip.HttpReader(url, { preventHeadRequest: true }),
-  );
-  const entries = await zipReader.getEntries();
-
-  return entries;
-}
-
-async function zipEntriesToBlob(entries: zip.Entry[]) {
-  const fileEntries = entries.filter(
-    (entry): entry is zip.FileEntry => !entry.directory,
-  );
-
-  // we want to aggregate all of the promises, so we do not want to await them
-  // eslint-disable-next-line @typescript-eslint/promise-function-async
-  const promises = fileEntries.map((entry) =>
-    saveEntryToBlob(entry).then((blob) => {
-      return blob;
-    }),
-  );
-
-  const blobEntries = await Promise.all(promises);
-
-  return blobEntries.filter((entry): entry is BlobZIPEntry => entry != null);
-}
-
-async function saveEntryToBlob(
-  entry: zip.FileEntry,
-): Promise<BlobZIPEntry | undefined> {
-  const dataBlobWriter = new zip.BlobWriter("text/plain");
-  const data = await entry.getData(dataBlobWriter);
-  if (data != null) {
-    const url = URL.createObjectURL(data);
-    return {
-      name: entry.filename,
-      blob: data,
-      url,
-    };
+  try {
+    resolveResources(document, files, directory, assetUrls);
+    const blob = new Blob([JSON.stringify(document)], { type: "model/gltf+json" });
+    const url = URL.createObjectURL(blob);
+    assetUrls.push(url);
+    return { url, dispose };
+  } catch (cause) {
+    dispose();
+    throw cause;
   }
 }
 
-async function combineToSingleBlob(
-  entries: BlobZIPEntry[],
-): Promise<BlobZIPEntry> {
-  const rootEntry = entries.find((entry) => entry.name.match(/\.gltf$/));
-
-  if (rootEntry == null) {
-    return await Promise.reject("Can not find a .gltf file in ZIP archive");
-  }
-
-  const assets: Record<string, string> = {};
-  for (const entry of entries) {
-    assets[entry.name] = entry.url;
-  }
-
-  const reader = new FileReader();
-
-  return await new Promise((resolve, reject) => {
-    reader.onload = () => {
-      try {
-        const gltfJson = JSON.parse(reader.result as string);
-
-        // Replace original buffers and images by blob URLs
-        const buffers = gltfJson.buffers ?? [];
-        for (const buffer of buffers) {
-          buffer.uri = assets[buffer.uri];
-        }
-
-        const images = gltfJson.images ?? [];
-        for (const image of images) {
-          image.uri = assets[image.uri];
-        }
-
-        const gltfContent = JSON.stringify(gltfJson, null, 2);
-        const gltfBlob = new Blob([gltfContent], { type: "text/plain" });
-        const gltfUrl = URL.createObjectURL(gltfBlob);
-        resolve({
-          name: rootEntry.name,
-          url: gltfUrl,
-          blob: gltfBlob,
-        });
-      } catch (e) {
-        reject(e);
+async function readArchive(url: string) {
+  const reader = new ZipReader(new HttpReader(url, { preventHeadRequest: true }));
+  try {
+    const entries = await reader.getEntries();
+    const files = new Map<string, Blob>();
+    for (const entry of entries) {
+      if (entry.directory) {
+        continue;
       }
-    };
+      const blob = await entry.getData(new BlobWriter());
+      files.set(entry.filename, blob);
+    }
+    return files;
+  } finally {
+    await reader.close();
+  }
+}
 
-    // Read initial blob
-    reader.readAsText(rootEntry.blob);
-  });
+function resolveResources(
+  document: GltfDocument,
+  files: Map<string, Blob>,
+  directory: string,
+  assetUrls: string[],
+) {
+  const resources = [...(document.buffers ?? []), ...(document.images ?? [])];
+  for (const resource of resources) {
+    if (!resource.uri || resource.uri.startsWith("data:")) {
+      continue;
+    }
+    const path = decodeURIComponent(resource.uri);
+    const file = files.get(directory + path) ?? files.get(path);
+    if (!file) {
+      throw new Error(`The model archive is missing ${resource.uri}.`);
+    }
+    const assetUrl = URL.createObjectURL(file);
+    assetUrls.push(assetUrl);
+    resource.uri = assetUrl;
+  }
 }

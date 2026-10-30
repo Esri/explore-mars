@@ -14,40 +14,45 @@
  */
 import Graphic from "@arcgis/core/Graphic";
 import Point from "@arcgis/core/geometry/Point";
-import type Polygon from "@arcgis/core/geometry/Polygon";
+import Polygon from "@arcgis/core/geometry/Polygon";
 import SpatialReference from "@arcgis/core/geometry/SpatialReference";
-import * as bufferOperator from "@arcgis/core/geometry/operators/bufferOperator";
-import * as projectOperator from "@arcgis/core/geometry/operators/projectOperator";
-import type FeatureLayer from "@arcgis/core/layers/FeatureLayer";
+import * as centroidOperator from "@arcgis/core/geometry/operators/centroidOperator";
+import FeatureLayer from "@arcgis/core/layers/FeatureLayer";
 import FillSymbol3DLayer from "@arcgis/core/symbols/FillSymbol3DLayer";
 import PolygonSymbol3D from "@arcgis/core/symbols/PolygonSymbol3D";
 import type SceneView from "@arcgis/core/views/SceneView";
 import PolygonTransform from "./PolygonTransform";
+import { prepareRegion } from "./regionWorker";
+
+// Retain the original app's comparison factor so existing footprint sizes do not change.
+const EARTH_TO_MARS_SCALE = 1.887;
 
 export async function graphicFromCountry(
   selectedRegion: Graphic,
   view: SceneView,
+  signal: AbortSignal,
 ) {
-  await projectOperator.load();
+  const layer = selectedRegion.layer;
+  if (!(layer instanceof FeatureLayer)) {
+    throw new Error("Select a country from a feature layer.");
+  }
 
-  const layer = selectedRegion.layer as FeatureLayer;
-
-  const displayField = layer.displayField;
   const objectId = selectedRegion.getObjectId();
-  if (objectId == null || displayField == null) {
-    throw new Error("Selected region is missing required layer metadata");
+  if (objectId == null) {
+    throw new Error("The selected region is missing its object ID.");
   }
 
   const query = layer.createQuery();
   query.objectIds = [objectId];
   query.returnGeometry = true;
-  query.outFields = [displayField];
+  query.outFields = [];
   query.outSpatialReference = SpatialReference.WebMercator;
-  // query.outSpatialReference = view.spatialReference;
-  // query.maxAllowableOffset = 1000;
 
-  const result = await layer.queryFeatures(query);
+  const result = await layer.queryFeatures(query, { signal });
   const feature = result.features[0];
+  if (!(feature?.geometry instanceof Polygon)) {
+    throw new Error("The selected region does not have a polygon footprint.");
+  }
 
   const viewCenter = new Point({
     x: view.center.x,
@@ -57,20 +62,15 @@ export async function graphicFromCountry(
   const viewSR = view.spatialReference;
   const spherical = new PolygonTransform(view);
 
-  const label = feature.getAttribute(displayField);
-  let geometry = feature.geometry as Polygon;
-  geometry = bufferOperator.execute(geometry, 1.887, {
-    unit: "meters",
-  }) as Polygon;
-  geometry = projectOperator.execute(geometry, viewSR) as Polygon;
-  geometry = spherical.moveTo(geometry, viewCenter);
-
-  const current = spherical.scale(geometry, 1.887);
+  const { polygon, preview } = await prepareRegion(feature.geometry, viewSR, signal);
+  const anchor = centroidOperator.execute(polygon);
+  const move = spherical.moveMatrix(anchor, viewCenter);
+  const geometry = spherical.transform(polygon, move, anchor);
+  const movedPreview = spherical.transform(preview, move, anchor);
+  const center = centroidOperator.execute(geometry);
+  const current = spherical.scale(geometry, EARTH_TO_MARS_SCALE, center);
 
   const country = new Graphic({
-    attributes: {
-      label,
-    },
     geometry: current,
     symbol: new PolygonSymbol3D({
       symbolLayers: [
@@ -87,5 +87,5 @@ export async function graphicFromCountry(
     }),
   });
 
-  return country;
+  return { country, preview: spherical.scale(movedPreview, EARTH_TO_MARS_SCALE, center) };
 }

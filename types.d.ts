@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/* eslint-disable @typescript-eslint/triple-slash-reference */
-
 /// <reference types="./file-declarations.d.ts" />
 /// <reference types="vite/client" />
+/// <reference types="@arcgis/map-components/types/react" />
+/// <reference types="@esri/calcite-components/types/react" />

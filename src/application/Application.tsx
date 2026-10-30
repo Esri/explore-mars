@@ -1,84 +1,144 @@
-/* Copyright 2023 Esri
- *
- * Licensed under the Apache License Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-import { subclass } from "@arcgis/core/core/accessorSupport/decorators";
-import Widget from "@arcgis/core/widgets/Widget";
-import { tsx } from "@arcgis/core/widgets/support/widget";
-import AppState from "./AppState";
-import { ComparePage } from "../compare/ComparePage";
-import { MeasurePage } from "../measure/MeasurePages";
-import { match } from "ts-pattern";
-import type { Page } from "./AppState";
-import { LocationPage } from "../location/LocationPage";
-import { CreditsPage } from "../credits/CreditsPage";
-import { LandingPage } from "../home/HomePage";
+import { Suspense, useEffect, useRef, useState } from "react";
+import { CatchBoundary, Outlet, useRouterState } from "@tanstack/react-router";
+import type { ArcgisScene } from "@arcgis/map-components/components/arcgis-scene";
+import * as reactiveUtils from "@arcgis/core/core/reactiveUtils";
+import { HomePage } from "../home/HomePage";
 import { CookieBanner } from "../utility-components/CookieBanner";
-import { Loading } from "../utility-components/Loading";
-import styles from "./app.module.scss";
-import { MenuBar } from "../utility-components/menu-bar/MenuBar";
-import { Page as PageWrapper } from "../utility-components/Page";
+import { SceneContext, type SceneContextValue } from "./SceneContext";
+import { SceneEffects } from "./SceneEffects";
+import { SceneNavigation } from "./SceneNavigation";
 import { BasemapSwitcher } from "./BasemapSwitcher";
+import { ToolToolbar } from "./ToolToolbar";
+import { createSceneResources, initialCamera } from "./scene";
+import { panels } from "./panels";
+import { errorMessage, isAbortError } from "../utilities/errors";
+import "@arcgis/map-components/components/arcgis-scene";
+import "@esri/calcite-components/components/calcite-alert";
+import "@esri/calcite-components/components/calcite-button";
+import "@esri/calcite-components/components/calcite-loader";
+import "@esri/calcite-components/components/calcite-shell";
+import "./Application.css";
 
-@subclass("ExploreMars.Application")
-class Application extends Widget {
-  renderPage(page: string) {
-    return match(page)
-      .with("home", () => <div style="display:none;" />)
-      .with("landing", () => <div style="display:none;" />)
-      .with("measure", () => <MeasurePage />)
-      .with("compare", () => <ComparePage />)
-      .with("credits", () => <CreditsPage />)
-      .with("locations", () => <LocationPage />)
-      .run()!;
-  }
+export default function Application() {
+  const locationLink = useRouterState({
+    select: ({ location, matches }) =>
+      Boolean(location.hash) && matches.some((match) => match.fullPath === panels.locations.to),
+  });
+  const [resources] = useState(createSceneResources);
+  const [ready] = useState(() => Promise.withResolvers<SceneContextValue>());
+  const [welcome, setWelcome] = useState(() => !locationLink);
+  const [error, setError] = useState<string | null>(null);
+  const scene = useRef<ArcgisScene>(null);
 
-  render() {
-    const path = AppState.route.path;
+  const reportError = (cause: unknown) => {
+    if (isAbortError(cause)) {
+      return;
+    }
+    console.error(cause);
+    setError(errorMessage(cause));
+  };
 
-    const content = match(AppState.status)
-      .with("loading", () => <Loading />)
-      .otherwise(() => this.renderPage(path));
+  const failView = (cause: unknown) => {
+    reportError(cause);
+    ready.reject(cause);
+  };
 
-    return (
-      <div class={styles.wrapper}>
-        <MenuBar
-          onItemClick={(item) => {
-            this.goToPage(item);
-          }}
-        />
-        <CookieBanner />
-        <PageWrapper
-          hidden={
-            AppState.route.match("home") || AppState.route.match("landing")
-          }
-          children={content}
-          class={AppState.status === "editing" ? styles.obscureMenu : ""}
-        />
-        <LandingPage
-          hidden={!AppState.route.match("landing")}
-          onStart={() => {
-            this.goToPage("home");
-          }}
-        />
-        <BasemapSwitcher />
-      </div>
+  useEffect(() => {
+    const element = scene.current;
+    if (!element) {
+      return;
+    }
+    const handle = reactiveUtils.watch(
+      () => element.fatalError,
+      (cause) => {
+        if (cause) {
+          failView(cause);
+        }
+      },
+      { initial: true },
     );
-  }
+    return () => handle.remove();
+  }, [failView]);
 
-  private goToPage(page: Page) {
-    AppState.route.push(page);
-  }
+  return (
+    <SceneContext value={ready.promise}>
+      <calcite-shell contentBehind>
+        <arcgis-scene
+          ref={scene}
+          id="mars-scene"
+          className="mars-scene"
+          map={resources.map}
+          spatialReference={resources.spatialReference}
+          camera={initialCamera}
+          environment={resources.environment}
+          theme={resources.theme}
+          popupDisabled
+          qualityProfile="high"
+          onarcgisViewReadyChange={(event) => {
+            if (event.currentTarget.ready) {
+              const view = event.currentTarget.view;
+              view.options.displayUnits = {
+                length: "metric",
+                verticalLength: "metric",
+                area: "metric",
+              };
+              ready.resolve({ view, resources, reportError });
+            }
+          }}
+          onarcgisViewReadyError={(event) => failView(event.detail)}
+          onarcgisLoadError={(event) => reportError(event.detail)}
+          aria-label="Interactive 3D globe of Mars"
+        >
+          <CatchBoundary
+            getResetKey={() => ready.promise}
+            onCatch={reportError}
+            errorComponent={() => null}
+          >
+            <Suspense
+              fallback={
+                <calcite-loader
+                  className="scene-loading"
+                  aria-live="polite"
+                  label="Loading Mars"
+                  text="Loading Mars"
+                />
+              }
+            >
+              <SceneEffects welcome={welcome} />
+              <SceneNavigation />
+              <BasemapSwitcher />
+              <ToolToolbar />
+            </Suspense>
+          </CatchBoundary>
+          <Outlet />
+        </arcgis-scene>
+        {error && (
+          <calcite-alert
+            slot="alerts"
+            open
+            kind="danger"
+            label="Application error"
+            queue="immediate"
+            oncalciteAlertClose={(event) => {
+              if (!event.currentTarget.open) {
+                setError(null);
+              }
+            }}
+          >
+            <span slot="title">Something went wrong</span>
+            <span slot="message">{error}</span>
+            <calcite-button
+              slot="link"
+              appearance="transparent"
+              onClick={() => window.location.reload()}
+            >
+              Reload app
+            </calcite-button>
+          </calcite-alert>
+        )}
+        <HomePage open={welcome} onStart={() => setWelcome(false)} />
+        <CookieBanner />
+      </calcite-shell>
+    </SceneContext>
+  );
 }
-
-export default Application;

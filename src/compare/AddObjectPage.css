@@ -1,0 +1,9 @@
+.model-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--calcite-spacing-sm);
+
+  & calcite-button {
+    min-height: 64px;
+  }
+}

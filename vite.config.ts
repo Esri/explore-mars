@@ -13,14 +13,38 @@
  * limitations under the License.
  */
 import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import { comparisonModes, measurementTools, panels } from "./src/application/panels.ts";
 
 export default defineConfig({
-  server: {
-    port: 3000,
-  },
-  base: "/",
-  build: {
-    target: "es2020",
-  },
+  plugins: [
+    react({ compiler: true }),
+    {
+      name: "panel-entry-points",
+      enforce: "post",
+      generateBundle(_, bundle) {
+        const index = bundle["index.html"];
+        if (!index || index.type !== "asset") {
+          this.error("The application entry page was not generated.");
+        }
+        const entries = [
+          ...Object.values(panels),
+          ...Object.values(measurementTools),
+          ...Object.values(comparisonModes),
+        ];
+        for (const { to } of entries) {
+          this.emitFile({
+            type: "asset",
+            fileName: `${to.slice(1)}/index.html`,
+            source: index.source,
+          });
+        }
+        this.emitFile({ type: "asset", fileName: "404.html", source: index.source });
+      },
+    },
+  ],
+  // Discover lazy worker dependencies before the first placement can trigger a full reload.
+  optimizeDeps: { entries: ["index.html", "src/compare/region.worker.ts"] },
+  worker: { format: "es" },
   assetsInclude: ["**/*.zip", "**/*.gltf"],
 });

@@ -1,0 +1,27 @@
+.mars-scene {
+  --arcgis-layout-overlay-space-bottom: env(safe-area-inset-bottom);
+}
+
+.tool-panel {
+  --calcite-panel-space: var(--calcite-spacing-lg);
+  --scene-side-controls-clearance: 112px;
+  --scene-bottom-controls-clearance: 136px;
+
+  box-shadow: var(--calcite-shadow-md);
+  width: 360px;
+  max-width: calc(100cqw - var(--scene-side-controls-clearance));
+  max-height: calc(100cqh - var(--scene-bottom-controls-clearance));
+}
+
+.scene-loading {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+@media (width <= 600px) {
+  .tool-panel {
+    --scene-side-controls-clearance: 88px;
+    --scene-bottom-controls-clearance: 140px;
+  }
+}

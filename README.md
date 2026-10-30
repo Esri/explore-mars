@@ -1,12 +1,12 @@
 # Explore Mars
 
-An interactive 3D web application showing the planet Mars, using the [ArcGIS Maps SDK for Javascript](https://developers.arcgis.com/javascript/). This is a non-commercial demo application made by the Esri R&D Center Zurich. It is intended for presentations or as a starting point for new projects.t for new projects.
+An interactive 3D web application showing the planet Mars, using the [ArcGIS Maps SDK for JavaScript](https://developers.arcgis.com/javascript/). This is a non-commercial demo application made by the Esri R&D Center Zurich. It is intended for presentations or as a starting point for new projects.
 
 [![screenshot](./screenshot.jpg)](https://esri.github.io/explore-mars)
 
-The app uses multiple API features like [Elevation Profile](https://developers.arcgis.com/javascript/latest/references/map-components/components/arcgis-elevation-profile/), [glTF import](https://developers.arcgis.com/javascript/latest/sample-code/import-gltf/index.html) and a [custom Spatial Reference](https://developers.arcgis.com/javascript/latest/api-reference/esri-geometry-SpatialReference.html).
+The app uses multiple API features like [Elevation Profile](https://developers.arcgis.com/javascript/latest/references/map-components/components/arcgis-elevation-profile/), [glTF import](https://developers.arcgis.com/javascript/latest/sample-code/import-gltf/index.html) and a [custom Spatial Reference](https://developers.arcgis.com/javascript/latest/references/core/geometry/SpatialReference/).
 
-On the technical side the app is built using [TypeScript](https://www.typescriptlang.org/), [npm](https://www.npmjs.com/) and [Vite](https://vitejs.dev/).
+The UI uses [React](https://react.dev/) and [Calcite Components](https://developers.arcgis.com/calcite-design-system/). The app is built using [TypeScript](https://www.typescriptlang.org/), [npm](https://www.npmjs.com/) and [Vite](https://vite.dev/).
 
 ## Instructions
 
@@ -17,8 +17,8 @@ To run the source code locally, follow these steps:
 ```
 git clone https://github.com/Esri/explore-mars.git
 cd explore-mars/
-npm install
-npm run start # serves application at http://localhost:3000
+npm ci
+npm start # open the local URL printed by Vite, normally http://localhost:5173/
 ```
 
 For more details about running and deploying the application see our [development and deployment instructions](./DEVELOP_AND_DEPLOY.md).
@@ -29,7 +29,7 @@ The following external libraries, APIs, open datasets and specifications were us
 
 - [ArcGIS Maps SDK for JavaScript](https://developers.arcgis.com/javascript/)
 - [zip.js](https://gildas-lormeau.github.io/zip.js/) for extracting glTF models
-- [Calcite Web](http://esri.github.io/calcite-web/)
+- [Calcite Components](https://developers.arcgis.com/calcite-design-system/)
 
 ## Disclaimer
 
